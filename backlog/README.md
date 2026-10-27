@@ -13,7 +13,7 @@ Zero-to-MVP development roadmap engineered for **multi-agent assignment**. Every
 
 ---
 
-## Backlog Index (27 items → GitHub issues)
+## Backlog Index (27 items → GitHub issues + post-MVP track)
 
 ### Phase 0 — Contracts, Infra & Skeleton (Week 1) — sequential start, then parallel
 
@@ -74,6 +74,12 @@ Zero-to-MVP development roadmap engineered for **multi-agent assignment**. Every
 | QA-001 | Security & Permission Audit | QA / Security | P1 | [phase-5/QA-001](phase-5/QA-001-security-permission-audit.md) | [#26](https://github.com/jtanori/form-control-2/issues/26) |
 | REL-001 | MVP Packaging & Release | Platform / DevOps | P0 | [phase-5/REL-001](phase-5/REL-001-mvp-packaging-release.md) | [#27](https://github.com/jtanori/form-control-2/issues/27) |
 
+### Post-MVP — Quality & Polish (after `v0.1.0-mvp`)
+
+| ID | Title | Agent | Priority | File | Issue |
+|---|---|---|---|---|---|
+| UX-001 | Extension UX Audit & Redesign | Frontend / Extension | P1 | [post-mvp/UX-001](post-mvp/UX-001-extension-ux-audit-redesign.md) | [#41](https://github.com/jtanori/form-control-2/issues/41) |
+
 ---
 
 ## GitHub metadata sync
@@ -82,7 +88,7 @@ Because the GitHub connector may be flaky, **every item file carries its own Git
 
 - `GitHub issue:` / `GitHub labels:` / `GitHub milestone:` bullets in every item file below.
 - The issue **description is the item file content**, so this metadata is visible in the issue itself.
-- [`apply-issue-metadata.sh`](apply-issue-metadata.sh) re-syncs all 27 issues (description + labels + milestone) in one run; idempotent, safe to re-run whenever the connector recovers.
+- [`apply-issue-metadata.sh`](apply-issue-metadata.sh) re-syncs all item issues (description + labels + milestone) in one run; idempotent, safe to re-run whenever the connector recovers.
 
 ```bash
 ./backlog/apply-issue-metadata.sh
