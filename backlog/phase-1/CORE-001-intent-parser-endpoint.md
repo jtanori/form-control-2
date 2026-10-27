@@ -8,6 +8,9 @@
 - **Parallel with:** EXT-001, AND-001, DES-001 (they use the schema, not the running parser)
 - **Critical path:** Yes
 - **Milestone gates:** G2
+- **GitHub issue:** https://github.com/jtanori/form-control-2/issues/5
+- **GitHub labels:** `backlog`, `phase-1`, `P0`, `agent-backend`, `critical-path`
+- **GitHub milestone:** Phase 1 — Core NLU
 
 ## Objective
 

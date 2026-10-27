@@ -8,6 +8,9 @@
 - **Parallel with:** STT-001, INFR-002
 - **Critical path:** Yes — blocks CORE-001 and every client extractor
 - **Milestone gates:** G2
+- **GitHub issue:** https://github.com/jtanori/form-control-2/issues/1
+- **GitHub labels:** `backlog`, `phase-0`, `P0`, `agent-backend`, `critical-path`
+- **GitHub milestone:** Phase 0 — Infra
 
 ## Objective
 

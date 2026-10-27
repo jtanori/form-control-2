@@ -8,6 +8,9 @@
 - **Parallel with:** DES-003
 - **Critical path:** No
 - **Milestone gates:** G5
+- **GitHub issue:** https://github.com/jtanori/form-control-2/issues/21
+- **GitHub labels:** `backlog`, `phase-4`, `P2`, `agent-desktop`
+- **GitHub milestone:** Phase 4 — Desktop
 
 ## Objective
 

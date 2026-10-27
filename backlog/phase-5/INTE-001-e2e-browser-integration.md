@@ -8,6 +8,9 @@
 - **Parallel with:** QA-001 (doc-level), AND-004 manual test
 - **Critical path:** Yes
 - **Milestone gates:** G3 proof, MVP gate
+- **GitHub issue:** https://github.com/jtanori/form-control-2/issues/24
+- **GitHub labels:** `backlog`, `phase-5`, `P0`, `agent-qa`, `critical-path`
+- **GitHub milestone:** Phase 5 — MVP Gate
 
 ## Objective
 

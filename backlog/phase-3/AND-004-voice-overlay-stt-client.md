@@ -8,6 +8,9 @@
 - **Parallel with:** AND-001, AND-002 (can use mock parser)
 - **Critical path:** No (required for G1 + G4)
 - **Milestone gates:** G1, G4
+- **GitHub issue:** https://github.com/jtanori/form-control-2/issues/18
+- **GitHub labels:** `backlog`, `phase-3`, `P0`, `agent-mobile`
+- **GitHub milestone:** Phase 3 — Android
 
 ## Objective
 

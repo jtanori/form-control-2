@@ -8,6 +8,9 @@
 - **Parallel with:** CONTRACT-001, INFR-002
 - **Critical path:** No (needed for G1, not for parser development — parser runs on mock text)
 - **Milestone gates:** G1
+- **GitHub issue:** https://github.com/jtanori/form-control-2/issues/4
+- **GitHub labels:** `backlog`, `phase-0`, `P0`, `agent-backend`
+- **GitHub milestone:** Phase 0 — Infra
 
 ## Objective
 

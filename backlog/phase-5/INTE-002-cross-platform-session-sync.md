@@ -8,6 +8,9 @@
 - **Parallel with:** INTE-001
 - **Critical path:** No
 - **Milestone gates:** MVP documentation
+- **GitHub issue:** https://github.com/jtanori/form-control-2/issues/25
+- **GitHub labels:** `backlog`, `phase-5`, `P1`, `agent-qa`
+- **GitHub milestone:** Phase 5 — MVP Gate
 
 ## Objective
 

@@ -76,6 +76,20 @@ Zero-to-MVP development roadmap engineered for **multi-agent assignment**. Every
 
 ---
 
+## GitHub metadata sync
+
+Because the GitHub connector may be flaky, **every item file carries its own GitHub metadata inline** (issue URL, intended labels, milestone) right in the header — so the data always lives in the repo *and* ends up inside each issue description:
+
+- `GitHub issue:` / `GitHub labels:` / `GitHub milestone:` bullets in every item file below.
+- The issue **description is the item file content**, so this metadata is visible in the issue itself.
+- [`apply-issue-metadata.sh`](apply-issue-metadata.sh) re-syncs all 27 issues (description + labels + milestone) in one run; idempotent, safe to re-run whenever the connector recovers.
+
+```bash
+./backlog/apply-issue-metadata.sh
+```
+
+---
+
 ## Multi-Agent Assignment & Parallelization Matrix
 
 | Track / Agent Profile | Work Package | Parallel With (Can be done simultaneously) | Blocked By (Cannot start until) |

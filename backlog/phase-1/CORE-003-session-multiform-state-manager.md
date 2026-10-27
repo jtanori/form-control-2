@@ -8,6 +8,9 @@
 - **Parallel with:** CORE-002, CORE-004, EXT-003, EXT-005
 - **Critical path:** No (required for G3)
 - **Milestone gates:** G3
+- **GitHub issue:** https://github.com/jtanori/form-control-2/issues/7
+- **GitHub labels:** `backlog`, `phase-1`, `P1`, `agent-backend`
+- **GitHub milestone:** Phase 1 — Core NLU
 
 ## Objective
 

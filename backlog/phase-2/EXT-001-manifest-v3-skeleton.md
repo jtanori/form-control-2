@@ -8,6 +8,9 @@
 - **Parallel with:** CONTRACT-001, CORE-001 (spec-level only)
 - **Critical path:** No (scaffold for EXT-002…006)
 - **Milestone gates:** G3
+- **GitHub issue:** https://github.com/jtanori/form-control-2/issues/9
+- **GitHub labels:** `backlog`, `phase-2`, `P0`, `agent-extension`
+- **GitHub milestone:** Phase 2 — Browser
 
 ## Objective
 

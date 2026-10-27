@@ -8,6 +8,9 @@
 - **Parallel with:** CONTRACT-001, STT-001, INFR-002 (once folder scaffold exists)
 - **Critical path:** Yes — this is the root of the entire critical chain
 - **Milestone gates:** Enables G1–G5
+- **GitHub issue:** https://github.com/jtanori/form-control-2/issues/2
+- **GitHub labels:** `backlog`, `phase-0`, `P0`, `agent-platform`, `critical-path`
+- **GitHub milestone:** Phase 0 — Infra
 
 ## Objective
 

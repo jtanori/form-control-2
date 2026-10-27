@@ -8,6 +8,9 @@
 - **Parallel with:** CONTRACT-001, STT-001
 - **Critical path:** No
 - **Milestone gates:** Cross-cutting (debuggability for all gates)
+- **GitHub issue:** https://github.com/jtanori/form-control-2/issues/3
+- **GitHub labels:** `backlog`, `phase-0`, `P1`, `agent-platform`
+- **GitHub milestone:** Phase 0 — Infra
 
 ## Objective
 

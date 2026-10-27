@@ -8,6 +8,9 @@
 - **Parallel with:** AND-004
 - **Critical path:** No
 - **Milestone gates:** G4
+- **GitHub issue:** https://github.com/jtanori/form-control-2/issues/19
+- **GitHub labels:** `backlog`, `phase-3`, `P1`, `agent-mobile`
+- **GitHub milestone:** Phase 3 — Android
 
 ## Objective
 

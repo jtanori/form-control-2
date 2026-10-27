@@ -8,6 +8,9 @@
 - **Parallel with:** EXT-003 (executor interface), EXT-004, EXT-005
 - **Critical path:** Yes
 - **Milestone gates:** G3
+- **GitHub issue:** https://github.com/jtanori/form-control-2/issues/10
+- **GitHub labels:** `backlog`, `phase-2`, `P0`, `agent-extension`, `critical-path`
+- **GitHub milestone:** Phase 2 — Browser
 
 ## Objective
 
