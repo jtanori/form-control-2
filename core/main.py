@@ -50,12 +50,21 @@ def create_app(
     app.state.stt = TranscriptionService(settings)
 
     app.add_middleware(SessionLoggingMiddleware)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],  # loopback-only service; QA-001 tightens this
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    # QA-001: no wildcard CORS. Default = loopback dev servers + extension
+    # pages (fullmatch); override with ALLOWED_ORIGINS=origin1,origin2.
+    cors_kwargs: dict = {
+        "allow_methods": ["GET", "POST"],
+        "allow_headers": ["content-type", "x-session-id"],
+    }
+    if settings.allowed_origins:
+        cors_kwargs["allow_origins"] = list(settings.allowed_origins)
+    else:
+        cors_kwargs["allow_origin_regex"] = (
+            r"(?:http://localhost:\d+"
+            r"|http://127\.0\.0\.1:\d+"
+            r"|chrome-extension://[a-z]+)"
+        )
+    app.add_middleware(CORSMiddleware, **cors_kwargs)
 
     @app.exception_handler(ParseInputError)
     async def _input_error(request: Request, exc: ParseInputError) -> JSONResponse:

@@ -314,7 +314,7 @@ chrome.alarms?.onAlarm?.addListener((alarm) => {
   if (alarm.name === "voiceform-flush") void flushQueue();
 });
 
-// Context menu (optional permission already declared)
+// Context menu (permission declared in manifest)
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "voiceform-capture",

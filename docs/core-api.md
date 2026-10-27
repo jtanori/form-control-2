@@ -151,6 +151,12 @@ Multipart upload (`audio` file field, `language` form field, default `auto`)
 Audio bodies skip the 1 MiB JSON sniff cap (multipart streams through).
 Full stack: `docker compose up --build` (core + stt-whisper + redis).
 
+**Data path:** the default backend transcribes **locally** (whisper.cpp).
+Setting `STT_FALLBACK=openai_whisper_api` forwards raw audio to OpenAI’s
+Whisper API (third-party processing — see [security-audit.md](security-audit.md)
+§ STT). CORS on Core allows loopback dev origins + `chrome-extension://` pages
+only (`ALLOWED_ORIGINS` to override).
+
 ## Parser safety rules (enforced in code, not only in the prompt)
 
 1. **Labels before indices** — a target resolves by label; `index` is only used

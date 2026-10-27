@@ -33,6 +33,12 @@
         android:text="Allow display over other apps" />
 
     <Button
+        android:id="@+id/allowMic"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Allow microphone (when you want voice)" />
+
+    <Button
         android:id="@+id/coreUrl"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

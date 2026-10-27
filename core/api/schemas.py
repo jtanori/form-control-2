@@ -12,12 +12,17 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_serializer
 
+#: QA-001 caps — keep prompt-stuffing and abuse bounded before any NLU work.
+TRANSCRIPT_MAX_CHARS = 4000
+CLARIFY_TEXT_MAX_CHARS = 500
+SESSION_ID_MAX_CHARS = 200
+
 
 class ParseRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    sessionId: str = Field(min_length=1)
-    transcript: str = Field(min_length=1)
+    sessionId: str = Field(min_length=1, max_length=SESSION_ID_MAX_CHARS)
+    transcript: str = Field(min_length=1, max_length=TRANSCRIPT_MAX_CHARS)
     context: dict[str, Any] | None = None
     history: list[dict[str, Any]] = Field(default_factory=list)
 
@@ -48,9 +53,9 @@ class ParseRequest(BaseModel):
 class ClarifyRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    sessionId: str = Field(min_length=1)
-    clarificationText: str | None = None
-    clarification: str | None = None  # alias tolerated for client convenience
+    sessionId: str = Field(min_length=1, max_length=SESSION_ID_MAX_CHARS)
+    clarificationText: str | None = Field(default=None, max_length=CLARIFY_TEXT_MAX_CHARS)
+    clarification: str | None = Field(default=None, max_length=CLARIFY_TEXT_MAX_CHARS)  # alias
     context: dict[str, Any] | None = None
 
     @property
