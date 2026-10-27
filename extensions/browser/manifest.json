@@ -3,7 +3,13 @@
   "name": "VoiceForm Universal",
   "version": "0.1.0",
   "description": "Voice-driven form filling for any page — bridge to the VoiceForm core NLU.",
-  "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "contextMenus",
+    "alarms"
+  ],
   "host_permissions": ["http://localhost:8020/*", "http://127.0.0.1:8020/*"],
   "optional_host_permissions": ["<all_urls>"],
   "background": {
