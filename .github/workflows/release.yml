@@ -1,0 +1,123 @@
+# REL-001 — build & publish release artifacts on version tags
+#
+#   git tag v0.1.0-mvp && git push origin v0.1.0-mvp
+#
+# Produces: extension zip, installable APK, compose file → GitHub Release.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  core-smoke:
+    name: Core tests (gate before artifacts)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest -q
+      - run: python -m core.lib.contracts
+
+  extension:
+    name: extension.zip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: extensions/browser/package-lock.json
+      - name: Build extension
+        working-directory: extensions/browser
+        run: |
+          npm ci
+          npm test
+          npm run build
+      - name: Package dist/ as zip
+        run: |
+          cd extensions/browser/dist
+          zip -r "${GITHUB_WORKSPACE}/voiceform-extension-${GITHUB_REF_NAME}.zip" .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extension-zip
+          path: voiceform-extension-${{ github.ref_name }}.zip
+
+  android:
+    name: voiceform.apk
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install Android platform
+        run: |
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager | head -1)
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+      - name: Unit tests + installable APK
+        working-directory: android
+        run: |
+          gradle :form-core:test --console=plain
+          # MVP: debug-signed so `adb install` works; Play internal-track needs
+          # a release keystore (post-MVP — see docs/release-checklist.md).
+          gradle :app:assembleDebug --console=plain
+      - name: Collect APK
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk \
+            "voiceform-${GITHUB_REF_NAME}.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voiceform-apk
+          path: voiceform-${{ github.ref_name }}.apk
+
+  publish:
+    name: GitHub Release
+    runs-on: ubuntu-latest
+    needs: [core-smoke, extension, android]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: VoiceForm ${{ github.ref_name }}
+          body: |
+            VoiceForm Universal ${{ github.ref_name }}
+
+            ### Artifacts
+            - `voiceform-extension-*.zip` — Chrome `chrome://extensions` → Load unpacked (unzip first) or store submission source
+            - `voiceform-*.apk` — installable Android build (debug-signed for sideload; see release checklist for Play signing)
+
+            ### 10-minute path
+            See `README.md` Quickstart: `docker compose up --build` → load extension → open a form → speak/type.
+
+            ### Gates
+            G2/G3 automated (CI + INTE-001 5×). G1/G4 device sign-off: `docs/release-checklist.md`.
+            Security sign-off: `docs/security-audit.md`.
+          files: |
+            voiceform-extension-*.zip
+            voiceform-*.apk
+            docker-compose.yml
+            docs/security-audit.md
+            docs/release-checklist.md

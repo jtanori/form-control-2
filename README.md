@@ -78,29 +78,41 @@ cd tests/e2e && npm ci && npm test    # builds the extension if needed
 CI runs Python lint/tests/contracts **and** extension typecheck/unit tests/build on
 every PR — see [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
-### Quickstart
+### Quickstart — voice form in <10 minutes
+
+```bash
+# 1 · Stack (Core + local Whisper STT + Redis) — ~2 min, loopback only
+docker compose up --build
+curl -s localhost:8020/api/v1/health        # "sttBackend":"whisper" after model pull
+
+# 2 · Extension — ~3 min
+cd extensions/browser && npm ci && npm run build
+# chrome://extensions → Developer mode → Load unpacked → extensions/browser/dist
+
+# 3 · Speak or type
+# Open any web form → VoiceForm icon → 🎤 (or type) → Parse → Confirm → filled.
+```
+
+Android (optional, ~5 min more): install the release APK → enable Accessibility
++ overlay + microphone → float mic over a native form → speak → Confirm.
+
+Release artifacts (`extension.zip`, APK) are published by CI on every `v*` tag
+— see [`docs/release-checklist.md`](docs/release-checklist.md) (gates) and
+[`docs/security-audit.md`](docs/security-audit.md) (QA-001 sign-off).
+
+Dev loop without Docker:
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt   # requirements.txt alone = rule provider only
 .venv/bin/python -m pytest                       # core tests, offline
 .venv/bin/python -m uvicorn core.main:app --host 0.0.0.0 --port 8020
-curl -s localhost:8020/api/v1/health
-```
-
-```bash
-cd extensions/browser
-npm ci && npm test && npm run build              # load dist/ as an unpacked extension
+cd extensions/browser && npm ci && npm test && npm run build
 ```
 
 No API key needed: `NLU_PROVIDER=auto` falls back to the deterministic rule
 provider. Set `OPENAI_API_KEY` (and optionally `NLU_PROVIDER=openai`) to use
 `gpt-4o` function calling. Session storage uses `REDIS_URL` when available and an
 in-memory store otherwise.
-
-```bash
-docker compose up --build           # core :8020 + stt-whisper :8081 + redis
-curl -s localhost:8020/api/v1/health # check "sttBackend":"whisper"
-```
 
 Full endpoint reference, request/response examples and the parser safety rules:
 [docs/core-api.md](docs/core-api.md).
