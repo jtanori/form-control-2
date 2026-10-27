@@ -150,6 +150,13 @@ def command_tool_schema() -> dict[str, Any]:
                         "nodeIds the question refers to, when clarification is requested."
                     ),
                 },
+                "pendingCommand": {
+                    "$ref": "#/$defs/command",
+                    "description": (
+                        "The command awaiting disambiguation (action + label), so "
+                        "the clarify endpoint can complete it."
+                    ),
+                },
             },
             "$defs": needed,
         }

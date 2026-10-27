@@ -22,11 +22,16 @@ from core.lib.contracts import ContractError
 from core.lib.logging_config import configure_logging, get_logger
 from core.nlu.parser import ParseInputError, Parser
 from core.nlu.provider import ProviderError
+from core.session.store import SessionStore, get_session_store
 
 log = get_logger("main")
 
 
-def create_app(settings: Settings | None = None, parser: Parser | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    parser: Parser | None = None,
+    store: SessionStore | None = None,
+) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(component="core", level=settings.log_level)
 
@@ -37,6 +42,7 @@ def create_app(settings: Settings | None = None, parser: Parser | None = None) -
     )
     app.state.settings = settings
     app.state.parser = parser or Parser(settings=settings)
+    app.state.store = store or get_session_store(settings)
 
     app.add_middleware(SessionLoggingMiddleware)
     app.add_middleware(

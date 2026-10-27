@@ -48,6 +48,9 @@ class ProviderOutput:
     needs_clarification: bool = False
     clarification_question: str | None = None
     candidate_ids: list[str] = field(default_factory=list)
+    #: The intent the clarification is about (action + label), so CORE-002 can
+    #: finish it once the user picks a candidate.
+    pending_command: dict[str, Any] | None = None
     model: str = "rule-v1"
 
 
@@ -163,17 +166,29 @@ def _type_word(nodes: Sequence[dict]) -> str:
     return "option"
 
 
-def _ambiguity(clause: str, nodes: Sequence[dict]) -> ProviderOutput:
+def _ambiguity(
+    clause: str,
+    nodes: Sequence[dict],
+    action: str = "click",
+    value: str | None = None,
+) -> ProviderOutput:
     candidates = list(nodes)
     question = (
         f"Which {_type_word(candidates)} do you mean: "
         f"{matching.describe_candidates(candidates)}?"
     )
+    pending: dict[str, Any] = {
+        "action": action,
+        "target": {"label": normalize_label(clause)},
+    }
+    if value is not None:
+        pending["value"] = value
     return ProviderOutput(
         commands=[],
         needs_clarification=True,
         clarification_question=question,
         candidate_ids=[n.get("nodeId", "") for n in candidates],
+        pending_command=pending,
     )
 
 
@@ -259,6 +274,10 @@ class RuleProvider(Provider):
                     n.get("nodeId", "")
                     for n in matching.match_nodes_preferred(nodes, label, "fill")
                 ],
+                pending_command={
+                    "action": "fill",
+                    "target": {"label": normalize_label(label)},
+                },
             )
         return None
 
@@ -289,7 +308,7 @@ class RuleProvider(Provider):
                     model=self.name,
                 )
             if len(hits) > 1:
-                return _ambiguity(direction, hits)
+                return _ambiguity(direction, hits, action="click")
         return ProviderOutput(
             commands=[],
             needs_clarification=True,
@@ -322,7 +341,7 @@ class RuleProvider(Provider):
         if len(candidates) > 1:
             chosen = matching.pick_by_index(candidates, index)
             if chosen is None:
-                return _ambiguity(label, candidates)
+                return _ambiguity(label, candidates, action=action, value=value)
             candidates = [chosen]
         node = candidates[0]
         command = {
@@ -425,11 +444,13 @@ class OpenAIProvider(Provider):
         except (json.JSONDecodeError, TypeError) as exc:  # pragma: no cover
             raise ProviderError(f"invalid tool arguments: {exc}") from exc
 
+        pending = payload.get("pendingCommand")
         return ProviderOutput(
             commands=list(payload.get("commands") or []),
             needs_clarification=bool(payload.get("needsClarification")),
             clarification_question=payload.get("clarificationQuestion"),
             candidate_ids=list(payload.get("candidateNodeIds") or []),
+            pending_command=pending if isinstance(pending, dict) else None,
             model=self.model,
         )
 

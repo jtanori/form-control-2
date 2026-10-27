@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 
 from core import __version__
 from core.api.schemas import (
@@ -15,6 +15,7 @@ from core.api.schemas import (
     ParseResponse,
 )
 from core.lib.logging_config import get_logger
+from core.nlu.clarify import ClarificationError, ClarificationResolver
 from core.nlu.parser import ParseResult
 
 log = get_logger("api.routes")
@@ -53,7 +54,29 @@ def parse(payload: ParseRequest, request: Request) -> ParseResponse:
         snapshot=payload.context,
         history=payload.history,
     )
+    if result.needs_clarification:
+        ClarificationResolver(parser, request.app.state.store).remember(result, payload.context)
     return _parse_response(result, withhold=result.needs_clarification)
+
+
+@router.post("/clarify", response_model=ClarifyResponse)
+def clarify(payload: ClarifyRequest, request: Request) -> ClarifyResponse:
+    """Resolve a pending ambiguity (CORE-002).
+
+    The answer is matched against the stored candidates only - the parser never
+    re-guesses. Commands resolved before the ambiguity are replayed together
+    with the newly disambiguated one.
+    """
+    resolver = ClarificationResolver(request.app.state.parser, request.app.state.store)
+    try:
+        result = resolver.resolve(
+            session_id=payload.sessionId,
+            clarification_text=payload.text,
+            snapshot=payload.context,
+        )
+    except ClarificationError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return ParseResponse(**result.response_payload())
 
 
 __all__ = ["router"]

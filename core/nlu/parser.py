@@ -60,6 +60,8 @@ class ParseResult:
     clarification: dict[str, Any] | None = None
     model: str = ""
     latency_ms: float = 0.0
+    #: The command the user still has to disambiguate/complete (CORE-002 state).
+    pending_command: dict[str, Any] | None = None
 
     def response_payload(self, *, withhold_commands: bool = False) -> dict[str, Any]:
         return {
@@ -149,6 +151,39 @@ class Parser:
         )
         return result
 
+    def accept(
+        self,
+        *,
+        session_id: str,
+        transcript: str,
+        snapshot: dict[str, Any] | None,
+        commands: Sequence[dict],
+    ) -> ParseResult:
+        """Re-run safety checks on already-emitted commands.
+
+        Used by the clarification resolver (CORE-002) when it merges the commands
+        resolved before the ambiguity with the newly disambiguated one, and by
+        tests. Same validation path as `parse()`.
+        """
+        if not transcript.strip():
+            raise ParseInputError("transcript must not be empty")
+        nodes = self._nodes(snapshot)
+        result = self._finalize(
+            session_id=session_id,
+            transcript=normalize_text(transcript),
+            nodes=nodes,
+            output=ProviderOutput(commands=list(commands), model=self.provider.name),
+        )
+        log.info(
+            "accept",
+            extra={
+                "commandCount": len(result.commands),
+                "needsClarification": result.needs_clarification,
+                "model": result.model,
+            },
+        )
+        return result
+
     # -- internals ---------------------------------------------------------- #
 
     @staticmethod
@@ -173,6 +208,7 @@ class Parser:
         commands: list[dict[str, Any]] = []
         missing: list[dict[str, Any]] = []
         ambiguity: list[dict] | None = None
+        pending_command: dict[str, Any] | None = output.pending_command
 
         for raw in output.commands:
             if not isinstance(raw, dict):
@@ -192,15 +228,23 @@ class Parser:
             resolution = matching.resolve_target(nodes, target, action)
             if resolution.ambiguous:
                 ambiguity = resolution.candidates
+                pending_command = {"action": action, "target": target}
+                if isinstance(raw.get("value"), str):
+                    pending_command["value"] = raw["value"]
                 break
             if resolution.node is None:
                 missing.append({"action": action, "target": target})
+                pending_command = pending_command or {
+                    "action": action,
+                    "target": target,
+                }
                 continue
 
             value = raw.get("value")
             if action == "fill":
                 if not isinstance(value, str) or not value.strip():
                     missing.append({"action": action, "target": target, "reason": "missing value"})
+                    pending_command = {"action": action, "target": target}
                     continue
                 if not contains_value(transcript, value):
                     # prompt rule 3: never invent values
@@ -279,6 +323,7 @@ class Parser:
             clarification_question=clarification["question"] if clarification else None,
             clarification=clarification,
             model=output.model or self.provider.name,
+            pending_command=pending_command,
         )
 
     @staticmethod
