@@ -104,3 +104,4 @@ class HealthResponse(BaseModel):
     version: str
     provider: str
     sessionBackend: str
+    sttBackend: str = "off"

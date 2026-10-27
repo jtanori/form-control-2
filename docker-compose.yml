@@ -1,0 +1,61 @@
+# VoiceForm Universal — local stack (INFR-001 + STT-001)
+#
+#   docker compose up --build
+#   curl -s localhost:8020/api/v1/health
+#
+# Services:
+#   core         FastAPI NLU + STT proxy (port 8020)
+#   stt-whisper  whisper.cpp server (port 8081 → container 8080)
+#   redis        session store (CORE-003)
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  stt-whisper:
+    build:
+      context: ./infra/stt
+    environment:
+      WHISPER_MODEL: ${WHISPER_MODEL:-base}
+      WHISPER_THREADS: ${WHISPER_THREADS:-4}
+    ports:
+      - "8081:8080"
+    volumes:
+      - whisper-models:/models
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 120s
+
+  core:
+    build:
+      context: .
+      dockerfile: core/Dockerfile
+    ports:
+      - "8020:8020"
+    environment:
+      CORE_HOST: 0.0.0.0
+      REDIS_URL: redis://redis:6379/0
+      STT_WHISPER_URL: http://stt-whisper:8080
+      STT_FALLBACK: ${STT_FALLBACK:-}
+      NLU_PROVIDER: ${NLU_PROVIDER:-auto}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      redis:
+        condition: service_healthy
+      stt-whisper:
+        condition: service_started
+
+volumes:
+  whisper-models:

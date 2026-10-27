@@ -1,7 +1,10 @@
-# Core service runtime dependencies (Phase 1).
+# Core service runtime dependencies (Phase 1+).
 # The deterministic rule provider (the CI/test default) runs without an LLM SDK;
 # install requirements-llm.txt when NLU_PROVIDER=openai.
 fastapi>=0.115,<1
 uvicorn[standard]>=0.30,<1
 jsonschema>=4.22,<5
 redis>=5,<6
+# STT-001: multipart upload parsing + backend HTTP (whisper.cpp / OpenAI)
+python-multipart>=0.0.9,<1
+httpx>=0.27,<1

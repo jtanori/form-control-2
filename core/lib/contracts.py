@@ -23,6 +23,7 @@ BASE_URI = "https://form-control.dev/contracts/v1"
 SCHEMA_FILES = {
     "form-context": CONTRACTS_DIR / "form-context.schema.json",
     "command": CONTRACTS_DIR / "command.schema.json",
+    "stt-response": CONTRACTS_DIR / "stt-response.schema.json",
 }
 
 #: Local prefix used for `form-context` definitions when inlined into a tool schema.
@@ -183,6 +184,8 @@ def main() -> int:
             name = "command"
         elif stem.startswith(("form-snapshot", "session-state")):
             name = "form-context"
+        elif stem.startswith("stt-response"):
+            name = "stt-response"
         else:
             print(f"SKIP {path.name} (no schema mapping)")
             continue

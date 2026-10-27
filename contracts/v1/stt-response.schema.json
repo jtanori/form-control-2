@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://form-control.dev/contracts/v1/stt-response.schema.json",
+  "title": "STT Response Contract (v1)",
+  "description": "Response of POST /stt/transcribe (and alias /transcribe) — STT-001. Consumed as-is by EXT-006 TRANSCRIBE and AND-004 VoiceClient.",
+  "type": "object",
+  "required": ["transcript", "language", "confidence", "duration_sec"],
+  "additionalProperties": false,
+  "properties": {
+    "transcript": {
+      "type": "string",
+      "description": "Recognized speech text (may be empty when nothing was said)."
+    },
+    "language": {
+      "type": "string",
+      "minLength": 1,
+      "description": "BCP-47-ish language code actually used/detected. `auto` requests detection; the response always reports a concrete value (or `unknown` when the backend cannot detect)."
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "0..1 average confidence when the backend reports one; 0.0 when unknown."
+    },
+    "duration_sec": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Audio duration in seconds when known; 0.0 when unknown."
+    }
+  }
+}

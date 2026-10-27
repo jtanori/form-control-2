@@ -6,6 +6,9 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
 
 /**
  * AND-004 part 1 — Android built-in speech recognition client.
@@ -67,6 +70,57 @@ class VoiceClient(
     fun stop() {
         recognizer?.destroy()
         recognizer = null
+    }
+
+    /**
+     * STT-001 fallback: upload raw audio to Core `POST /stt/transcribe`.
+     * Consumes the v1 stt-response contract as-is:
+     * `{transcript, language, confidence, duration_sec}`.
+     * Blocking — call from a background thread.
+     */
+    fun postTranscribe(
+        coreBaseUrl: String,
+        audio: ByteArray,
+        fileName: String = "speech.wav",
+        language: String = "auto",
+    ): String {
+        val url = URL("${coreBaseUrl.trimEnd('/')}/stt/transcribe")
+        val boundary = "VoiceForm${System.nanoTime()}"
+        val conn = url.openConnection() as HttpURLConnection
+        try {
+            conn.requestMethod = "POST"
+            conn.connectTimeout = 10_000
+            conn.readTimeout = 60_000
+            conn.doOutput = true
+            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=$boundary")
+            conn.outputStream.use { out ->
+                fun line(s: String) = out.write("$s\r\n".toByteArray(Charsets.UTF_8))
+                line("--$boundary")
+                line("Content-Disposition: form-data; name=\"language\"")
+                line("")
+                line(language)
+                line("--$boundary")
+                line("Content-Disposition: form-data; name=\"audio\"; filename=\"$fileName\"")
+                line("Content-Type: audio/wav")
+                line("")
+                out.write(audio)
+                line("")
+                line("--$boundary--")
+            }
+            val status = conn.responseCode
+            val stream = if (status >= 400) conn.errorStream else conn.inputStream
+            val body = stream?.bufferedReader()?.use { it.readText() } ?: ""
+            if (status !in 200..299) {
+                throw IOException("stt -> HTTP $status ${body.take(160)}")
+            }
+            return Regex("\"transcript\"\\s*:\\s*\"((?:\\\\.|[^\"\\\\])*)\"")
+                .find(body)?.groupValues?.get(1)
+                ?.replace("\\\"", "\"")
+                ?.replace("\\\\", "\\")
+                ?: ""
+        } finally {
+            conn.disconnect()
+        }
     }
 
     private fun humanizeError(code: Int): String = when (code) {
