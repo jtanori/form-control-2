@@ -31,17 +31,34 @@ Start here: [backlog/README.md](backlog/README.md) — see "Coding Agent Takeawa
 | CONTRACT-001 | `FormSnapshot`, `FormNode`, `Command`, `ClarificationRequest`, `SessionState` schemas + mocks | [`contracts/v1/`](contracts/v1) |
 | INFR-002 | Structured JSON logs with a correlated `sessionId` | [`core/lib/logging_config.py`](core/lib/logging_config.py) |
 
-CI (GitHub Actions) runs lint (`compileall` + `pyflakes`), the full test suite and
-the contract-mock validation on every PR — see
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+**Phase 2 — Browser extension (MV3)** is in: voice popup, DOM extractor,
+execution engine with ambiguity refusal, virtual cursor, and the Core bridge.
+
+| Ticket | Delivered | Where |
+|---|---|---|
+| EXT-001 | Manifest V3 skeleton — content script, background SW, popup, esbuild → `dist/` | [`extensions/browser/`](extensions/browser) |
+| EXT-002 | `extractFormSnapshot` — six-level label resolution, hidden filter, contract-shaped nodes | [`src/content/context-extractor.ts`](extensions/browser/src/content/context-extractor.ts) |
+| EXT-003 | `executeCommands` — fuzzy match, >70% multi-match → ambiguity (no blind click), visual highlight | [`src/content/executor.ts`](extensions/browser/src/content/executor.ts) |
+| EXT-004 | Popup: MediaRecorder → TRANSCRIBE → PARSE → Confirm/Edit/Cancel + clarify + text fallback | [`src/popup/`](extensions/browser/src/popup) |
+| EXT-005 | Virtual cursor NAV_NEXT / NAV_PREV / NAV_READ with wrap-around | [`src/content/cursor.ts`](extensions/browser/src/content/cursor.ts), [`src/background/navigation.ts`](extensions/browser/src/background/navigation.ts) |
+| EXT-006 | Background bridge: Core URL config, offline queue (2 msgs + backoff), session correlation | [`src/background/bridge.ts`](extensions/browser/src/background/bridge.ts) |
+| INFR-002 (TS) | Same JSON log shape as core (`ts, level, component, sessionId, message`) | [`extensions/shared/logger.ts`](extensions/shared/logger.ts) |
+
+CI runs Python lint/tests/contracts **and** extension typecheck/unit tests/build on
+every PR — see [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ### Quickstart
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt   # requirements.txt alone = rule provider only
-.venv/bin/python -m pytest                       # 130 tests, offline
+.venv/bin/python -m pytest                       # core tests, offline
 .venv/bin/python -m uvicorn core.main:app --host 0.0.0.0 --port 8020
 curl -s localhost:8020/api/v1/health
+```
+
+```bash
+cd extensions/browser
+npm ci && npm test && npm run build              # load dist/ as an unpacked extension
 ```
 
 No API key needed: `NLU_PROVIDER=auto` falls back to the deterministic rule

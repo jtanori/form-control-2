@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Checkout — plain HTML</title>
+  </head>
+  <body>
+    <h1>Checkout</h1>
+    <form action="/order" method="post">
+      <label for="email">Email address</label>
+      <input id="email" name="email" type="email" value="" />
+
+      <label for="name">Full name</label>
+      <input id="name" name="name" type="text" />
+
+      <label for="country">Country</label>
+      <select id="country" name="country">
+        <option value="us">United States</option>
+        <option value="ca">Canada</option>
+      </select>
+
+      <label>
+        <input type="checkbox" name="terms" value="1" />
+        I agree to the terms and conditions
+      </label>
+
+      <button type="submit" name="step" value="billing">Submit billing</button>
+      <button type="submit" name="step" value="shipping">Submit shipping</button>
+    </form>
+  </body>
+</html>

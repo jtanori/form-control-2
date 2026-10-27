@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Bootstrap-style checkout</title>
+    <!-- Minimal structure mimicking Bootstrap form markup (no external CSS needed for extraction tests). -->
+  </head>
+  <body>
+    <div class="container">
+      <div class="mb-3">
+        <label class="form-label" for="bs-email">Email address</label>
+        <input class="form-control" id="bs-email" name="email" type="email" placeholder="you@example.com" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="bs-pass">Password</label>
+        <input class="form-control" id="bs-pass" name="password" type="password" />
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="bs-check" />
+        <label class="form-check-label" for="bs-check">Remember me</label>
+      </div>
+      <button class="btn btn-primary" type="submit">Log in</button>
+    </div>
+  </body>
+</html>
