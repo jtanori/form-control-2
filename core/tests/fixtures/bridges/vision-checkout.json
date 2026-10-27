@@ -1,0 +1,11 @@
+{
+  "source": "vision",
+  "windowTitle": "Checkout",
+  "capturedAt": "2026-01-15T10:00:00Z",
+  "elements": [
+    { "kind": "textfield", "text": "Email address", "bbox": [100, 200, 300, 40], "confidence": 0.97 },
+    { "kind": "dropdown", "text": "Country", "bbox": [100, 260, 300, 40], "confidence": 0.93 },
+    { "kind": "checkbox", "text": "I agree to the terms and conditions", "checked": false, "bbox": [100, 320, 18, 18], "confidence": 0.9 },
+    { "kind": "button", "text": "Submit", "bbox": [100, 360, 140, 40], "confidence": 0.99 }
+  ]
+}

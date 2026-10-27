@@ -3,7 +3,7 @@
 - **Phase:** 1 — The Brain: NLU, Ambiguity, Session (Week 1–2)
 - **Track / Agent:** Agent A — Backend / AI
 - **Priority:** P1
-- **Status:** ready
+- **Status:** done (Phase 1 PR)
 - **Depends on:** CONTRACT-001
 - **Parallel with:** CORE-002, CORE-003
 - **Critical path:** No
@@ -29,9 +29,9 @@ One adapter so the parser always sees the same `FormSnapshot` shape no matter wh
 
 ## Acceptance criteria
 
-- [ ] 3 sources (DOM, Accessibility, desktop/vision fixtures) produce **identical normalized JSON** for the same logical form.
-- [ ] Normalized output passes `jsonschema` validation.
-- [ ] Unknown/missing label yields `label: ""` plus `nodeId`, never `null` (parser depends on this).
+- [x] 3 sources (DOM, Accessibility, desktop/vision fixtures) produce **identical normalized JSON** for the same logical form.
+- [x] Normalized output passes `jsonschema` validation.
+- [x] Unknown/missing label yields `label: ""` plus `nodeId`, never `null` (parser depends on this).
 
 ## Handoffs
 

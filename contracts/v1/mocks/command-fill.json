@@ -1,0 +1,5 @@
+{
+  "action": "fill",
+  "target": { "label": "email address", "nodeId": "b1" },
+  "value": "test@example.com"
+}

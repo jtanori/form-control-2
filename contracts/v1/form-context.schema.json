@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://form-control.dev/contracts/v1/form-context.schema.json",
+  "title": "Form Context Contract (v1)",
+  "description": "Canonical form context shapes shared by the browser extension, the Android accessibility service, the desktop daemon and core. CORE-004 emits FormSnapshot; CORE-003 stores SessionState.",
+  "$defs": {
+    "rect": {
+      "type": "object",
+      "description": "Pixel rectangle in viewport/screen coordinates. Never null; offscreen nodes use zeros plus FormNode.offscreen=true.",
+      "required": ["x", "y", "w", "h"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 },
+        "w": { "type": "integer", "minimum": 0 },
+        "h": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "nodeType": {
+      "type": "string",
+      "enum": ["input", "button", "checkbox", "select", "link"]
+    },
+    "nodeAction": {
+      "type": "string",
+      "enum": ["fill", "click", "check", "uncheck", "navigate", "clear"]
+    },
+    "source": {
+      "type": "string",
+      "enum": ["dom", "accessibility", "vision"]
+    },
+    "formNode": {
+      "type": "object",
+      "description": "One fillable/actionable element of a form.",
+      "required": ["nodeId", "label", "type", "rect", "source", "actions"],
+      "additionalProperties": false,
+      "properties": {
+        "nodeId": {
+          "type": "string",
+          "description": "Stable id within a snapshot. Prefix per source: b = browser/DOM, a = accessibility, v = vision.",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "description": "Normalized label (lowercase, trimmed, collapsed whitespace, decorative punctuation stripped). Empty string when unknown - never null.",
+          "default": ""
+        },
+        "displayLabel": {
+          "type": "string",
+          "description": "Optional original human-readable label, preserved for UI display."
+        },
+        "type": { "$ref": "#/$defs/nodeType" },
+        "value": {
+          "type": "string",
+          "description": "Current value of the node, when known."
+        },
+        "checked": {
+          "type": "boolean",
+          "description": "Checkbox/toggle state, when known."
+        },
+        "rect": { "$ref": "#/$defs/rect" },
+        "offscreen": {
+          "type": "boolean",
+          "description": "True when the source reported a zero/offscreen rect (CORE-004 clamps these)."
+        },
+        "role": {
+          "type": "string",
+          "description": "Accessibility role, e.g. textbox, button, checkbox, combobox, link."
+        },
+        "source": { "$ref": "#/$defs/source" },
+        "actions": {
+          "type": "array",
+          "description": "Actions the node supports, inferred from type when a source omits them.",
+          "items": { "$ref": "#/$defs/nodeAction" },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "formSnapshot": {
+      "type": "object",
+      "description": "One captured form/window, normalized by CORE-004.",
+      "required": ["source", "capturedAt", "title", "nodes"],
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "type": "string", "minLength": 1 },
+        "source": { "$ref": "#/$defs/source" },
+        "capturedAt": {
+          "type": "string",
+          "description": "ISO-8601 timestamp of capture.",
+          "format": "date-time"
+        },
+        "title": { "type": "string" },
+        "url": { "type": "string" },
+        "nodes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/formNode" },
+          "default": []
+        }
+      }
+    },
+    "sessionState": {
+      "type": "object",
+      "description": "Per-session state kept by CORE-003 under session:{sessionId}.",
+      "required": ["sessionId", "currentContextSnapshot", "history", "formSteps"],
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "type": "string", "minLength": 1 },
+        "currentContextSnapshot": {
+          "anyOf": [
+            { "$ref": "#/$defs/formSnapshot" },
+            { "type": "null" }
+          ]
+        },
+        "history": {
+          "type": "array",
+          "items": { "$ref": "https://form-control.dev/contracts/v1/command.schema.json#/$defs/command" }
+        },
+        "currentActiveNodeId": { "type": "string" },
+        "formSteps": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Detected step labels, e.g. Next, Previous, Step 2."
+        }
+      }
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/formSnapshot" },
+    { "$ref": "#/$defs/sessionState" }
+  ]
+}

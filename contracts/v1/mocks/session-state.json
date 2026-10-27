@@ -1,0 +1,31 @@
+{
+  "sessionId": "sess-mock-001",
+  "currentContextSnapshot": {
+    "sessionId": "sess-mock-001",
+    "source": "dom",
+    "capturedAt": "2026-01-15T10:00:00Z",
+    "title": "Checkout - Example Shop",
+    "url": "https://example.com/checkout",
+    "nodes": [
+      {
+        "nodeId": "b1",
+        "label": "email address",
+        "displayLabel": "Email address",
+        "type": "input",
+        "rect": { "x": 120, "y": 240, "w": 320, "h": 40 },
+        "role": "textbox",
+        "source": "dom",
+        "actions": ["fill", "clear"]
+      }
+    ]
+  },
+  "history": [
+    {
+      "action": "fill",
+      "target": { "label": "email address", "nodeId": "b1" },
+      "value": "test@example.com"
+    }
+  ],
+  "currentActiveNodeId": "b1",
+  "formSteps": ["next", "previous"]
+}

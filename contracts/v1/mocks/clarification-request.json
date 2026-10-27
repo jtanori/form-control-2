@@ -1,0 +1,28 @@
+{
+  "sessionId": "sess-mock-001",
+  "question": "Which submit button do you mean?",
+  "candidates": [
+    {
+      "nodeId": "b5",
+      "label": "submit billing",
+      "displayLabel": "Submit billing",
+      "type": "button",
+      "rect": { "x": 120, "y": 480, "w": 140, "h": 40 },
+      "role": "button",
+      "source": "dom",
+      "actions": ["click"]
+    },
+    {
+      "nodeId": "b6",
+      "label": "submit shipping",
+      "displayLabel": "Submit shipping",
+      "type": "button",
+      "rect": { "x": 280, "y": 480, "w": 140, "h": 40 },
+      "role": "button",
+      "source": "dom",
+      "actions": ["click"]
+    }
+  ],
+  "previousTranscript": "click submit",
+  "ambiguity": "2 nodes match 'submit'"
+}

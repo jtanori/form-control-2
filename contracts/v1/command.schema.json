@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://form-control.dev/contracts/v1/command.schema.json",
+  "title": "Command Contract (v1)",
+  "description": "Structured commands emitted by core NLU (CORE-001/CORE-002) and consumed by every execution layer (EXT-003, AND-003, DES-003). Also defines ClarificationRequest.",
+  "$defs": {
+    "commandTarget": {
+      "type": "object",
+      "description": "How to locate the node a command applies to. At least one locator is required; clients resolve in order nodeId > label > index > rect.",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "label": { "type": "string" },
+        "nodeId": { "type": "string" },
+        "index": { "type": "integer", "minimum": 0 },
+        "rect": { "$ref": "https://form-control.dev/contracts/v1/form-context.schema.json#/$defs/rect" }
+      }
+    },
+    "commandAction": {
+      "type": "string",
+      "enum": ["fill", "click", "check", "uncheck", "navigate", "clear"]
+    },
+    "command": {
+      "type": "object",
+      "required": ["action", "target"],
+      "additionalProperties": false,
+      "properties": {
+        "action": { "$ref": "#/$defs/commandAction" },
+        "target": { "$ref": "#/$defs/commandTarget" },
+        "value": {
+          "type": "string",
+          "description": "Value to fill/select. Only actions fill (and select semantics via fill) use this."
+        },
+        "confirmRequired": {
+          "type": "boolean",
+          "description": "Execution layers must ask for confirmation before running (e.g. submit/checkout)."
+        }
+      }
+    },
+    "clarificationRequest": {
+      "type": "object",
+      "required": ["sessionId", "question", "candidates"],
+      "additionalProperties": false,
+      "properties": {
+        "sessionId": { "type": "string", "minLength": 1 },
+        "question": { "type": "string", "minLength": 1 },
+        "candidates": {
+          "type": "array",
+          "items": { "$ref": "https://form-control.dev/contracts/v1/form-context.schema.json#/$defs/formNode" }
+        },
+        "previousTranscript": { "type": "string" },
+        "ambiguity": { "type": "string" }
+      }
+    }
+  },
+  "oneOf": [
+    { "$ref": "#/$defs/command" },
+    { "$ref": "#/$defs/clarificationRequest" }
+  ]
+}

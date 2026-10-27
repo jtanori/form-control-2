@@ -1,0 +1,30 @@
+{
+  "source": "accessibility",
+  "windowTitle": "Checkout",
+  "capturedAt": "2026-01-15T10:00:00Z",
+  "nodes": [
+    {
+      "className": "android.widget.EditText",
+      "contentDescription": "Email address",
+      "hintText": "you@example.com",
+      "bounds": "[100,200][400,240]",
+      "isEditable": true
+    },
+    {
+      "className": "android.widget.Spinner",
+      "text": "Country",
+      "bounds": "[100,260][400,300]"
+    },
+    {
+      "className": "android.widget.CheckBox",
+      "text": "I agree to the terms and conditions",
+      "isChecked": false,
+      "bounds": "[100,320][118,338]"
+    },
+    {
+      "className": "android.widget.Button",
+      "text": "Submit",
+      "bounds": "[100,360][240,400]"
+    }
+  ]
+}

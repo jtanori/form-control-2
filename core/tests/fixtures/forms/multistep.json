@@ -1,0 +1,49 @@
+{
+  "sessionId": "sess-multistep",
+  "source": "dom",
+  "capturedAt": "2026-01-15T10:05:00Z",
+  "title": "Signup - Step 2",
+  "url": "https://example.com/signup?step=2",
+  "nodes": [
+    {
+      "nodeId": "b1",
+      "label": "email address",
+      "displayLabel": "Email address",
+      "type": "input",
+      "rect": { "x": 80, "y": 200, "w": 300, "h": 40 },
+      "role": "textbox",
+      "source": "dom",
+      "actions": ["fill", "clear"]
+    },
+    {
+      "nodeId": "b2",
+      "label": "next",
+      "displayLabel": "Next",
+      "type": "button",
+      "rect": { "x": 240, "y": 360, "w": 120, "h": 40 },
+      "role": "button",
+      "source": "dom",
+      "actions": ["click"]
+    },
+    {
+      "nodeId": "b3",
+      "label": "back",
+      "displayLabel": "Back",
+      "type": "button",
+      "rect": { "x": 100, "y": 360, "w": 120, "h": 40 },
+      "role": "button",
+      "source": "dom",
+      "actions": ["click"]
+    },
+    {
+      "nodeId": "b4",
+      "label": "step 2 of 3",
+      "displayLabel": "Step 2 of 3",
+      "type": "link",
+      "rect": { "x": 80, "y": 160, "w": 160, "h": 20 },
+      "role": "link",
+      "source": "dom",
+      "actions": ["navigate"]
+    }
+  ]
+}

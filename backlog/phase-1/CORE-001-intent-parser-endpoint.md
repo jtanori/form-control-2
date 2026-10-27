@@ -3,7 +3,7 @@
 - **Phase:** 1 — The Brain: NLU, Ambiguity, Session (Week 1–2)
 - **Track / Agent:** Agent A — Backend / AI (Stream A Lead)
 - **Priority:** P0
-- **Status:** ready
+- **Status:** done (Phase 1 PR)
 - **Depends on:** CONTRACT-001; STT-001 for integration (parser itself runs with mock text)
 - **Parallel with:** EXT-001, AND-001, DES-001 (they use the schema, not the running parser)
 - **Critical path:** Yes
@@ -60,10 +60,10 @@ Turn a transcript + form context into structured `Command[]` using LLM function 
 
 ## Acceptance criteria
 
-- [ ] 20 test utterances (fill, click, select, navigate, ambiguous "submit") mapped correctly >90% of the time.
-- [ ] Ambiguous utterances return `needsClarification=true` with a question instead of a guessed command.
-- [ ] Output validates against `command.schema.json`.
-- [ ] Runs end-to-end with mock text (no STT dependency).
+- [x] 20 test utterances (fill, click, select, navigate, ambiguous "submit") mapped correctly >90% of the time.
+- [x] Ambiguous utterances return `needsClarification=true` with a question instead of a guessed command.
+- [x] Output validates against `command.schema.json`.
+- [x] Runs end-to-end with mock text (no STT dependency).
 
 ## Handoffs
 
