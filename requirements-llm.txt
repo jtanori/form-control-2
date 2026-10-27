@@ -1,0 +1,3 @@
+# Optional live-LLM path (NLU_PROVIDER=openai).
+-r requirements.txt
+openai>=1.40,<2

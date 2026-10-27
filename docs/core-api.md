@@ -15,9 +15,10 @@ bridge ctx ──┘                              │  ▲
 ## Run it
 
 ```bash
-python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt   # incl. openai
+# rule-provider-only deploy:  pip install -r requirements.txt
 .venv/bin/python -m uvicorn core.main:app --host 0.0.0.0 --port 8020
-.venv/bin/python -m pytest              # 104 tests, no network needed
+.venv/bin/python -m pytest              # 130 tests, no network needed
 ```
 
 `NLU_PROVIDER=auto` (default) uses OpenAI when `OPENAI_API_KEY` is set and the
@@ -27,7 +28,7 @@ offline.
 | Env | Default | Purpose |
 |---|---|---|
 | `CORE_HOST` / `CORE_PORT` | `127.0.0.1` / `8020` | bind address |
-| `REDIS_URL` | `redis://localhost:6379/0` | session store; falls back to in-memory when unreachable |
+| `REDIS_URL` | `redis://localhost:6379/0` | session store; falls back to in-memory when unreachable (re-probed every 30 s, the live fallback is never discarded) |
 | `SESSION_TTL_SECONDS` | `1800` | idle TTL for `session:{id}` (and its clarification) |
 | `NLU_PROVIDER` | `auto` | `auto` / `rule` / `openai` |
 | `OPENAI_API_KEY`, `OPENAI_MODEL` | – / `gpt-4o` | live LLM function calling |
@@ -96,7 +97,18 @@ after clarification) plus:
 
 Returns the same shape as `/parse`, with the replayed commands and
 `needsClarification: false`. The answer is matched against the stored candidates
-only. `409` when the session has nothing pending.
+only.
+
+| Status | Meaning |
+|---|---|
+| `200` | resolved (or re-asks: `needsClarification: true` with the same candidates) |
+| `400` | `clarificationText` is empty/whitespace |
+| `409` | nothing pending for this session |
+
+**Lifecycle:** pending clarification is cleared as soon as it is resolved, and a
+later *successful* `/parse` on the same session supersedes (clears) it — a stale
+question can never be answered against an old snapshot. Abandoned questions
+expire with the session TTL.
 
 ### `GET /api/v1/session/{id}` — CORE-003
 
@@ -116,7 +128,9 @@ Returns the contract's `SessionState`; unknown sessions return an empty state
 ### `POST /api/v1/context/normalize` — CORE-004
 
 Accepts any raw bridge payload and returns `{"snapshot": FormSnapshot}`. `422`
-when the source cannot be determined or the result would violate the contract.
+when the source is missing, unsupported (`desktop` is not part of v1) or the
+result would violate the contract. `/parse` runs the same normalizer
+automatically, so bridges may post raw payloads directly to it.
 
 ## Parser safety rules (enforced in code, not only in the prompt)
 
@@ -130,6 +144,22 @@ when the source cannot be determined or the result would violate the contract.
 
 `confirmRequired: true` is set for submit/pay/purchase/delete/confirm-style
 targets so execution layers (EXT-003/AND-003) can insert a confirmation step.
+
+Clarification reasons are explicit (`ambiguity`):
+
+| `ambiguity` | Meaning |
+|---|---|
+| `provider` | the parser/model reported more than one match |
+| `N nodes match the request` | the target text matched several nodes |
+| `value not spoken` | the field exists but the value was not said out loud |
+| `missing value` | the utterance named a field but no value |
+| `no command produced` / `unmatched target` | nothing usable in the transcript |
+
+## Limits
+
+- Request bodies larger than **1 MiB** are rejected with `413` by the logging
+  middleware (it buffers bodies only to bind `sessionId`).
+- Unknown JSON fields on `/parse` still produce `422` (`extra="forbid"`).
 
 ## Normalizer guarantees (CORE-004)
 
@@ -147,7 +177,10 @@ accepts `dom` / `accessibility` / `vision`.
 - nodeIds deterministic and prefixed per source;
 - rects standardized to pixels; zero/offscreen rects clamped and flagged
   `offscreen: true`;
-- `actions[]` inferred from `type` when a bridge omits it;
+- `actions[]` inferred from `type` when a bridge omits it, and kept in sync with
+  the type (a bridge claiming `fill` on a checkbox gets `check`/`uncheck`);
+- a payload that merely *looks* canonical still goes through its bridge adapter
+  unless every node carries `source` and a pixel `rect`;
 - output validates against `contracts/v1/form-context.schema.json`;
 - normalization is idempotent.
 
@@ -167,6 +200,13 @@ Clarification state lives in the session namespace and inherits the idle TTL, so
 an abandoned question expires with its session. Both backends
 (`RedisSessionStore`, `InMemorySessionStore`) are interchangeable behind
 `SessionStore`; pick via `REDIS_URL` availability or inject one in tests.
+
+**Redis fallback semantics:** the store is process-wide and re-probes Redis every
+30 s. While Redis is down the *same* in-memory store keeps serving requests, so
+in-flight sessions and pending clarifications survive the re-probe; once Redis
+answers, new requests use it. Read-modify-write cycles (`SessionManager.record`)
+are serialized by `SessionStore.lock` within a process — cross-process races
+still need Redis `WATCH`/Lua (tracked for INTE-002).
 
 ## Logging (INFR-002)
 

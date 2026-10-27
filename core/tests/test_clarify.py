@@ -217,3 +217,58 @@ def test_clarification_uses_contract_keys(parser, resolver, checkout):
     assert set(result.clarification) <= {
         "sessionId", "question", "candidates", "previousTranscript", "ambiguity"
     }
+
+
+def test_value_not_spoken_clarification_completes_the_fill(store, checkout):
+    """Model-invented value -> the user's spoken answer becomes the value.
+
+    Regression: the pending fill was not remembered, so the answer was re-parsed
+    from scratch and the user got re-asked forever.
+    """
+    from core.nlu.provider import ProviderOutput
+
+    class InventingProvider(RuleProvider):
+        def generate(self, *, transcript, nodes, history=None):  # noqa: ARG002
+            return ProviderOutput(
+                commands=[
+                    {
+                        "action": "fill",
+                        "target": {"label": "email address"},
+                        "value": "hallucinated@example.com",
+                    }
+                ]
+            )
+
+    parser = Parser(provider=InventingProvider())
+    resolver = ClarificationResolver(parser, store)
+
+    asked = parser.parse(
+        session_id=SESSION, transcript="fill the email address", snapshot=checkout
+    )
+    assert asked.clarification["ambiguity"] == "value not spoken"
+    resolver.remember(asked, checkout)
+
+    resolved = resolver.resolve(
+        session_id=SESSION, clarification_text="test@example.com"
+    )
+    assert resolved.needs_clarification is False
+    assert resolved.commands == [
+        {
+            "action": "fill",
+            "target": {"label": "email address", "nodeId": "b1"},
+            "value": "test@example.com",
+        }
+    ]
+    assert store.get_clarification(SESSION) is None
+
+
+def test_missing_value_clarification_completes_the_fill(parser, resolver, store, checkout):
+    asked = parser.parse(
+        session_id=SESSION, transcript="fill the email address", snapshot=checkout
+    )
+    assert asked.needs_clarification
+    assert "email address" in asked.clarification_question
+    resolver.remember(asked, checkout)
+    resolved = resolver.resolve(session_id=SESSION, clarification_text="a@b.com")
+    assert resolved.commands[0]["target"] == {"label": "email address", "nodeId": "b1"}
+    assert resolved.commands[0]["value"] == "a@b.com"

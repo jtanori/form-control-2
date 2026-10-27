@@ -31,11 +31,15 @@ Start here: [backlog/README.md](backlog/README.md) — see "Coding Agent Takeawa
 | CONTRACT-001 | `FormSnapshot`, `FormNode`, `Command`, `ClarificationRequest`, `SessionState` schemas + mocks | [`contracts/v1/`](contracts/v1) |
 | INFR-002 | Structured JSON logs with a correlated `sessionId` | [`core/lib/logging_config.py`](core/lib/logging_config.py) |
 
+CI (GitHub Actions) runs lint (`compileall` + `pyflakes`), the full test suite and
+the contract-mock validation on every PR — see
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
 ### Quickstart
 
 ```bash
-python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
-.venv/bin/python -m pytest                       # 104 tests, offline
+python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt   # requirements.txt alone = rule provider only
+.venv/bin/python -m pytest                       # 130 tests, offline
 .venv/bin/python -m uvicorn core.main:app --host 0.0.0.0 --port 8020
 curl -s localhost:8020/api/v1/health
 ```

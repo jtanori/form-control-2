@@ -145,13 +145,21 @@ def infer_type(*candidates: Any) -> str:
 
 
 def infer_actions(node_type: str, provided: Iterable[str] | None = None) -> list[str]:
+    """`actions[]` for a node: contract-valid, and consistent with its type.
+
+    Bridge-provided actions are kept when they make sense for the node type; if a
+    bridge sends only actions its type cannot perform (e.g. `fill` on a
+    checkbox), the CONTRACT-001 defaults for that type win. Actions describe
+    semantics - executors map them onto native gestures.
+    """
+    defaults = list(TYPE_ACTIONS.get(node_type, ["click"]))
+    supported = set(defaults)
     actions: list[str] = []
     for action in provided or []:
         if action in _NODE_ACTIONS and action not in actions:
             actions.append(action)
-    if not actions:
-        actions = list(TYPE_ACTIONS.get(node_type, ["click"]))
-    return actions
+    relevant = [action for action in actions if action in supported]
+    return relevant or defaults
 
 
 def _humanize_view_id(view_id: str) -> str:
@@ -385,14 +393,26 @@ _ADAPTERS = {
     "vision": _from_vision,
 }
 
-_CANONICAL_REQUIRED = {"label", "type", "actions", "rect"}
+_CANONICAL_REQUIRED = {"label", "type", "actions", "rect", "source"}
+_RECT_KEYS = {"x", "y", "w", "h"}
 
 
 def _looks_canonical(raw: dict[str, Any]) -> bool:
+    """True only for payloads already in contract shape.
+
+    Every `FormNode` must carry its own `source` and a pixel `rect` (contract),
+    so a raw bridge dump that happens to include `label`/`type`/`actions`/`rect`
+    is still routed through its adapter instead of being trusted as canonical.
+    """
     nodes = raw.get("nodes")
     if not isinstance(nodes, list) or not nodes:
         return False
-    return all(isinstance(node, dict) and _CANONICAL_REQUIRED <= set(node) for node in nodes)
+    for node in nodes:
+        if not isinstance(node, dict) or not _CANONICAL_REQUIRED <= set(node):
+            return False
+        if not isinstance(node.get("rect"), dict) or not _RECT_KEYS <= set(node["rect"]):
+            return False
+    return True
 
 
 def _detect_source(raw: dict[str, Any], source: str | None) -> str:

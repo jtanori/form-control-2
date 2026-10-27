@@ -239,7 +239,8 @@ _store_cache: dict[str, Any] = {"key": None, "store": None, "checked_at": 0.0}
 _STORE_RECHECK_SECONDS = 30.0
 
 
-def _build_store(redis_url: str, ttl_seconds: int) -> SessionStore:
+def _try_redis(redis_url: str, ttl_seconds: int) -> RedisSessionStore | None:
+    """Connect to Redis, or return None (logged) when it is unreachable."""
     try:
         store = RedisSessionStore.from_url(redis_url, ttl_seconds=ttl_seconds)
     except Exception as exc:
@@ -247,30 +248,48 @@ def _build_store(redis_url: str, ttl_seconds: int) -> SessionStore:
             "redis unavailable, falling back to in-memory sessions",
             extra={"redisUrl": redis_url, "error": str(exc)},
         )
-        return InMemorySessionStore(ttl_seconds=ttl_seconds)
+        return None
     log.info("using redis session store", extra={"redisUrl": redis_url})
     return store
 
 
 def get_session_store(settings: Settings | None = None) -> SessionStore:
-    """Cached store with periodic Redis re-probe (not a permanent fallback).
+    """Process-wide store, re-probing Redis instead of caching its state forever.
 
-    A failed Redis connect falls back to memory for at most
-    `_STORE_RECHECK_SECONDS`, then is retried. A healthy Redis client is
-    re-pinged on the same interval so a mid-flight outage re-probes instead of
-    using a dead client forever.
+    * healthy Redis client -> reused, re-pinged every `_STORE_RECHECK_SECONDS`
+      so a mid-flight outage starts being re-probed instead of failing forever;
+    * Redis down -> the *same* in-memory fallback keeps serving requests and is
+      only replaced once Redis answers again. Re-probing must never drop live
+      session state (CORE-002/CORE-003), so a failed probe updates the check
+      timestamp and hands back the existing fallback.
     """
     settings = settings or get_settings()
     key = (settings.redis_url, settings.session_ttl_seconds)
     now = time.monotonic()
     cached = _store_cache["store"]
-    if (
-        cached is not None
-        and _store_cache["key"] == key
-        and (now - float(_store_cache["checked_at"])) < _STORE_RECHECK_SECONDS
-    ):
-        if cached.backend_name != "redis" or cached.ping():
+    same_key = cached is not None and _store_cache["key"] == key
+
+    if same_key:
+        fresh = (now - float(_store_cache["checked_at"])) < _STORE_RECHECK_SECONDS
+        if fresh and (cached.backend_name != "redis" or cached.ping()):
             return cached
-    store = _build_store(settings.redis_url, settings.session_ttl_seconds)
+        if not fresh:
+            if cached.backend_name == "redis":
+                if cached.ping():  # still healthy: keep the connection
+                    _store_cache["checked_at"] = now
+                    return cached
+                # dead client: fall through and reconnect
+            else:
+                revived = _try_redis(settings.redis_url, settings.session_ttl_seconds)
+                if revived is not None:
+                    _store_cache.update(key=key, store=revived, checked_at=now)
+                    return revived
+                # still down: keep the SAME fallback so sessions survive
+                _store_cache["checked_at"] = now
+                return cached
+
+    store = _try_redis(settings.redis_url, settings.session_ttl_seconds) or (
+        InMemorySessionStore(ttl_seconds=settings.session_ttl_seconds)
+    )
     _store_cache.update(key=key, store=store, checked_at=now)
     return store

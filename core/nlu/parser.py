@@ -254,7 +254,14 @@ class Parser:
             if action == "fill":
                 if not isinstance(value, str) or not value.strip():
                     missing.append({"action": action, "target": target, "reason": "missing value"})
-                    pending_command = {"action": action, "target": target}
+                    pending_command = {
+                        "action": action,
+                        "target": {
+                            "label": normalize_label(resolution.node.get("label", ""))
+                            or normalize_label(str(target.get("label") or "")),
+                            "nodeId": resolution.node.get("nodeId"),
+                        },
+                    }
                     continue
                 if not contains_value(transcript, value):
                     # prompt rule 3: never invent values
@@ -262,6 +269,16 @@ class Parser:
                     missing.append(
                         {"action": action, "target": target, "reason": "value not spoken"}
                     )
+                    # Keep the resolved node so CORE-002 can apply the value the
+                    # user says next instead of re-running the whole utterance.
+                    pending_command = {
+                        "action": action,
+                        "target": {
+                            "label": normalize_label(resolution.node.get("label", ""))
+                            or normalize_label(str(target.get("label") or "")),
+                            "nodeId": resolution.node.get("nodeId"),
+                        },
+                    }
                     continue
 
             command: dict[str, Any] = {

@@ -24,6 +24,7 @@ from core.nlu.clarify import (
     ClarificationResolver,
 )
 from core.nlu.parser import ParseResult
+from core.nlu.provider import ProviderError
 from core.session.manager import SessionManager
 
 log = get_logger("api.routes")
@@ -39,10 +40,16 @@ def _parse_response(result: ParseResult, *, withhold: bool = False) -> ParseResp
 def health(request: Request) -> HealthResponse:
     state = request.app.state
     store = getattr(state, "store", None)
+    # Building the provider is lazy (and fails without a key / the optional SDK),
+    # so health reports the configured backend instead of erroring out.
+    try:
+        provider = state.parser.provider.name
+    except ProviderError:
+        provider = f"{state.settings.resolved_provider}:unavailable"
     return HealthResponse(
         status="ok",
         version=__version__,
-        provider=state.parser.provider.name,
+        provider=provider,
         sessionBackend=getattr(store, "backend_name", "unconfigured"),
     )
 

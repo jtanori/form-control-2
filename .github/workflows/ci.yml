@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Phase 1 runs entirely offline: the deterministic rule provider is the default
+# and Redis is replaced by the in-memory store / fakeredis, so no secrets needed.
+jobs:
+  core:
+    name: Core (lint + tests + contracts)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+          pip install pyflakes
+
+      - name: Lint (syntax + unused names)
+        run: |
+          python -m compileall -q core
+          python -m pyflakes core
+
+      - name: Tests
+        run: python -m pytest
+
+      - name: Validate contract mocks against schemas
+        run: python -m core.lib.contracts
+
+      - name: Import check for the ASGI app
+        run: python -c "from core.main import app; print(app.title)"

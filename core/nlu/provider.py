@@ -372,7 +372,13 @@ class OpenAIProvider(Provider):
         else:  # pragma: no cover - requires network/key
             if not self.settings.openai_api_key:
                 raise ProviderError("OPENAI_API_KEY is not configured")
-            from openai import OpenAI
+            try:
+                from openai import OpenAI
+            except ImportError as exc:
+                raise ProviderError(
+                    "the openai package is not installed; install "
+                    "requirements-llm.txt or run with NLU_PROVIDER=rule"
+                ) from exc
 
             self._client = OpenAI(api_key=self.settings.openai_api_key, timeout=30.0)
         self.model = self.settings.openai_model

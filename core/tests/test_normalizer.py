@@ -244,3 +244,48 @@ def test_session_stores_the_normalized_snapshot(client):
     assert snapshot["source"] == "dom"
     assert all(node.get("actions") for node in snapshot["nodes"])
     assert snapshot["nodes"][0]["nodeId"] == "b1"
+
+
+def test_canonical_lookalike_raw_payload_still_uses_the_bridge_adapter():
+    """`label`+`type`+`actions`+`rect` alone must not bypass the DOM adapter."""
+    snapshot = normalize_snapshot(
+        {
+            "source": "dom",
+            "title": "Lookalike",
+            "nodes": [
+                {
+                    "tagName": "input",
+                    "inputType": "checkbox",
+                    "label": "I agree to the terms",
+                    "type": "input",  # misleading hint from the bridge
+                    "actions": ["fill"],
+                    "rect": {"left": 0, "top": 0, "width": 16, "height": 16},
+                }
+            ],
+        }
+    )
+    node = snapshot["nodes"][0]
+    assert node["type"] == "checkbox"
+    # a bridge claiming ["fill"] on a checkbox is overridden by type defaults
+    assert node["actions"] == ["check", "uncheck"]
+    assert node["rect"] == {"x": 0, "y": 0, "w": 16, "h": 16}
+
+
+def test_actions_kept_when_they_match_the_type():
+    snapshot = normalize_snapshot(
+        {
+            "source": "dom",
+            "title": "Keep",
+            "nodes": [
+                {
+                    "tagName": "input",
+                    "inputType": "text",
+                    "label": "Nickname",
+                    "actions": ["fill", "clear", "click"],
+                    "rect": {"left": 0, "top": 0, "width": 10, "height": 10},
+                }
+            ],
+        }
+    )
+    # `click` is not an input semantic -> dropped; the rest is preserved
+    assert snapshot["nodes"][0]["actions"] == ["fill", "clear"]
