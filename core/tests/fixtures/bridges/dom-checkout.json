@@ -1,0 +1,31 @@
+{
+  "source": "dom",
+  "title": "Checkout",
+  "url": "https://example.com/checkout",
+  "capturedAt": "2026-01-15T10:00:00Z",
+  "nodes": [
+    {
+      "tagName": "input",
+      "inputType": "email",
+      "ariaLabel": "Email address",
+      "rect": { "left": 100, "top": 200, "width": 300, "height": 40 }
+    },
+    {
+      "tagName": "select",
+      "label": "Country",
+      "rect": { "left": 100, "top": 260, "width": 300, "height": 40 }
+    },
+    {
+      "tagName": "input",
+      "inputType": "checkbox",
+      "label": "I agree to the terms and conditions",
+      "checked": false,
+      "rect": { "left": 100, "top": 320, "width": 18, "height": 18 }
+    },
+    {
+      "tagName": "button",
+      "text": "Submit",
+      "rect": { "left": 100, "top": 360, "width": 140, "height": 40 }
+    }
+  ]
+}

@@ -7,10 +7,12 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 
 from core import __version__
+from core.adapters.normalizer import NormalizationError, normalize_snapshot
 from core.api.schemas import (
     ClarifyRequest,
     ClarifyResponse,
     HealthResponse,
+    NormalizeResponse,
     ParseRequest,
     ParseResponse,
     SessionStateResponse,
@@ -59,11 +61,15 @@ def parse(payload: ParseRequest, request: Request) -> ParseResponse:
         history=history,
     )
     if result.needs_clarification:
-        ClarificationResolver(parser, request.app.state.store).remember(result, payload.context)
-        sessions.record(payload.sessionId, snapshot=payload.context)
+        ClarificationResolver(parser, request.app.state.store).remember(
+            result, result.snapshot
+        )
+        sessions.record(payload.sessionId, snapshot=result.snapshot)
         return _parse_response(result, withhold=True)
 
-    sessions.record(payload.sessionId, snapshot=payload.context, commands=result.commands)
+    sessions.record(
+        payload.sessionId, snapshot=result.snapshot, commands=result.commands
+    )
     return _parse_response(result)
 
 
@@ -87,9 +93,23 @@ def clarify(payload: ClarifyRequest, request: Request) -> ClarifyResponse:
 
     if not result.needs_clarification:
         request.app.state.sessions.record(
-            payload.sessionId, snapshot=payload.context, commands=result.commands
+            payload.sessionId, snapshot=result.snapshot, commands=result.commands
         )
     return ParseResponse(**result.response_payload())
+
+
+@router.post("/context/normalize", response_model=NormalizeResponse)
+def normalize_context(payload: dict[str, Any]) -> NormalizeResponse:
+    """CORE-004 adapter: any bridge payload -> canonical `FormSnapshot`.
+
+    Bridges may POST their raw DOM/Accessibility/vision dump here to validate it
+    before sending commands; `/parse` runs the same normalizer automatically.
+    """
+    try:
+        snapshot = normalize_snapshot(payload)
+    except NormalizationError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return NormalizeResponse(snapshot=snapshot)
 
 
 @router.get("/session/{session_id}", response_model=SessionStateResponse)

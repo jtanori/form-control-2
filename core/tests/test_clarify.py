@@ -12,7 +12,6 @@ from core.session.store import (
     InMemorySessionStore,
     RedisSessionStore,
     clarification_key,
-    session_key,
 )
 
 SESSION = "sess-clarify"

@@ -16,6 +16,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Sequence
 
+from core.adapters.normalizer import NormalizationError, normalize_snapshot
 from core.config import Settings, get_settings
 from core.lib import contracts
 from core.lib.contracts import ContractError
@@ -62,6 +63,8 @@ class ParseResult:
     latency_ms: float = 0.0
     #: The command the user still has to disambiguate/complete (CORE-002 state).
     pending_command: dict[str, Any] | None = None
+    #: Canonical FormSnapshot the commands were resolved against (CORE-004).
+    snapshot: dict[str, Any] | None = None
 
     def response_payload(self, *, withhold_commands: bool = False) -> dict[str, Any]:
         return {
@@ -122,7 +125,8 @@ class Parser:
         if not session_id:
             raise ParseInputError("sessionId is required")
 
-        nodes = self._nodes(snapshot)
+        normalized = self._snapshot(snapshot, session_id)
+        nodes = normalized["nodes"] if normalized else []
         try:
             output = self.provider.generate(
                 transcript=clean_transcript, nodes=nodes, history=list(history or [])
@@ -137,6 +141,7 @@ class Parser:
             nodes=nodes,
             output=output,
         )
+        result.snapshot = normalized
         result.latency_ms = round((time.perf_counter() - started) * 1000, 1)
         log.info(
             "parse",
@@ -167,13 +172,15 @@ class Parser:
         """
         if not transcript.strip():
             raise ParseInputError("transcript must not be empty")
-        nodes = self._nodes(snapshot)
+        normalized = self._snapshot(snapshot, session_id)
+        nodes = normalized["nodes"] if normalized else []
         result = self._finalize(
             session_id=session_id,
             transcript=normalize_text(transcript),
             nodes=nodes,
             output=ProviderOutput(commands=list(commands), model=self.provider.name),
         )
+        result.snapshot = normalized
         log.info(
             "accept",
             extra={
@@ -187,15 +194,18 @@ class Parser:
     # -- internals ---------------------------------------------------------- #
 
     @staticmethod
-    def _nodes(snapshot: dict[str, Any] | None) -> list[dict[str, Any]]:
+    def _snapshot(
+        snapshot: dict[str, Any] | None, session_id: str
+    ) -> dict[str, Any] | None:
+        """CORE-004: every bridge payload is normalized before parsing."""
         if snapshot is None:
-            return []
+            return None
         if not isinstance(snapshot, dict):
             raise ParseInputError("context must be a FormSnapshot object")
-        nodes = snapshot.get("nodes") or []
-        if not isinstance(nodes, list):
-            raise ParseInputError("context.nodes must be an array")
-        return [node for node in nodes if isinstance(node, dict)]
+        try:
+            return normalize_snapshot(snapshot, session_id=session_id)
+        except NormalizationError as exc:
+            raise ParseInputError(f"invalid context: {exc}") from exc
 
     def _finalize(
         self,

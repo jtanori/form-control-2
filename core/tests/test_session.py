@@ -6,8 +6,6 @@ import fakeredis
 import pytest
 
 from core.lib import contracts
-from core.nlu.parser import Parser
-from core.nlu.provider import RuleProvider
 from core.session.manager import SessionManager, empty_state
 from core.session.navigation import detect_form_steps, find_navigation_node
 from core.session.store import InMemorySessionStore, RedisSessionStore

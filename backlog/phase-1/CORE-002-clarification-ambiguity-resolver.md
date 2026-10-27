@@ -3,7 +3,7 @@
 - **Phase:** 1 — The Brain: NLU, Ambiguity, Session (Week 1–2)
 - **Track / Agent:** Agent A — Backend / AI
 - **Priority:** P0
-- **Status:** ready
+- **Status:** done (Phase 1 PR)
 - **Depends on:** CORE-001
 - **Parallel with:** CORE-003, CORE-004
 - **Critical path:** No (but required for G2)
@@ -28,10 +28,10 @@ Close the ambiguity loop: when the parser can't decide, persist the pending ambi
 
 ## Acceptance criteria
 
-- [ ] Given "click submit" with 2 submit nodes → asks clarification.
-- [ ] After "billing submit" → resolves to the correct `nodeId`.
-- [ ] Clarification state survives a round-trip through Redis.
-- [ ] Client flow works: EXT-006 `CLARIFY` message (browser) and AND-004 confirmation card (mobile) both drive this endpoint.
+- [x] Given "click submit" with 2 submit nodes → asks clarification.
+- [x] After "billing submit" → resolves to the correct `nodeId`.
+- [x] Clarification state survives a round-trip through Redis.
+- [x] Client flow works: EXT-006 `CLARIFY` message (browser) and AND-004 confirmation card (mobile) both drive this endpoint.
 
 ## Handoffs
 

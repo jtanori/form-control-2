@@ -3,7 +3,7 @@
 - **Phase:** 1 — The Brain: NLU, Ambiguity, Session (Week 1–2)
 - **Track / Agent:** Agent A — Backend / AI
 - **Priority:** P1 (MVP can ship with an in-memory dict, but the spec is required now for navigation)
-- **Status:** ready
+- **Status:** done (Phase 1 PR)
 - **Depends on:** CONTRACT-001
 - **Parallel with:** CORE-002, CORE-004, EXT-003, EXT-005
 - **Critical path:** No (required for G3)
@@ -30,10 +30,10 @@ Hold per-session state — last form snapshot, command history, active node, and
 
 ## Acceptance criteria
 
-- [ ] Session survives 5 sequential commands (history intact).
-- [ ] "go back" finds a button with text "Back/Previous" and adds it to the command queue.
-- [ ] `GET /api/v1/session/{id}` returns the CONTRACT-001 `SessionState` shape.
-- [ ] In-memory and Redis backends are interchangeable behind `SessionStore`.
+- [x] Session survives 5 sequential commands (history intact).
+- [x] "go back" finds a button with text "Back/Previous" and adds it to the command queue.
+- [x] `GET /api/v1/session/{id}` returns the CONTRACT-001 `SessionState` shape.
+- [x] In-memory and Redis backends are interchangeable behind `SessionStore`.
 
 ## Handoffs
 
