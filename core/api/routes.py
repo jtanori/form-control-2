@@ -46,11 +46,13 @@ def health(request: Request) -> HealthResponse:
         provider = state.parser.provider.name
     except ProviderError:
         provider = f"{state.settings.resolved_provider}:unavailable"
+    stt = getattr(state, "stt", None)
     return HealthResponse(
         status="ok",
         version=__version__,
         provider=provider,
         sessionBackend=getattr(store, "backend_name", "unconfigured"),
+        sttBackend=getattr(stt, "backend", "off"),
     )
 
 

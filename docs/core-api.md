@@ -132,6 +132,25 @@ when the source is missing, unsupported (`desktop` is not part of v1) or the
 result would violate the contract. `/parse` runs the same normalizer
 automatically, so bridges may post raw payloads directly to it.
 
+### `POST /stt/transcribe` (alias `POST /transcribe`) — STT-001
+
+Multipart upload (`audio` file field, `language` form field, default `auto`)
+→ contract `stt-response`:
+
+```json
+{"transcript": "…", "language": "en", "confidence": 0.86, "duration_sec": 4.2}
+```
+
+| Backend | How selected |
+|---|---|
+| local whisper.cpp | `STT_WHISPER_URL` (compose: `http://stt-whisper:8080`) |
+| OpenAI Whisper API | `STT_FALLBACK=openai_whisper_api` + `OPENAI_API_KEY` |
+| none | `503` with setup hint |
+
+`GET /api/v1/health` reports `sttBackend`: `whisper` | `openai` | `off`.
+Audio bodies skip the 1 MiB JSON sniff cap (multipart streams through).
+Full stack: `docker compose up --build` (core + stt-whisper + redis).
+
 ## Parser safety rules (enforced in code, not only in the prompt)
 
 1. **Labels before indices** — a target resolves by label; `index` is only used

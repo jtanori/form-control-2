@@ -34,6 +34,7 @@ class SessionLoggingMiddleware:
         }
         session_id = headers.get("x-session-id")
         started = time.perf_counter()
+        path = scope.get("path") or ""
 
         def _bind_and_pass(raw_receive):
             token = bind_session_id(session_id)
@@ -58,6 +59,12 @@ class SessionLoggingMiddleware:
                     reset_session_id(token)
 
             return run
+
+        # STT uploads can exceed the JSON sniff cap — stream them through
+        # without buffering or a 413 from the JSON limit.
+        if path.startswith("/stt/") or path.rstrip("/").endswith("/transcribe"):
+            await _bind_and_pass(receive)()
+            return
 
         try:
             content_length = int(headers.get("content-length") or 0)

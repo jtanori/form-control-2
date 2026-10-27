@@ -17,6 +17,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from core import __version__
 from core.api.middleware import SessionLoggingMiddleware
 from core.api.routes import router
+from core.api.stt import router as stt_router
 from core.config import Settings, get_settings
 from core.lib.contracts import ContractError
 from core.lib.logging_config import configure_logging, get_logger
@@ -24,6 +25,7 @@ from core.nlu.parser import ParseInputError, Parser
 from core.nlu.provider import ProviderError
 from core.session.manager import SessionManager
 from core.session.store import SessionStore, get_session_store
+from core.stt import SttError, TranscriptionService
 
 log = get_logger("main")
 
@@ -45,6 +47,7 @@ def create_app(
     app.state.parser = parser or Parser(settings=settings)
     app.state.store = store or get_session_store(settings)
     app.state.sessions = SessionManager(app.state.store, history_limit=settings.history_limit)
+    app.state.stt = TranscriptionService(settings)
 
     app.add_middleware(SessionLoggingMiddleware)
     app.add_middleware(
@@ -69,12 +72,18 @@ def create_app(
         log.error("contract violation", extra={"error": str(exc)})
         return JSONResponse(status_code=500, content={"detail": "contract violation"})
 
+    @app.exception_handler(SttError)
+    async def _stt_error(request: Request, exc: SttError) -> JSONResponse:
+        log.warning("stt failure", extra={"error": str(exc)})
+        return JSONResponse(status_code=exc.status_code, content={"detail": str(exc)})
+
     @app.get("/", include_in_schema=False)
     async def root() -> RedirectResponse:
         """Human-friendly entry point: the interactive API docs."""
         return RedirectResponse(url="/docs")
 
     app.include_router(router)
+    app.include_router(stt_router)
     return app
 
 

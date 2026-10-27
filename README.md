@@ -55,6 +55,18 @@ executor + voice overlay + Core client (JVM-tested `form-core`).
 | AND-004 | Floating overlay: mic (`SpeechRecognizer`) → parse → confirm card → execute | [`ui/OverlayVoice.kt`](android/app/src/main/java/com/voiceform/ui/OverlayVoice.kt), [`voice/VoiceClient.kt`](android/app/src/main/java/com/voiceform/voice/VoiceClient.kt) |
 | AND-005 | `CoreClient` — parse/clarify, window-stable `sessionId = a-{device}-{window}` | [`form-core/.../CoreClient.kt`](android/form-core/src/main/kotlin/com/voiceform/network/CoreClient.kt) |
 
+**STT-001 — local speech-to-text** is in: `POST /stt/transcribe` (alias
+`/transcribe`) with a contract-shaped response, whisper.cpp proxy or OpenAI
+fallback, and a full compose stack.
+
+| Piece | Delivered | Where |
+|---|---|---|
+| STT endpoint | multipart `audio` → `{transcript, language, confidence, duration_sec}` | [`core/api/stt.py`](core/api/stt.py), [`core/stt/service.py`](core/stt/service.py) |
+| Contract | `stt-response.schema.json` + mock (validated in CI) | [`contracts/v1/`](contracts/v1) |
+| whisper.cpp | Docker image + model auto-download (`WHISPER_MODEL`) | [`infra/stt/`](infra/stt) |
+| Compose | `core` + `stt-whisper` + `redis` | [`docker-compose.yml`](docker-compose.yml) |
+| Clients | EXT-006 `TRANSCRIBE` unchanged; AND-004 `postTranscribe()` | [`bridge.ts`](extensions/browser/src/background/bridge.ts), [`VoiceClient.kt`](android/app/src/main/java/com/voiceform/voice/VoiceClient.kt) |
+
 CI runs Python lint/tests/contracts **and** extension typecheck/unit tests/build on
 every PR — see [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
@@ -76,6 +88,11 @@ No API key needed: `NLU_PROVIDER=auto` falls back to the deterministic rule
 provider. Set `OPENAI_API_KEY` (and optionally `NLU_PROVIDER=openai`) to use
 `gpt-4o` function calling. Session storage uses `REDIS_URL` when available and an
 in-memory store otherwise.
+
+```bash
+docker compose up --build           # core :8020 + stt-whisper :8081 + redis
+curl -s localhost:8020/api/v1/health # check "sttBackend":"whisper"
+```
 
 Full endpoint reference, request/response examples and the parser safety rules:
 [docs/core-api.md](docs/core-api.md).

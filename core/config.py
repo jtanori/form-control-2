@@ -10,6 +10,9 @@ tests:
     NLU_PROVIDER               auto | rule | openai        (default auto)
     OPENAI_API_KEY             enables the live LLM provider
     OPENAI_MODEL               default gpt-4o
+    STT_WHISPER_URL            whisper.cpp server base (e.g. http://stt-whisper:8080)
+    STT_FALLBACK               openai_whisper_api → use OpenAI Whisper API instead
+    STT_TIMEOUT_SECONDS        per-request STT timeout (default 30)
     LOG_LEVEL                  default INFO
 """
 
@@ -39,6 +42,9 @@ class Settings:
     nlu_provider: str = "auto"
     openai_api_key: str | None = None
     openai_model: str = "gpt-4o"
+    stt_whisper_url: str | None = None
+    stt_fallback: str | None = None
+    stt_timeout_seconds: float = 30.0
     log_level: str = "INFO"
     history_limit: int = 200
     prompt_path: str | None = field(default=None)
@@ -60,6 +66,9 @@ def load_settings() -> Settings:
         nlu_provider=os.getenv("NLU_PROVIDER", "auto").strip().lower() or "auto",
         openai_api_key=os.getenv("OPENAI_API_KEY") or None,
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4o"),
+        stt_whisper_url=os.getenv("STT_WHISPER_URL") or None,
+        stt_fallback=os.getenv("STT_FALLBACK") or None,
+        stt_timeout_seconds=float(os.getenv("STT_TIMEOUT_SECONDS", "30") or "30"),
         log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
         history_limit=_int("HISTORY_LIMIT", 200),
     )
