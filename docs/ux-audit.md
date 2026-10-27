@@ -3,7 +3,30 @@
 - **Item:** [`backlog/post-mvp/UX-001`](../backlog/post-mvp/UX-001-extension-ux-audit-redesign.md) · [issue #41](https://github.com/jtanori/form-control-2/issues/41)
 - **Scope:** browser extension surfaces only (Android overlay adoption is a Phase C optional handoff)
 - **Inputs:** source as of `v0.1.0-mvp` + mic recorder-window fix (#40); dogfooding notes from the first real session
-- **Status:** Phase A ✅ · Phase B ✅ (proposal below) · Phase C ⏳ implement next
+- **Status:** Phase A ✅ · Phase B ⚠️ **revised by stakeholder direction — see below** · Phase C ⏳
+
+> **⚠️ Direction update (stakeholder, on #41) — read first**
+>
+> The **persistent secondary “Stage” window proposed in Phase B is rejected**:
+> two-window focus while filling a form is harder than filling by hand.
+> The target model is now:
+> 1. **Configuration page** (Chrome `options_ui`, full tab) = the only setup
+>    surface — mic setup, Core health, onboarding. Feasibility spike required
+>    (options-page `getUserMedia` + persisted grant; if impossible, document an
+>    alternative here **before** building more UI).
+> 2. **Popup = the only runtime surface** — records inline once permission is
+>    granted; missing permission → CTA to the options page, never a companion
+>    window. `recorder.html` leaves the happy path.
+> 3. **Launch = form identification first** — detect/group the page’s forms,
+>    show them (“Checkout — 6 fields”), then accept voice/typed commands scoped
+>    to the chosen form.
+> 4. **Quick learning/tutorial** — one-click launch from the popup + auto-open
+>    on first install (welcome **tab**, not a popup modal); includes a safe
+>    **demo-form** full-loop step. Pattern research table lives in the UX-001
+>    item; reality-check against shipped extensions is a Phase C task.
+>
+> Phase A (map, scores, friction, constraints) still stands. The “Console +
+> Stage” write-up below is retained as the superseded draft for traceability.
 
 ---
 
