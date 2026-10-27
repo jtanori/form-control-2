@@ -179,6 +179,10 @@ def test_invented_value_is_dropped(checkout):
     assert result.commands == []
     assert result.needs_clarification
     assert "email address" in result.clarification_question
+    # distinct from "couldn't find" — the field exists, the value was not spoken
+    assert "couldn't find" not in result.clarification_question
+    assert "said out loud" in result.clarification_question
+    assert result.clarification["ambiguity"] == "value not spoken"
 
 
 def test_invalid_provider_output_is_rejected(checkout):

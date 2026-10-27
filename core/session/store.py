@@ -19,9 +19,9 @@ from __future__ import annotations
 
 import abc
 import json
+import threading
 import time
 from datetime import datetime, timezone
-from functools import lru_cache
 from typing import Any
 
 from core.config import Settings, get_settings
@@ -52,6 +52,9 @@ class SessionStore(abc.ABC):
 
     def __init__(self, ttl_seconds: int = 1800) -> None:
         self.ttl_seconds = int(ttl_seconds)
+        #: Serializes read-modify-write cycles (e.g. `SessionManager.record`)
+        #: within this process. Cross-process races still need Redis WATCH/Lua.
+        self.lock = threading.RLock()
 
     # -- backend primitives ------------------------------------------------- #
 
@@ -232,7 +235,10 @@ class RedisSessionStore(SessionStore):
             pass
 
 
-@lru_cache(maxsize=4)
+_store_cache: dict[str, Any] = {"key": None, "store": None, "checked_at": 0.0}
+_STORE_RECHECK_SECONDS = 30.0
+
+
 def _build_store(redis_url: str, ttl_seconds: int) -> SessionStore:
     try:
         store = RedisSessionStore.from_url(redis_url, ttl_seconds=ttl_seconds)
@@ -247,5 +253,24 @@ def _build_store(redis_url: str, ttl_seconds: int) -> SessionStore:
 
 
 def get_session_store(settings: Settings | None = None) -> SessionStore:
+    """Cached store with periodic Redis re-probe (not a permanent fallback).
+
+    A failed Redis connect falls back to memory for at most
+    `_STORE_RECHECK_SECONDS`, then is retried. A healthy Redis client is
+    re-pinged on the same interval so a mid-flight outage re-probes instead of
+    using a dead client forever.
+    """
     settings = settings or get_settings()
-    return _build_store(settings.redis_url, settings.session_ttl_seconds)
+    key = (settings.redis_url, settings.session_ttl_seconds)
+    now = time.monotonic()
+    cached = _store_cache["store"]
+    if (
+        cached is not None
+        and _store_cache["key"] == key
+        and (now - float(_store_cache["checked_at"])) < _STORE_RECHECK_SECONDS
+    ):
+        if cached.backend_name != "redis" or cached.ping():
+            return cached
+    store = _build_store(settings.redis_url, settings.session_ttl_seconds)
+    _store_cache.update(key=key, store=store, checked_at=now)
+    return store

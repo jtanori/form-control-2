@@ -305,16 +305,30 @@ class Parser:
         elif not commands and missing:
             first = missing[0]
             label = normalize_label(str(first["target"].get("label") or ""))
+            reason = first.get("reason", "unmatched target")
+            if reason == "value not spoken":
+                question = (
+                    f"I can only use a value you said out loud for '{label}'. "
+                    "What value should I enter?"
+                    if label
+                    else "What value should I enter?"
+                )
+            elif reason == "missing value":
+                question = (
+                    f"What should I enter in the {label}?" if label else "What value should I enter?"
+                )
+            else:
+                question = (
+                    f"I couldn't find '{label}' on this form. Which field do you mean?"
+                    if label
+                    else "Which field should I use?"
+                )
             clarification = self._clarification(
                 session_id=session_id,
                 transcript=transcript,
                 candidates=[],
-                question=(
-                    f"I couldn't find '{label}' on this form. Which field do you mean?"
-                    if label
-                    else "Which field should I use?"
-                ),
-                ambiguity=first.get("reason", "unmatched target"),
+                question=question,
+                ambiguity=reason,
             )
         elif not commands and not output.needs_clarification:
             clarification = self._clarification(

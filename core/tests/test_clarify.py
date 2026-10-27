@@ -181,7 +181,34 @@ def test_clarify_endpoint_requires_text(client):
     response = client.post(
         "/api/v1/clarify", json={"sessionId": SESSION, "clarificationText": "  "}
     )
-    assert response.status_code == 409
+    assert response.status_code == 400
+
+
+def test_successful_parse_clears_pending_clarification(client, checkout, store):
+    client.post(
+        "/api/v1/parse",
+        json={"sessionId": SESSION, "transcript": "click submit", "context": checkout},
+    )
+    assert store.get_clarification(SESSION) is not None
+
+    # A later successful parse supersedes the abandoned ambiguity.
+    response = client.post(
+        "/api/v1/parse",
+        json={
+            "sessionId": SESSION,
+            "transcript": "fill the email address with a@b.com",
+            "context": checkout,
+        },
+    )
+    assert response.status_code == 200
+    assert store.get_clarification(SESSION) is None
+
+    # Clarifying afterwards must not resolve the stale ambiguity.
+    clarify = client.post(
+        "/api/v1/clarify",
+        json={"sessionId": SESSION, "clarificationText": "submit billing"},
+    )
+    assert clarify.status_code == 409
 
 
 def test_clarification_uses_contract_keys(parser, resolver, checkout):

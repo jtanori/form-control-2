@@ -25,10 +25,10 @@ Everything that crosses a process boundary between core and a client lives here.
 |---|---|---|
 | browser / DOM | `b` | `b2` |
 | Android accessibility | `a` | `a5` |
-| desktop | `d` | `d1` |
 | vision | `v` | `v3` |
 
 Ids are deterministic (1-based index within the snapshot) when the source does not supply one.
+Sources outside `dom` / `accessibility` / `vision` are rejected (v1 schema enum).
 
 ## Validating
 

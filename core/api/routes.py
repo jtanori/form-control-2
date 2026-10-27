@@ -18,7 +18,11 @@ from core.api.schemas import (
     SessionStateResponse,
 )
 from core.lib.logging_config import get_logger
-from core.nlu.clarify import ClarificationError, ClarificationResolver
+from core.nlu.clarify import (
+    ClarificationError,
+    ClarificationInputError,
+    ClarificationResolver,
+)
 from core.nlu.parser import ParseResult
 from core.session.manager import SessionManager
 
@@ -70,6 +74,8 @@ def parse(payload: ParseRequest, request: Request) -> ParseResponse:
     sessions.record(
         payload.sessionId, snapshot=result.snapshot, commands=result.commands
     )
+    # A successful parse supersedes any pending ambiguity (CORE-002).
+    request.app.state.store.clear_clarification(payload.sessionId)
     return _parse_response(result)
 
 
@@ -88,6 +94,8 @@ def clarify(payload: ClarifyRequest, request: Request) -> ClarifyResponse:
             clarification_text=payload.text,
             snapshot=payload.context,
         )
+    except ClarificationInputError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except ClarificationError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 

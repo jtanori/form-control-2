@@ -139,6 +139,9 @@ targets so execution layers (EXT-003/AND-003) can insert a confirmation step.
 | Android accessibility | `a` | `className`, `contentDescription`, `bounds "[x1,y1][x2,y2]"` |
 | desktop / vision | `v` | `kind`, `bbox [x,y,w,h]` |
 
+Unknown `source` values (including `desktop`) are rejected with `422` — v1 only
+accepts `dom` / `accessibility` / `vision`.
+
 - labels: lowercase, trimmed, whitespace collapsed, decorative punctuation gone
   (unknown label ⇒ `""`, never `null`);
 - nodeIds deterministic and prefixed per source;

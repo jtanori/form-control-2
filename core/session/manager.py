@@ -59,30 +59,33 @@ class SessionManager:
         active_node_id: str | None = None,
     ) -> dict[str, Any]:
         """Merge a snapshot and/or executed commands into the session."""
-        state = self.get(session_id)
-        if snapshot is not None:
-            state["currentContextSnapshot"] = snapshot
-            state["formSteps"] = detect_form_steps(snapshot.get("nodes") or [])
+        with self.store.lock:
+            state = self.get(session_id)
+            if snapshot is not None:
+                state["currentContextSnapshot"] = snapshot
+                state["formSteps"] = detect_form_steps(snapshot.get("nodes") or [])
 
-        new_commands = [command for command in commands if isinstance(command, dict)]
-        if new_commands:
-            state["history"] = (state["history"] + new_commands)[-self.history_limit :]
-            node_id = (new_commands[-1].get("target") or {}).get("nodeId")
-            if node_id:
-                state["currentActiveNodeId"] = node_id
-        if active_node_id:
-            state["currentActiveNodeId"] = active_node_id
+            new_commands = [command for command in commands if isinstance(command, dict)]
+            if new_commands:
+                state["history"] = (state["history"] + new_commands)[-self.history_limit :]
+                node_id = (new_commands[-1].get("target") or {}).get("nodeId")
+                if node_id:
+                    state["currentActiveNodeId"] = node_id
+            if active_node_id:
+                state["currentActiveNodeId"] = active_node_id
 
-        return self._save(state)
+            return self._save(state)
 
     def set_active_node(self, session_id: str, node_id: str) -> dict[str, Any]:
-        state = self.get(session_id)
-        state["currentActiveNodeId"] = node_id
-        return self._save(state)
+        with self.store.lock:
+            state = self.get(session_id)
+            state["currentActiveNodeId"] = node_id
+            return self._save(state)
 
     def clear(self, session_id: str) -> None:
-        self.store.delete_session(session_id)
-        self.store.clear_clarification(session_id)
+        with self.store.lock:
+            self.store.delete_session(session_id)
+            self.store.clear_clarification(session_id)
 
     # -- internals ---------------------------------------------------------- #
 

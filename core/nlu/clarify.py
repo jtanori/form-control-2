@@ -29,7 +29,11 @@ log = get_logger("nlu.clarify")
 
 
 class ClarificationError(RuntimeError):
-    """No clarification is pending for this session, or the request is unusable."""
+    """No clarification is pending for this session (HTTP 409)."""
+
+
+class ClarificationInputError(ClarificationError):
+    """The clarify request itself is unusable (HTTP 400)."""
 
 
 class ClarificationResolver:
@@ -77,14 +81,15 @@ class ClarificationResolver:
         clarification_text: str,
         snapshot: dict[str, Any] | None = None,
     ) -> ParseResult:
+        answer = normalize_text(clarification_text)
+        if not answer:
+            raise ClarificationInputError("clarificationText must not be empty")
+
         pending = self.store.get_clarification(session_id)
         if not pending:
             raise ClarificationError(
                 f"no pending clarification for session {session_id!r}"
             )
-        answer = normalize_text(clarification_text)
-        if not answer:
-            raise ClarificationError("clarificationText must not be empty")
 
         clarification: dict[str, Any] = pending.get("clarification") or {}
         original = normalize_text(clarification.get("previousTranscript") or "")

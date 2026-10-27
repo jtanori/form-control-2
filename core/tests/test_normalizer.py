@@ -139,6 +139,37 @@ def test_unknown_source_is_rejected():
         normalize_snapshot({"title": "x", "nodes": [{"label": "a"}]})
 
 
+def test_desktop_source_is_rejected_not_a_key_error():
+    """v1 schema has no `desktop`; must be NormalizationError (422), not KeyError."""
+    with pytest.raises(NormalizationError, match="unsupported source"):
+        normalize_snapshot(
+            {"source": "desktop", "title": "x", "nodes": [{"label": "a", "type": "button"}]},
+            source="desktop",
+        )
+
+
+def test_accessibility_filled_edittext_prefers_a11y_label_over_text():
+    snapshot = normalize_snapshot(
+        {
+            "source": "accessibility",
+            "title": "Login",
+            "nodes": [
+                {
+                    "className": "android.widget.EditText",
+                    "contentDescription": "Email address",
+                    "text": "user@example.com",
+                    "bounds": "[0,0][100,40]",
+                    "isEditable": True,
+                }
+            ],
+        }
+    )
+    node = snapshot["nodes"][0]
+    assert node["label"] == "email address"
+    assert node["value"] == "user@example.com"
+    assert node["displayLabel"] == "Email address"
+
+
 def test_captured_at_is_normalized_to_utc_iso():
     snapshot = normalize_snapshot(
         {

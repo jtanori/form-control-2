@@ -79,7 +79,7 @@ class SessionStateResponse(BaseModel):
     explicit (`null`) because the contract requires the key.
     """
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
 
     sessionId: str
     currentContextSnapshot: dict[str, Any] | None = None

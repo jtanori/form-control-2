@@ -1,4 +1,6 @@
 # Core service runtime dependencies (Phase 1)
+# `openai` is only required when NLU_PROVIDER selects the live LLM path;
+# the deterministic rule provider runs without it.
 fastapi>=0.115,<1
 uvicorn[standard]>=0.30,<1
 jsonschema>=4.22,<5

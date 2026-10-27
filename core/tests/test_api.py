@@ -103,3 +103,43 @@ def test_parse_rejects_unknown_fields(client, checkout):
         },
     )
     assert response.status_code == 422
+
+
+def test_normalize_rejects_desktop_source(client):
+    response = client.post(
+        "/api/v1/context/normalize",
+        json={"source": "desktop", "title": "x", "nodes": [{"label": "a"}]},
+    )
+    assert response.status_code == 422
+    assert "unsupported source" in response.json()["detail"]
+
+
+def test_oversized_body_is_rejected(client, checkout):
+    from core.api.middleware import MAX_BODY_BYTES
+
+    huge = "x" * (MAX_BODY_BYTES + 1024)
+    response = client.post(
+        "/api/v1/parse",
+        json={
+            "sessionId": "sess-api",
+            "transcript": "click submit billing",
+            "context": checkout,
+            "history": [{"action": "fill", "target": {"label": huge}}],
+        },
+    )
+    assert response.status_code == 413
+
+
+def test_session_state_response_forbids_extra_fields(client, checkout):
+    from core.api.schemas import SessionStateResponse
+    import pytest
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        SessionStateResponse(
+            sessionId="s",
+            currentContextSnapshot=None,
+            history=[],
+            formSteps=[],
+            unexpected="nope",
+        )

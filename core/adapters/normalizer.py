@@ -6,7 +6,7 @@ AccessibilityService dump and a vision/desktop extraction all become the same
 
 * labels are normalized (lowercase, trimmed, whitespace collapsed, decorative
   punctuation stripped) with the *same* function the parser matches against,
-* nodeIds are deterministic and prefixed per source (`b`/`a`/`d`/`v`),
+* nodeIds are deterministic and prefixed per source (`b`/`a`/`v`),
 * rects are standardized to pixels `{x, y, w, h}`; zero/offscreen rects are
   clamped to zeros and flagged with `offscreen: true`,
 * `actions[]` is inferred from `type` when a bridge omits it,
@@ -29,7 +29,7 @@ from core.lib.text import normalize_label, normalize_text
 
 log = get_logger("adapters.normalizer")
 
-SOURCE_PREFIX = {"dom": "b", "accessibility": "a", "vision": "v", "desktop": "d"}
+SOURCE_PREFIX = {"dom": "b", "accessibility": "a", "vision": "v"}
 
 TYPE_ACTIONS: dict[str, list[str]] = {
     "input": ["fill", "clear"],
@@ -307,11 +307,24 @@ def _from_accessibility(raw: dict[str, Any], source: str) -> list[dict[str, Any]
             node_type = "input" if node.get("editable") or node.get("isEditable") else (
                 "link" if clickable else "input"
             )
-        label = (
-            node.get("text") or node.get("contentDescription") or node.get("hintText")
-            or node.get("hint") or _humanize_view_id(str(node.get("viewIdResourceName") or ""))
-        )
-        display = node.get("text") or node.get("contentDescription") or node.get("hintText")
+        humanized = _humanize_view_id(str(node.get("viewIdResourceName") or ""))
+        if node_type == "input":
+            # `text` is the field *value* on EditText; labels come from a11y metadata.
+            label = (
+                node.get("contentDescription") or node.get("hintText") or node.get("hint")
+                or humanized or node.get("text")
+            )
+            display = (
+                node.get("contentDescription") or node.get("hintText") or node.get("text")
+            )
+            value = node.get("text") or node.get("value")
+        else:
+            label = (
+                node.get("text") or node.get("contentDescription") or node.get("hintText")
+                or humanized
+            )
+            display = node.get("text") or node.get("contentDescription") or node.get("hintText")
+            value = node.get("value")
         nodes.append(
             _artifact_keys(
                 _finish_node(
@@ -322,7 +335,7 @@ def _from_accessibility(raw: dict[str, Any], source: str) -> list[dict[str, Any]
                     rect=node.get("bounds") or node.get("rect"),
                     actions=node.get("actions"),
                     role=node.get("role"),
-                    value=node.get("text") if node_type == "input" and node.get("text") else node.get("value"),
+                    value=value if isinstance(value, str) else None,
                     checked=node.get("isChecked", node.get("checked")),
                     display_label=str(display) if display else None,
                     offscreen_hint=node.get("visibleToUser") is False,
@@ -384,8 +397,12 @@ def _looks_canonical(raw: dict[str, Any]) -> bool:
 
 def _detect_source(raw: dict[str, Any], source: str | None) -> str:
     candidate = (source or raw.get("source") or "").strip().lower()
-    if candidate in SOURCE_PREFIX:
-        return candidate
+    if candidate:
+        if candidate in _ADAPTERS:
+            return candidate
+        raise NormalizationError(
+            f"unsupported source {candidate!r}; expected one of {sorted(_ADAPTERS)}"
+        )
     nodes = raw.get("nodes") or raw.get("elements") or []
     first = nodes[0] if isinstance(nodes, list) and nodes and isinstance(nodes[0], dict) else {}
     if "viewIdResourceName" in first or "isClickable" in first or "bounds" in first:
@@ -412,6 +429,10 @@ def normalize_snapshot(
         raise NormalizationError("snapshot must be an object")
 
     resolved_source = _detect_source(raw, source)
+    if resolved_source not in _ADAPTERS:  # pragma: no cover - defensive
+        raise NormalizationError(
+            f"unsupported source {resolved_source!r}; expected one of {sorted(_ADAPTERS)}"
+        )
     nodes = (
         _from_canonical(raw, resolved_source)
         if _looks_canonical(raw)

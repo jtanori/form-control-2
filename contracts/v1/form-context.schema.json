@@ -36,7 +36,7 @@
       "properties": {
         "nodeId": {
           "type": "string",
-          "description": "Stable id within a snapshot. Prefix per source: b = browser/DOM, a = accessibility, d = desktop, v = vision.",
+          "description": "Stable id within a snapshot. Prefix per source: b = browser/DOM, a = accessibility, v = vision.",
           "minLength": 1
         },
         "label": {

@@ -63,14 +63,20 @@ def schema(name: str) -> dict[str, Any]:
         raise KeyError(f"unknown contract schema {name!r}; known: {sorted(_schemas())}") from exc
 
 
-def validator(name: str) -> Draft202012Validator:
-    @lru_cache(maxsize=None)
-    def _build(key: str) -> Draft202012Validator:
-        return Draft202012Validator(
-            _schemas()[key], registry=_registry(), format_checker=FormatChecker()
-        )
+@lru_cache(maxsize=None)
+def _validator_for(name: str) -> Draft202012Validator:
+    return Draft202012Validator(
+        _schemas()[name], registry=_registry(), format_checker=FormatChecker()
+    )
 
-    return _build(name)
+
+def validator(name: str) -> Draft202012Validator:
+    try:
+        return _validator_for(name)
+    except KeyError as exc:  # pragma: no cover - programmer error
+        raise KeyError(
+            f"unknown contract schema {name!r}; known: {sorted(_schemas())}"
+        ) from exc
 
 
 def validate(name: str, payload: Any) -> Any:
