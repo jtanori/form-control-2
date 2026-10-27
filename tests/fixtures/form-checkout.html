@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Checkout — E2E fixture</title>
+  </head>
+  <body>
+    <h1>Checkout</h1>
+    <!-- Node order must yield: b1 = email input, b2 = submit billing -->
+    <form id="checkout" action="/order" method="post">
+      <label for="email">Email address</label>
+      <input id="email" name="email" type="email" />
+
+      <label for="country">Country</label>
+      <select id="country" name="country">
+        <option value="us">United States</option>
+        <option value="ca">Canada</option>
+      </select>
+
+      <button type="submit" id="submit" name="step" value="billing">Submit billing</button>
+    </form>
+    <script>
+      // Keep navigation out of the test; expose observable flags for E2E.
+      const form = document.getElementById("checkout");
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        document.body.dataset.submitted = String(Date.now());
+      });
+      document.getElementById("submit").addEventListener("click", () => {
+        document.body.dataset.clicked = String(Date.now());
+      });
+    </script>
+  </body>
+</html>

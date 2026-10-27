@@ -87,17 +87,20 @@ function resolveLabel(el: Element): string {
   const aria = el.getAttribute("aria-label")?.trim();
   if (aria) return aria;
 
+  // Visible text beats `name` on buttons/links (name=step is not a label).
+  const tag = el.tagName.toLowerCase();
+  const isButtonLike =
+    tag === "button" || tag === "a" || el.getAttribute("role") === "button";
+  if (isButtonLike) {
+    const text = el.textContent?.trim();
+    if (text) return text;
+  }
+
   const placeholder = el.getAttribute("placeholder")?.trim();
   if (placeholder) return placeholder;
 
   const name = el.getAttribute("name")?.trim();
   if (name) return name;
-
-  const tag = el.tagName.toLowerCase();
-  if (tag === "button" || tag === "a" || el.getAttribute("role") === "button") {
-    const text = el.textContent?.trim();
-    if (text) return text;
-  }
 
   // last resort: any associated text
   return el.textContent?.trim() ?? "";
