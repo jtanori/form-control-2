@@ -1,0 +1,39 @@
+{
+  "sessionId": "sess-login",
+  "source": "dom",
+  "capturedAt": "2026-01-15T10:10:00Z",
+  "title": "Sign in",
+  "url": "https://example.com/login",
+  "nodes": [
+    {
+      "nodeId": "b1",
+      "label": "username",
+      "displayLabel": "Username",
+      "type": "input",
+      "rect": { "x": 40, "y": 120, "w": 300, "h": 40 },
+      "role": "textbox",
+      "source": "dom",
+      "actions": ["fill", "clear"]
+    },
+    {
+      "nodeId": "b2",
+      "label": "password",
+      "displayLabel": "Password",
+      "type": "input",
+      "rect": { "x": 40, "y": 180, "w": 300, "h": 40 },
+      "role": "textbox",
+      "source": "dom",
+      "actions": ["fill", "clear"]
+    },
+    {
+      "nodeId": "b3",
+      "label": "sign in",
+      "displayLabel": "Sign in",
+      "type": "button",
+      "rect": { "x": 40, "y": 240, "w": 120, "h": 40 },
+      "role": "button",
+      "source": "dom",
+      "actions": ["click"]
+    }
+  ]
+}

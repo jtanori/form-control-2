@@ -1,0 +1,73 @@
+{
+  "sessionId": "sess-mock-001",
+  "source": "dom",
+  "capturedAt": "2026-01-15T10:00:00Z",
+  "title": "Checkout - Example Shop",
+  "url": "https://example.com/checkout",
+  "nodes": [
+    {
+      "nodeId": "b1",
+      "label": "email address",
+      "displayLabel": "Email address",
+      "type": "input",
+      "value": "",
+      "rect": { "x": 120, "y": 240, "w": 320, "h": 40 },
+      "role": "textbox",
+      "source": "dom",
+      "actions": ["fill", "clear"]
+    },
+    {
+      "nodeId": "b2",
+      "label": "full name",
+      "displayLabel": "Full name",
+      "type": "input",
+      "value": "",
+      "rect": { "x": 120, "y": 300, "w": 320, "h": 40 },
+      "role": "textbox",
+      "source": "dom",
+      "actions": ["fill", "clear"]
+    },
+    {
+      "nodeId": "b3",
+      "label": "country",
+      "displayLabel": "Country",
+      "type": "select",
+      "value": "us",
+      "rect": { "x": 120, "y": 360, "w": 320, "h": 40 },
+      "role": "combobox",
+      "source": "dom",
+      "actions": ["click", "fill"]
+    },
+    {
+      "nodeId": "b4",
+      "label": "i agree to the terms and conditions",
+      "displayLabel": "I agree to the terms and conditions",
+      "type": "checkbox",
+      "checked": false,
+      "rect": { "x": 120, "y": 420, "w": 18, "h": 18 },
+      "role": "checkbox",
+      "source": "dom",
+      "actions": ["check", "uncheck"]
+    },
+    {
+      "nodeId": "b5",
+      "label": "submit billing",
+      "displayLabel": "Submit billing",
+      "type": "button",
+      "rect": { "x": 120, "y": 480, "w": 140, "h": 40 },
+      "role": "button",
+      "source": "dom",
+      "actions": ["click"]
+    },
+    {
+      "nodeId": "b6",
+      "label": "submit shipping",
+      "displayLabel": "Submit shipping",
+      "type": "button",
+      "rect": { "x": 280, "y": 480, "w": 140, "h": 40 },
+      "role": "button",
+      "source": "dom",
+      "actions": ["click"]
+    }
+  ]
+}
