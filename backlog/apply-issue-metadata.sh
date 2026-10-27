@@ -15,7 +15,7 @@ set -u
 cd "$(dirname "$0")/.."   # repo root
 
 ok=0; fail=0
-for f in backlog/phase-*/*.md; do
+for f in backlog/phase-*/*.md backlog/post-mvp/*.md; do
   num=$(grep -m1 'GitHub issue:'   "$f" | sed 's|.*/issues/||')
   labels=$(grep -m1 'GitHub labels:' "$f" | sed 's/.*:\*\* //' | tr -d '\`' | tr -d ' ')
   ms=$(grep -m1 'GitHub milestone:' "$f" | sed 's/.*:\*\* //')
