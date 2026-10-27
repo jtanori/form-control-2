@@ -20,7 +20,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=build /src/whisper/build/bin/whisper-server /usr/local/bin/whisper-server
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Guard against CRLF from any build context (shebang must be LF).
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 ENV WHISPER_MODEL=base \
     WHISPER_THREADS=4 \
