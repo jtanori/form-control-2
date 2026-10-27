@@ -49,10 +49,19 @@ await esbuild.build({
   define: { "process.env.NODE_ENV": '"production"' },
 });
 
+// Durable voice/recorder window (mic prompt lives here, not in the popup).
+await esbuild.build({
+  ...common,
+  entryPoints: [join(pkgRoot, "src/recorder/recorder.ts")],
+  outfile: join(dist, "recorder.js"),
+  format: "iife",
+});
+
 // Static assets.
 await cp(join(pkgRoot, "manifest.json"), join(dist, "manifest.json"));
 await cp(join(pkgRoot, "src/popup/popup.html"), join(dist, "popup.html"));
 await cp(join(pkgRoot, "src/popup/popup.css"), join(dist, "popup.css"));
+await cp(join(pkgRoot, "src/recorder/recorder.html"), join(dist, "recorder.html"));
 
 // Minimal placeholder icons (solid PNG generated as base64 1x1 scaled by browser).
 const png1x1 = Buffer.from(
@@ -64,5 +73,5 @@ await writeFile(join(dist, "icon128.png"), png1x1);
 
 const manifest = JSON.parse(await readFile(join(dist, "manifest.json"), "utf8"));
 console.log(
-  `built extension v${manifest.version} -> dist/ (${["content.js", "background.js", "popup.js", "popup.html"].join(", ")})`,
+  `built extension v${manifest.version} -> dist/ (${["content.js", "background.js", "popup.js", "popup.html", "recorder.js", "recorder.html"].join(", ")})`,
 );

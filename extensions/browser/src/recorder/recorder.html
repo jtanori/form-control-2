@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VoiceForm — Listening</title>
+    <link rel="stylesheet" href="popup.css" />
+    <style>
+      body {
+        min-width: 360px;
+        max-width: 400px;
+      }
+      .rec {
+        font-size: 40px;
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        border: 3px solid var(--border);
+        background: var(--card);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .rec.on {
+        background: var(--danger);
+        border-color: var(--danger);
+        color: #fff;
+        animation: pulse 1s ease-in-out infinite;
+      }
+      .center {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        align-items: center;
+      }
+      .hint {
+        font-size: 12px;
+        color: var(--muted);
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <h1>VoiceForm</h1>
+        <span class="session" id="sid"></span>
+      </header>
+
+      <div class="center">
+        <button type="button" class="rec on" id="rec" title="Stop">●</button>
+      </div>
+      <div class="hint" id="phase">
+        Allow the microphone if Chrome asks — this window stays open.
+        The prompt is for the <strong>VoiceForm extension</strong> itself
+        (website mic grants don’t count).
+      </div>
+
+      <div class="transcript" id="transcript">…</div>
+      <div class="status" id="status"></div>
+      <div class="actions" id="permActions" hidden>
+        <button type="button" class="primary" id="retry">Ask again</button>
+        <button type="button" id="openSettings">Open mic settings</button>
+      </div>
+      <div id="commands"></div>
+      <div class="actions" id="actions" hidden>
+        <button type="button" class="danger" id="cancel">Cancel</button>
+        <button type="button" class="primary" id="confirm">Confirm</button>
+      </div>
+      <div class="actions" id="doneActions" hidden>
+        <button type="button" id="close">Close</button>
+        <button type="button" class="primary" id="again">Record again</button>
+      </div>
+      <div class="clarify" id="clarify" hidden>
+        <p id="question"></p>
+        <input id="answer" placeholder="Your answer…" />
+        <div class="actions">
+          <button type="button" class="primary" id="sendAnswer">Submit answer</button>
+        </div>
+      </div>
+    </div>
+    <script src="recorder.js"></script>
+  </body>
+</html>
