@@ -1,0 +1,6 @@
+# Shell scripts must be LF in the working tree and in Docker build contexts —
+# CRLF shebangs fail with `env: 'bash\r': No such file` (exit 127).
+*.sh text eol=lf
+*.bash text eol=lf
+*.ps1 text eol=crlf
+gradlew text eol=lf
