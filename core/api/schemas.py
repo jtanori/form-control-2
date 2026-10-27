@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_serializer
 
 
 class ParseRequest(BaseModel):
@@ -69,6 +69,30 @@ class ClarifyResponse(BaseModel):
 
 class ParseResponse(ClarifyResponse):
     pass
+
+
+class SessionStateResponse(BaseModel):
+    """`SessionState` (CONTRACT-001).
+
+    `currentActiveNodeId` is omitted while unset instead of serialized as null,
+    because the contract types it as a string; `currentContextSnapshot` stays
+    explicit (`null`) because the contract requires the key.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    sessionId: str
+    currentContextSnapshot: dict[str, Any] | None = None
+    history: list[dict[str, Any]] = Field(default_factory=list)
+    currentActiveNodeId: str | None = None
+    formSteps: list[str] = Field(default_factory=list)
+
+    @model_serializer(mode="wrap")
+    def _omit_unset_active_node(self, handler):
+        data = handler(self)
+        if data.get("currentActiveNodeId") is None:
+            data.pop("currentActiveNodeId", None)
+        return data
 
 
 class NormalizeResponse(BaseModel):

@@ -25,6 +25,8 @@ from functools import lru_cache
 from typing import Any
 
 from core.config import Settings, get_settings
+from core.lib import contracts
+from core.lib.contracts import ContractError
 from core.lib.logging_config import get_logger
 
 log = get_logger("session.store")
@@ -105,6 +107,36 @@ class SessionStore(abc.ABC):
 
     def clear_clarification(self, session_id: str) -> None:
         self._delete(clarification_key(session_id))
+
+    # -- CORE-003: SessionState --------------------------------------------- #
+
+    def get_session(self, session_id: str) -> dict[str, Any] | None:
+        """Stored `SessionState`, or None when absent/corrupt."""
+        payload = self._read_json(session_key(session_id))
+        if payload is None:
+            return None
+        try:
+            contracts.validate("form-context", payload)
+        except ContractError as exc:
+            log.warning(
+                "discarding contract-invalid session state",
+                extra={"key": session_key(session_id), "error": str(exc)},
+            )
+            self._delete(session_key(session_id))
+            return None
+        return payload
+
+    def save_session(self, state: dict[str, Any]) -> dict[str, Any]:
+        """Persist a `SessionState`, refreshing the idle TTL."""
+        try:
+            contracts.validate("form-context", state)
+        except ContractError as exc:
+            raise SessionStoreError(f"invalid SessionState: {exc}") from exc
+        self._write_json(session_key(state["sessionId"]), state)
+        return state
+
+    def delete_session(self, session_id: str) -> None:
+        self._delete(session_key(session_id))
 
 
 class InMemorySessionStore(SessionStore):

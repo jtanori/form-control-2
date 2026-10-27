@@ -22,6 +22,7 @@ from core.lib.contracts import ContractError
 from core.lib.logging_config import configure_logging, get_logger
 from core.nlu.parser import ParseInputError, Parser
 from core.nlu.provider import ProviderError
+from core.session.manager import SessionManager
 from core.session.store import SessionStore, get_session_store
 
 log = get_logger("main")
@@ -43,6 +44,7 @@ def create_app(
     app.state.settings = settings
     app.state.parser = parser or Parser(settings=settings)
     app.state.store = store or get_session_store(settings)
+    app.state.sessions = SessionManager(app.state.store, history_limit=settings.history_limit)
 
     app.add_middleware(SessionLoggingMiddleware)
     app.add_middleware(

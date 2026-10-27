@@ -26,6 +26,7 @@ from core.lib import contracts
 from core.lib.logging_config import get_logger
 from core.lib.text import contains_value, normalize_label, normalize_text
 from core.nlu import matching
+from core.session import navigation
 
 log = get_logger("nlu.provider")
 
@@ -126,15 +127,6 @@ _LEADING_NOISE = re.compile(
     r"i want to|i need to|let's|lets)\b[\s,]*)+",
     re.IGNORECASE,
 )
-
-NAV_DIRECTIONS = {
-    "back": ("back", "previous"),
-    "previous": ("previous", "back"),
-    "next": ("next", "continue"),
-    "forward": ("forward", "next"),
-    "continue": ("continue", "next"),
-}
-
 
 def split_clauses(transcript: str) -> list[str]:
     """Split a multi-instruction transcript into one clause per instruction."""
@@ -290,25 +282,22 @@ class RuleProvider(Provider):
         return self._target("fill", label, nodes, value=value, transcript=label + " " + value)
 
     def _navigate(self, direction: str, nodes: Sequence[dict]) -> ProviderOutput:
-        for token in NAV_DIRECTIONS.get(direction, (direction,)):
-            hits = matching.match_nodes(nodes, token, types=("button", "link"))
-            if not hits:
-                hits = matching.match_nodes(nodes, token)
-            if len(hits) == 1:
-                return ProviderOutput(
-                    commands=[
-                        {
-                            "action": "click",
-                            "target": {
-                                "label": normalize_label(hits[0].get("label", "")),
-                                "nodeId": hits[0].get("nodeId"),
-                            },
-                        }
-                    ],
-                    model=self.name,
-                )
-            if len(hits) > 1:
-                return _ambiguity(direction, hits, action="click")
+        hits = navigation.navigation_candidates(nodes, direction)
+        if len(hits) == 1:
+            return ProviderOutput(
+                commands=[
+                    {
+                        "action": "click",
+                        "target": {
+                            "label": normalize_label(hits[0].get("label", "")),
+                            "nodeId": hits[0].get("nodeId"),
+                        },
+                    }
+                ],
+                model=self.name,
+            )
+        if len(hits) > 1:
+            return _ambiguity(direction, hits, action="click")
         return ProviderOutput(
             commands=[],
             needs_clarification=True,

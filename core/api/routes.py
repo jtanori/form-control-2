@@ -13,10 +13,12 @@ from core.api.schemas import (
     HealthResponse,
     ParseRequest,
     ParseResponse,
+    SessionStateResponse,
 )
 from core.lib.logging_config import get_logger
 from core.nlu.clarify import ClarificationError, ClarificationResolver
 from core.nlu.parser import ParseResult
+from core.session.manager import SessionManager
 
 log = get_logger("api.routes")
 
@@ -48,15 +50,21 @@ def parse(payload: ParseRequest, request: Request) -> ParseResponse:
     are held in the session and replayed by `POST /api/v1/clarify`.
     """
     parser = request.app.state.parser
+    sessions: SessionManager = request.app.state.sessions
+    history = payload.history or sessions.history(payload.sessionId)
     result = parser.parse(
         session_id=payload.sessionId,
         transcript=payload.transcript,
         snapshot=payload.context,
-        history=payload.history,
+        history=history,
     )
     if result.needs_clarification:
         ClarificationResolver(parser, request.app.state.store).remember(result, payload.context)
-    return _parse_response(result, withhold=result.needs_clarification)
+        sessions.record(payload.sessionId, snapshot=payload.context)
+        return _parse_response(result, withhold=True)
+
+    sessions.record(payload.sessionId, snapshot=payload.context, commands=result.commands)
+    return _parse_response(result)
 
 
 @router.post("/clarify", response_model=ClarifyResponse)
@@ -76,7 +84,23 @@ def clarify(payload: ClarifyRequest, request: Request) -> ClarifyResponse:
         )
     except ClarificationError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    if not result.needs_clarification:
+        request.app.state.sessions.record(
+            payload.sessionId, snapshot=payload.context, commands=result.commands
+        )
     return ParseResponse(**result.response_payload())
+
+
+@router.get("/session/{session_id}", response_model=SessionStateResponse)
+def get_session(session_id: str, request: Request) -> SessionStateResponse:
+    """Current `SessionState` for a session (CORE-003).
+
+    Clients fetch this before speaking; unknown sessions return an empty state
+    rather than a 404 so the bridge can start a conversation unconditionally.
+    """
+    state = request.app.state.sessions.get(session_id)
+    return SessionStateResponse(**state)
 
 
 __all__ = ["router"]
