@@ -77,3 +77,30 @@ jobs:
           test -f dist/popup.html
           test -f dist/popup.js
 
+  android:
+    name: Android (form-core tests + debug APK)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: form-core unit tests (JVM, no emulator)
+        run: gradle :form-core:test --console=plain
+
+      - name: Compile debug APK
+        run: gradle :app:assembleDebug --console=plain
+

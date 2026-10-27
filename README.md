@@ -44,6 +44,17 @@ execution engine with ambiguity refusal, virtual cursor, and the Core bridge.
 | EXT-006 | Background bridge: Core URL config, offline queue (2 msgs + backoff), session correlation | [`src/background/bridge.ts`](extensions/browser/src/background/bridge.ts) |
 | INFR-002 (TS) | Same JSON log shape as core (`ts, level, component, sessionId, message`) | [`extensions/shared/logger.ts`](extensions/shared/logger.ts) |
 
+**Phase 3 — Android bridge** is in: AccessibilityService + node parser +
+executor + voice overlay + Core client (JVM-tested `form-core`).
+
+| Ticket | Delivered | Where |
+|---|---|---|
+| AND-001 | Service manifest, overlay permission gates, `minSdk 28` / `targetSdk 34` | [`android/app/`](android/app) |
+| AND-002 | `NodeParser` → `FormSnapshot` (`a{n}` ids, a11y label rules, decorative filter) | [`form-core/.../NodeParser.kt`](android/form-core/src/main/kotlin/com/voiceform/parser/NodeParser.kt) |
+| AND-003 | `ActionExecutor` — SET_TEXT/CLICK/CHECK, >70% ambiguity refusal (EXT-003 parity) | [`form-core/.../ActionExecutor.kt`](android/form-core/src/main/kotlin/com/voiceform/executor/ActionExecutor.kt) |
+| AND-004 | Floating overlay: mic (`SpeechRecognizer`) → parse → confirm card → execute | [`ui/OverlayVoice.kt`](android/app/src/main/java/com/voiceform/ui/OverlayVoice.kt), [`voice/VoiceClient.kt`](android/app/src/main/java/com/voiceform/voice/VoiceClient.kt) |
+| AND-005 | `CoreClient` — parse/clarify, window-stable `sessionId = a-{device}-{window}` | [`form-core/.../CoreClient.kt`](android/form-core/src/main/kotlin/com/voiceform/network/CoreClient.kt) |
+
 CI runs Python lint/tests/contracts **and** extension typecheck/unit tests/build on
 every PR — see [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
