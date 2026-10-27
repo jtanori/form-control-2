@@ -30,6 +30,13 @@ class VoiceClient(
             onError("Speech recognition unavailable on this device")
             return
         }
+        // QA-001: RECORD_AUDIO must be granted before capture (never earlier).
+        if (appContext.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
+            != android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            onError("Microphone permission not granted — enable it in app settings")
+            return
+        }
         stop()
         val r = SpeechRecognizer.createSpeechRecognizer(appContext)
         recognizer = r

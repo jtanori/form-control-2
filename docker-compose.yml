@@ -12,7 +12,8 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      # QA-001: publish on loopback only — never expose Core/Redis/STT LAN-wide
+      - "127.0.0.1:6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -26,7 +27,7 @@ services:
       WHISPER_MODEL: ${WHISPER_MODEL:-base}
       WHISPER_THREADS: ${WHISPER_THREADS:-4}
     ports:
-      - "8081:8080"
+      - "127.0.0.1:8081:8080"
     volumes:
       - whisper-models:/models
     healthcheck:
@@ -41,7 +42,7 @@ services:
       context: .
       dockerfile: core/Dockerfile
     ports:
-      - "8020:8020"
+      - "127.0.0.1:8020:8020"
     environment:
       CORE_HOST: 0.0.0.0
       REDIS_URL: redis://redis:6379/0
