@@ -51,7 +51,6 @@ class VoiceClient(
             override fun onEndOfSpeech() = Unit
             override fun onPartialResults(partialResults: Bundle?) = Unit
             override fun onEvent(eventType: Int, params: Bundle?) = Unit
-            override fun onVolumeChanged(volume: Int, noise: Float) = Unit
         })
 
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {

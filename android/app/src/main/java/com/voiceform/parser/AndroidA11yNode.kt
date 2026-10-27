@@ -42,7 +42,12 @@ class AndroidA11yNode(private val node: AccessibilityNodeInfo) : A11yNode {
 
     override fun performSetText(value: String): Boolean {
         val args = android.os.Bundle().apply {
-            putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHAR_SEQUENCE, value)
+            // Public SDK does not export the ACTION_ARGUMENT_* constant on all
+            // compileSdk levels; value matches AccessibilityNodeInfo docs.
+            putCharSequence(
+                "android.view.accessibility.ACTION_ARGUMENT_SET_TEXT_CHAR_SEQUENCE",
+                value,
+            )
         }
         return node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
     }
@@ -50,11 +55,17 @@ class AndroidA11yNode(private val node: AccessibilityNodeInfo) : A11yNode {
     override fun performClick(): Boolean =
         node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
 
-    override fun performCheck(): Boolean =
-        node.performAction(AccessibilityNodeInfo.ACTION_CHECK)
+    // ACTION_CHECK / ACTION_UNCHECK are @hide in the public android.jar;
+    // ACTION_CLICK toggles isCheckable nodes (Android semantics).
+    override fun performCheck(): Boolean {
+        if (node.isChecked) return true
+        return node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+    }
 
-    override fun performUncheck(): Boolean =
-        node.performAction(AccessibilityNodeInfo.ACTION_UNCHECK)
+    override fun performUncheck(): Boolean {
+        if (!node.isChecked) return true
+        return node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+    }
 
     override fun performAccessibilityFocus(): Boolean =
         node.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS)
