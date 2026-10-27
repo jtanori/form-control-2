@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ARIA / Material-style form</title>
+  </head>
+  <body>
+    <div role="form" aria-label="Signup">
+      <div>
+        <input
+          id="m-email"
+          type="email"
+          aria-label="Email"
+          placeholder="Email"
+          role="textbox"
+        />
+      </div>
+      <div>
+        <input id="m-name" type="text" aria-labelledby="name-label" />
+        <span id="name-label">Full name</span>
+      </div>
+      <div role="checkbox" aria-checked="false" tabindex="0" id="m-terms" aria-label="Accept terms">
+        Accept terms
+      </div>
+      <button type="button" id="m-submit" aria-label="Create account">Create account</button>
+    </div>
+  </body>
+</html>

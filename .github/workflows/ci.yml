@@ -41,3 +41,39 @@ jobs:
 
       - name: Import check for the ASGI app
         run: python -c "from core.main import app; print(app.title)"
+
+  extension:
+    name: Extension (typecheck + tests + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: extensions/browser
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: extensions/browser/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build loadable extension
+        run: npm run build
+
+      - name: Assert dist layout
+        run: |
+          test -f dist/manifest.json
+          test -f dist/content.js
+          test -f dist/background.js
+          test -f dist/popup.html
+          test -f dist/popup.js
+
