@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VoiceForm</string>
+    <string name="accessibility_service_description">VoiceForm reads the current screen so you can fill forms by voice. It only processes the visible UI tree while you use the floating button — it does not collect keystrokes or network data on its own.</string>
+    <string name="overlay_title">VoiceForm</string>
+    <string name="overlay_mic">Mic</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="clarify">Clarify</string>
+</resources>
