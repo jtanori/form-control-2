@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from core import __version__
 from core.api.middleware import SessionLoggingMiddleware
@@ -68,6 +68,11 @@ def create_app(
     async def _contract_error(request: Request, exc: ContractError) -> JSONResponse:
         log.error("contract violation", extra={"error": str(exc)})
         return JSONResponse(status_code=500, content={"detail": "contract violation"})
+
+    @app.get("/", include_in_schema=False)
+    async def root() -> RedirectResponse:
+        """Human-friendly entry point: the interactive API docs."""
+        return RedirectResponse(url="/docs")
 
     app.include_router(router)
     return app

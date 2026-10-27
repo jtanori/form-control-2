@@ -5,6 +5,13 @@ from __future__ import annotations
 from core.lib import contracts
 
 
+def test_root_redirects_to_the_docs(client):
+    response = client.get("/", follow_redirects=False)
+    assert response.status_code in (302, 307)
+    assert response.headers["location"] == "/docs"
+    assert client.get("/docs").status_code == 200
+
+
 def test_health(client):
     response = client.get("/api/v1/health")
     assert response.status_code == 200
