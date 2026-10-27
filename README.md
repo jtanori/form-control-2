@@ -67,6 +67,14 @@ fallback, and a full compose stack.
 | Compose | `core` + `stt-whisper` + `redis` | [`docker-compose.yml`](docker-compose.yml) |
 | Clients | EXT-006 `TRANSCRIBE` unchanged; AND-004 `postTranscribe()` | [`bridge.ts`](extensions/browser/src/background/bridge.ts), [`VoiceClient.kt`](android/app/src/main/java/com/voiceform/voice/VoiceClient.kt) |
 
+**INTE-001 — E2E browser proof** is in: Playwright loads the real MV3
+extension against a stub Core; transcript → parse → **Confirm** → filled
+checkout (5 repeats in CI = G3 evidence).
+
+```bash
+cd tests/e2e && npm ci && npm test    # builds the extension if needed
+```
+
 CI runs Python lint/tests/contracts **and** extension typecheck/unit tests/build on
 every PR — see [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 

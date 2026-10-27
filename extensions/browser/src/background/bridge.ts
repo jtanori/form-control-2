@@ -117,16 +117,50 @@ async function corePost<T>(
   return (await res.json()) as T;
 }
 
+/**
+ * Resolve which tab to message (INTE-001).
+ *
+ * Without the `tabs` permission, `tabs.query` omits URLs — so we probe tabs
+ * with a side-effect-free `PING` and remember the last tab that answered
+ * (the popup opened as a E2E tab has no content script and fails the probe).
+ */
+let lastTargetTabId: number | undefined;
+
+async function pingContentScript(tabId: number): Promise<boolean> {
+  try {
+    await chrome.tabs.sendMessage(tabId, { type: "PING" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function resolveTabId(tabId?: number): Promise<number> {
+  if (tabId !== undefined) return tabId;
+  if (lastTargetTabId !== undefined && (await pingContentScript(lastTargetTabId))) {
+    return lastTargetTabId;
+  }
+  const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tabs: chrome.tabs.Tab[] = active ? [active, ...(await chrome.tabs.query({}))] : await chrome.tabs.query({});
+  const seen = new Set<number>();
+  for (const tab of tabs) {
+    if (tab.id === undefined || seen.has(tab.id)) continue;
+    seen.add(tab.id);
+    if (tab.url?.startsWith("chrome-extension://")) continue;
+    if (await pingContentScript(tab.id)) {
+      lastTargetTabId = tab.id;
+      return tab.id;
+    }
+  }
+  throw new Error("no active tab with a reachable content script");
+}
+
 async function sendMessageToTab<T>(
   tabId: number | undefined,
   message: unknown,
 ): Promise<T> {
-  if (tabId === undefined) {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab?.id) throw new Error("no active tab");
-    tabId = tab.id;
-  }
-  return chrome.tabs.sendMessage(tabId, message) as Promise<T>;
+  const target = await resolveTabId(tabId);
+  return chrome.tabs.sendMessage(target, message) as Promise<T>;
 }
 
 async function getSessionId(): Promise<string> {

@@ -12,6 +12,13 @@ const log = createLogger("ext.content");
 
 log.info("VoiceForm: active", { url: location.href });
 
+// DOM-visible injection marker (E2E asserts from the page's main world).
+try {
+  document.documentElement.dataset.voiceform = "ready";
+} catch {
+  /* document not ready yet */
+}
+
 // Reset cursor on page navigation (SPA soft-nav + full loads)
 window.addEventListener("pagehide", () => resetCursor());
 window.addEventListener("popstate", () => resetCursor());
@@ -20,6 +27,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   void (async () => {
     try {
       switch (message?.type) {
+        case "PING":
+          sendResponse({ ok: true });
+          break;
         case "GET_CONTEXT": {
           const snapshot: FormSnapshot = extractFormSnapshot();
           if (message.sessionId) snapshot.sessionId = message.sessionId;

@@ -89,6 +89,11 @@ function resolveLabelQuick(el: Element): string {
   if (closest) return closest;
   const aria = el.getAttribute("aria-label")?.trim();
   if (aria) return aria;
+  const tag = el.tagName.toLowerCase();
+  if (tag === "button" || tag === "a" || el.getAttribute("role") === "button") {
+    const text = el.textContent?.trim();
+    if (text) return text;
+  }
   const placeholder = el.getAttribute("placeholder")?.trim();
   if (placeholder) return placeholder;
   const name = el.getAttribute("name")?.trim();
