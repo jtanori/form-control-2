@@ -17,6 +17,12 @@ interface CommandDraft {
   value: string;
 }
 
+interface AmbiguityInfo {
+  message: string;
+  candidates: { nodeId: string; label: string; displayLabel?: string }[];
+  pendingCommand: Command | null;
+}
+
 async function sendMessage<T = Record<string, unknown>>(
   message: Record<string, unknown>,
 ): Promise<T & { ok: boolean; error?: string }> {
@@ -46,6 +52,7 @@ export function App() {
   const [drafts, setDrafts] = useState<CommandDraft[]>([]);
   const [parse, setParse] = useState<ParseResponse | null>(null);
   const [clarifyText, setClarifyText] = useState("");
+  const [ambiguity, setAmbiguity] = useState<AmbiguityInfo | null>(null);
   const [coreUrl, setCoreUrl] = useState("http://localhost:8020");
   const [sessionId, setSessionId] = useState("");
   const [elapsed, setElapsed] = useState(0);
@@ -180,26 +187,42 @@ export function App() {
   const onConfirm = useCallback(async () => {
     const commands = drafts
       .filter((d) => d.command.action !== "fill" || d.value !== "")
-      .map((d) => ({
-        ...d.command,
-        ...(d.command.action === "fill" || d.command.action === "check" || d.command.action === "uncheck"
-          ? {}
-          : {}),
-        ...(d.command.action === "fill" ? { value: d.value } : {}),
-      }));
+      .map((d) =>
+        d.command.action === "fill"
+          ? { ...d.command, value: d.value }
+          : d.command,
+      );
     setPhase("executing");
     setStatus("Executing…");
     setStatusKind("");
+    setAmbiguity(null);
     try {
       const res = await sendMessage<{
-        result?: { status: string; error?: string; executed?: Command[] };
+        result?: {
+          status: string;
+          error?: string;
+          executed?: Command[];
+          candidates?: { nodeId: string; label?: string; displayLabel?: string }[];
+        };
       }>({ type: "EXECUTE", sessionId, commands });
       if (!res.ok) throw new Error(res.error ?? "execute failed");
       const result = res.result;
       if (result?.status === "ambiguity") {
-        setPhase("clarifying");
-        setStatus("Ambiguous target — clarify below.");
+        // Executor refused to guess — let the user pick a candidate directly.
+        // (Core has no pending clarification here; CLARIFY would 409.)
+        const failed = commands[result.executed?.length ?? 0];
+        setAmbiguity({
+          message: result.error ?? "Ambiguous target — pick one:",
+          candidates: (result.candidates ?? []).map((c) => ({
+            nodeId: c.nodeId,
+            label: c.label ?? c.displayLabel ?? c.nodeId,
+            displayLabel: c.displayLabel,
+          })),
+          pendingCommand: failed ?? null,
+        });
+        setPhase("ready");
         setStatusKind("error");
+        setStatus(result.error ?? "Ambiguous target — pick one below.");
         return;
       }
       if (result?.status === "error") {
@@ -220,6 +243,34 @@ export function App() {
       setStatus(err instanceof Error ? err.message : "Execute failed");
     }
   }, [drafts, sessionId]);
+
+  const pickCandidate = useCallback(
+    (nodeId: string, label: string) => {
+      if (!ambiguity?.pendingCommand) return;
+      const command: Command = {
+        ...ambiguity.pendingCommand,
+        target: { ...ambiguity.pendingCommand.target, nodeId, label },
+      };
+      setAmbiguity(null);
+      setDrafts((prev) => {
+        const next = prev.map((d) =>
+          d.command === ambiguity.pendingCommand ||
+          (d.command.action === command.action &&
+            d.command.target.label === ambiguity.pendingCommand?.target.label)
+            ? { ...d, command }
+            : d,
+        );
+        // If the failed command wasn't in drafts (filtered), append it
+        if (!next.some((d) => d.command.target.nodeId === nodeId)) {
+          next.push({ command, value: command.value ?? "" });
+        }
+        return next;
+      });
+      setStatusKind("ok");
+      setStatus(`Target set to ${label}`);
+    },
+    [ambiguity],
+  );
 
   const onClarify = useCallback(async () => {
     if (!clarifyText.trim()) return;
@@ -243,6 +294,7 @@ export function App() {
   const onCancel = useCallback(() => {
     setDrafts([]);
     setParse(null);
+    setAmbiguity(null);
     setPhase("idle");
     setStatus("Cancelled");
     setStatusKind("");
@@ -333,6 +385,25 @@ export function App() {
           Parse
         </button>
       </form>
+
+      {ambiguity && ambiguity.candidates.length > 0 && (
+        <div className="clarify">
+          <p>
+            <strong>Ambiguous:</strong> {ambiguity.message}
+          </p>
+          <div className="row">
+            {ambiguity.candidates.map((c) => (
+              <button
+                key={c.nodeId}
+                type="button"
+                onClick={() => pickCandidate(c.nodeId, c.label)}
+              >
+                {c.displayLabel ?? c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {phase === "clarifying" && (
         <div className="clarify">
