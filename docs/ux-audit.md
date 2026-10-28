@@ -17,9 +17,11 @@
 > 2. **Popup = the only runtime surface** — records inline once permission is
 >    granted; missing permission → CTA to the options page, never a companion
 >    window. `recorder.html` leaves the happy path.
-> 3. **Launch = form identification first** — detect/group the page’s forms,
->    show them (“Checkout — 6 fields”), then accept voice/typed commands scoped
->    to the chosen form.
+> 3. **Always-on form identification** — content script detects forms **as the
+>    user browses** (observer-driven, throttled, local-only); toolbar badge +
+>    Side Panel list are pre-populated with **no icon click** (lazy users won’t
+>    start the extension — they’ll fill by hand). Full snapshot only on
+>    engagement (tap / panel open / command); Tier-1/Tier-2 split in UX-001 B-3.
 > 4. **Quick learning/tutorial** — one-click launch from the popup + auto-open
 >    on first install (welcome **tab**, not a popup modal); includes a safe
 >    **demo-form** full-loop step. Pattern research table lives in the UX-001

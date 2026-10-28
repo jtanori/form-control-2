@@ -49,9 +49,12 @@ secondary window” idea):**
   stop and document an alternative strategy in `docs/ux-audit.md` before
   building more UI** (do not revive the two-window flow without a new
   decision).
-- ✅ Once configured, **launching the extension’s first act is form
-  identification**: scan the current page, show the user what forms/fields
-  were found, then start voice/typed commands against that context.
+- ✅ **Form identification runs always, not on launch** — the content script
+  detects forms **while the user browses**, with no icon click required.
+  Users are lazy: if the extension needs a manual start, they will fill the
+  form by hand instead. Detection is passive and local; opening the Side
+  Panel (or tapping a form) merely *shows what was already found* and starts
+  full extraction only at that moment (B-3).
 - ✅ **Easy launch of a quick learning/tutorial** — a one-click way (from the
   popup and automatically on first install) to open a short, guided
   “how this works” experience. Research how others do it first (below), pick a
@@ -236,23 +239,47 @@ hot-mic state always visible; fallback path for blockers (above).
   mechanism that passes; document in audit.
 - Delete `recorder.html` from the happy path (dead once panel+options exist).
 
-**B-3. Launch flow starts with form identification**
+**B-3. Always-on form identification (no icon click, ever)**
 
-On popup open (and on demand):
+*Stakeholder revision: this is not a “launch” step — it runs for the whole
+browsing session.*
 
-1. **Identify forms** on the active page via the existing content-script
-   context (`GET_CONTEXT`): group nodes by `<form>` (fallback: interactive
-   regions when no `<form>` exists) → list each form with title/field count
-   (e.g. “Checkout — 6 fields”, “Sign in — 3 fields”).
-2. Show the list **before** any command UI: “What should I fill?” with the
-   detected forms; selecting one scopes `context` for parse/execute (or
-   “whole page” default, clearly labelled).
-3. Then the normal voice/typed input against the chosen form.
+**Two tiers:**
 
-Implementation note: grouping by form is an **extractor/normalizer add-on**
-(extension-side only; contract keeps a flat node list — add form metadata as
-optional grouping in the snapshot the popup already receives, or compute in
-the content script from `form` ancestry).
+1. **Tier 1 — passive discovery (always running, cheap).**
+   The content script is already injected on every page (`matches:
+   <all_urls>`). On `document_idle`, SPA route changes, and DOM mutations
+   (reuse the B-6 **MutationObserver**, throttled ~300–500 ms), detect forms
+   and interactive regions and maintain a light registry:
+   `{ formKey, label/title, fieldCount, rect, lastSeen }`.
+   - **No user action required** — happens on every site as they surf.
+   - Prune stale entries when the observer sees them removed (SPA steps).
+   - Publish registry changes to the Side Panel / toolbar badge (count) so
+     the UI is **pre-populated before the user ever opens it**.
+   - Privacy stance (QA-001): discovery is **local only** — nothing is sent
+     to Core until the user engages (tap, speak, or explicit extract).
+2. **Tier 2 — full snapshot on engagement.**
+   Full `extractFormSnapshot` (existing pipeline) runs only when the user
+   **taps the form, opens the Side Panel, or issues a command** — expensive
+   work stays lazy.
+
+**UI without requiring the icon:**
+
+- Quiet presence signal: toolbar badge/dot shows detected-form count while
+  browsing (B-0: indicator over text; muted when zero).
+- First form on a page may show the B-6 active/muted indicators + B-7 helper
+  chip contextually (hover/pause or first focus) — optional, must stay calm.
+- Opening the Side Panel shows the registry immediately: “What should I
+  fill?” → “Checkout — 6 fields”, “Sign in — 3 fields” (…); selecting one
+  scopes `context` (or “whole page”), then voice/typed input runs as normal.
+
+Implementation notes:
+- Grouping by `<form>` ancestry (fallback: interactive regions) computed in
+  the content script; contract stays a flat node list — registry metadata
+  lives extension-side (or as optional grouping fields in the snapshot the
+  panel already receives).
+- Registry state in the SW (MV3-safe across panel open/close); content script
+  is the source of truth on each page.
 
 **B-5. Quick learning / tutorial (launchable, not buried)**
 
@@ -389,7 +416,9 @@ floating second window.
 4. `options.html` (B-1) + manifest `options_ui`.  
 5. **Shadow-DOM cue layer + MutationObserver re-apply** (B-6): active/muted
    form indicators survive SPA re-renders.  
-6. Form identification panel (B-3) as first block of the side panel.  
+6. **Always-on form registry (B-3)** in the content script (observer-
+   driven, throttled, local-only) + count signal (badge) + Side Panel list
+   as first block (already populated on open).  
 7. **Tutorial (B-5):** `onboarding.html` + `onInstalled` + popup “?” + demo
    page + badge; desk-research reality check appended to audit.  
 8. **B-7 tap-to-talk** on the spike-#2 channel (chip, focus ring, sound,
@@ -433,8 +462,10 @@ floating second window.
 - [ ] **Side Panel hosts the runtime flow** (form list, transcript, cards,
       Confirm) and **persists across page interaction**; no user-managed
       floating window anywhere.
-- [ ] On launch, the user sees **detected forms** (count + labels) before
-      command entry; context scoped to a chosen form.
+- [ ] **Form detection is always on** — browsing any site updates the
+      registry with **zero** icon clicks (badge/list pre-populated); full
+      snapshot only on engagement; SPA add/remove keeps the list fresh;
+      nothing leaves the machine until engagement (privacy note in audit).
 - [ ] **Active form** shows the 2–3 px indicator; other forms show the muted,
       slightly blurred variant — **and both re-apply after a simulated SPA
       form re-render** (MutationObserver test or manual note).
