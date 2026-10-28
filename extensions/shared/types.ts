@@ -1,5 +1,5 @@
 /**
- * TypeScript types for contracts/v1 (CONTRACT-001).
+ * Shared types for contracts/v1 (CONTRACT-001).
  * Source of truth remains the JSON schemas; keep these in sync by hand for MVP.
  */
 
@@ -95,6 +95,15 @@ export interface ExecutionResult {
   error?: string;
 }
 
+/** B-3 Tier 1 — passive form discovery entry (local, extension-side only). */
+export interface FormSummary {
+  key: string;
+  title: string;
+  fieldCount: number;
+  rect: Rect | null;
+  formIndex: number;
+}
+
 /** Message contract between popup ↔ background ↔ content (EXT-004/006). */
 export type ExtensionMessage =
   | { type: "TRANSCRIBE"; blob: Blob; sessionId: string }
@@ -122,5 +131,8 @@ export type ExtensionMessage =
   | { type: "GET_CONTEXT"; sessionId: string; tabId?: number }
   | { type: "NAV_NEXT" | "NAV_PREV" | "NAV_READ"; sessionId: string; tabId?: number }
   | { type: "SET_CORE_URL"; coreUrl: string; sessionId?: string }
-  | { type: "GET_STATE"; sessionId: string };
-
+  | { type: "GET_STATE"; sessionId: string }
+  | { type: "FORM_REGISTRY"; forms: FormSummary[]; href: string; tabId?: number }
+  | { type: "GET_FORM_REGISTRY" }
+  | { type: "OPEN_SIDE_PANEL" }
+  | { type: "OPEN_OPTIONS" };

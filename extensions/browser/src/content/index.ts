@@ -3,10 +3,12 @@
  */
 
 import { createLogger } from "@shared/logger";
-import type { Command, FormSnapshot } from "@shared/types";
+import type { Command, FormSnapshot, FormSummary } from "@shared/types";
 import { extractFormSnapshot } from "./context-extractor";
 import { executeCommands } from "./executor";
 import { navNext, navPrev, navRead, resetCursor } from "./cursor";
+import { startFormRegistry } from "./form-registry";
+import { clearCues, installCueReapply, setCues } from "./cues";
 
 const log = createLogger("ext.content");
 
@@ -22,6 +24,10 @@ try {
 // Reset cursor on page navigation (SPA soft-nav + full loads)
 window.addEventListener("pagehide", () => resetCursor());
 window.addEventListener("popstate", () => resetCursor());
+
+// B-3 Tier 1: always-on form discovery + B-6 cue layer re-apply
+installCueReapply();
+startFormRegistry();
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   void (async () => {
@@ -54,6 +60,20 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           break;
         case "RESET_CURSOR":
           resetCursor();
+          sendResponse({ ok: true });
+          break;
+        case "SET_CUES": {
+          // B-6: side panel tells the page which form is active
+          const forms = (message.forms ?? []) as FormSummary[];
+          setCues({
+            forms,
+            activeKey: (message.activeKey as string | null) ?? null,
+          });
+          sendResponse({ ok: true });
+          break;
+        }
+        case "CLEAR_CUES":
+          clearCues();
           sendResponse({ ok: true });
           break;
         default:

@@ -3,11 +3,18 @@
   "name": "VoiceForm Universal",
   "version": "0.1.0",
   "description": "Voice-driven form filling for any page — bridge to the VoiceForm core NLU.",
-  "permissions": ["storage", "contextMenus", "alarms"],
+  "permissions": ["storage", "contextMenus", "alarms", "sidePanel"],
   "host_permissions": ["http://localhost:8020/*", "http://127.0.0.1:8020/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
   },
   "content_scripts": [
     {

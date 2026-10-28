@@ -38,7 +38,7 @@ await esbuild.build({
   format: "esm",
 });
 
-// Popup (React).
+// Popup (React) — demoted launcher (B-2).
 await esbuild.build({
   ...common,
   entryPoints: [join(pkgRoot, "src/popup/main.tsx")],
@@ -49,11 +49,22 @@ await esbuild.build({
   define: { "process.env.NODE_ENV": '"production"' },
 });
 
-// Durable voice/recorder window (mic prompt lives here, not in the popup).
+// Side Panel workspace (B-2) — the primary runtime surface.
 await esbuild.build({
   ...common,
-  entryPoints: [join(pkgRoot, "src/recorder/recorder.ts")],
-  outfile: join(dist, "recorder.js"),
+  entryPoints: [join(pkgRoot, "src/sidepanel/main.tsx")],
+  outfile: join(dist, "sidepanel.js"),
+  format: "iife",
+  jsx: "automatic",
+  loader: { ".css": "css" },
+  define: { "process.env.NODE_ENV": '"production"' },
+});
+
+// Options / onboarding (B-1, B-1a, B-5) — durable full tab.
+await esbuild.build({
+  ...common,
+  entryPoints: [join(pkgRoot, "src/options/options.ts")],
+  outfile: join(dist, "options.js"),
   format: "iife",
 });
 
@@ -61,7 +72,14 @@ await esbuild.build({
 await cp(join(pkgRoot, "manifest.json"), join(dist, "manifest.json"));
 await cp(join(pkgRoot, "src/popup/popup.html"), join(dist, "popup.html"));
 await cp(join(pkgRoot, "src/popup/popup.css"), join(dist, "popup.css"));
-await cp(join(pkgRoot, "src/recorder/recorder.html"), join(dist, "recorder.html"));
+await cp(join(pkgRoot, "src/ui/tokens.css"), join(dist, "tokens.css"));
+await cp(join(pkgRoot, "src/sidepanel/sidepanel.html"), join(dist, "sidepanel.html"));
+await cp(join(pkgRoot, "src/options/options.html"), join(dist, "options.html"));
+// Demo sandbox form (B-5) — repo fixture copied into the extension.
+await cp(
+  join(pkgRoot, "..", "..", "tests", "fixtures", "form-checkout.html"),
+  join(dist, "demo.html"),
+);
 
 // Minimal placeholder icons (solid PNG generated as base64 1x1 scaled by browser).
 const png1x1 = Buffer.from(
@@ -73,5 +91,12 @@ await writeFile(join(dist, "icon128.png"), png1x1);
 
 const manifest = JSON.parse(await readFile(join(dist, "manifest.json"), "utf8"));
 console.log(
-  `built extension v${manifest.version} -> dist/ (${["content.js", "background.js", "popup.js", "popup.html", "recorder.js", "recorder.html"].join(", ")})`,
+  `built extension v${manifest.version} -> dist/ (${[
+    "content.js",
+    "background.js",
+    "popup.js",
+    "sidepanel.js",
+    "options.js",
+    "tokens.css",
+  ].join(", ")})…`,
 );

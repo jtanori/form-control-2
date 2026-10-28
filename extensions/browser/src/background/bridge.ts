@@ -9,6 +9,7 @@ import type {
   Command,
   ExtensionMessage,
   FormSnapshot,
+  FormSummary,
   ParseResponse,
 } from "@shared/types";
 
@@ -171,6 +172,41 @@ async function getSessionId(): Promise<string> {
   return sessionId;
 }
 
+// ---- B-3 Tier 1: form registry + toolbar badge (local only) ----
+
+interface RegistryEntry {
+  tabId: number;
+  href: string;
+  forms: FormSummary[];
+  at: number;
+}
+
+async function recordFormRegistry(
+  forms: FormSummary[],
+  href: string,
+  tabId: number,
+): Promise<void> {
+  const entry: RegistryEntry = { tabId, href, forms, at: Date.now() };
+  await chrome.storage.session.set({ [`formRegistry:${tabId}`]: entry });
+  await updateBadge();
+}
+
+async function getFormRegistry(): Promise<RegistryEntry[]> {
+  const all = await chrome.storage.session.get(null);
+  const entries = Object.entries(all)
+    .filter(([k]) => k.startsWith("formRegistry:"))
+    .map(([, v]) => v as RegistryEntry)
+    .filter((e) => e && Date.now() - e.at < 5 * 60_000);
+  return entries.sort((a, b) => b.at - a.at);
+}
+
+async function updateBadge(): Promise<void> {
+  const entries = await getFormRegistry();
+  const count = entries.reduce((n, e) => n + e.forms.length, 0);
+  await chrome.action.setBadgeText({ text: count > 0 ? String(count) : "" });
+  await chrome.action.setBadgeBackgroundColor({ color: count > 0 ? "#2563eb" : "#6b7280" });
+}
+
 export async function handleMessage(
   message: ExtensionMessage,
   opts: { fromQueue?: boolean } = {},
@@ -268,6 +304,30 @@ export async function handleMessage(
         return { sessionId, coreUrl, queueSize: queue.length };
       }
 
+      case "FORM_REGISTRY": {
+        // Fallback path; primary path handles this with sender.tab in onMessage.
+        return { ok: true };
+      }
+
+      case "GET_FORM_REGISTRY":
+        return { forms: await getFormRegistry() };
+
+      case "OPEN_SIDE_PANEL": {
+        const [tab] = await chrome.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
+        if (tab?.id !== undefined) {
+          await chrome.sidePanel.open({ tabId: tab.id });
+        }
+        return { ok: true };
+      }
+
+      case "OPEN_OPTIONS": {
+        await chrome.runtime.openOptionsPage();
+        return { ok: true };
+      }
+
       default: {
         const never: never = message;
         throw new Error(`unknown message type: ${JSON.stringify(never)}`);
@@ -295,7 +355,23 @@ export async function handleMessage(
   }
 }
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Form registry (B-3) must record the *sender's* tab, not "active".
+  if (message?.type === "FORM_REGISTRY" && sender.tab?.id !== undefined) {
+    void recordFormRegistry(
+      message.forms as FormSummary[],
+      (message.href as string) ?? sender.tab.url ?? "",
+      sender.tab.id,
+    )
+      .then(() => sendResponse({ ok: true }))
+      .catch((err) =>
+        sendResponse({
+          ok: false,
+          error: err instanceof Error ? err.message : String(err),
+        }),
+      );
+    return true;
+  }
   void handleMessage(message as ExtensionMessage)
     .then((result) => sendResponse({ ok: true, ...((result as object) ?? {}) }))
     .catch((err) =>
@@ -314,14 +390,25 @@ chrome.alarms?.onAlarm?.addListener((alarm) => {
   if (alarm.name === "voiceform-flush") void flushQueue();
 });
 
-// Context menu (permission declared in manifest)
-chrome.runtime.onInstalled.addListener(() => {
+// Context menu (permission declared in manifest) + first-run surfaces (B-1/B-5)
+chrome.runtime.onInstalled.addListener((details) => {
   chrome.contextMenus.create({
     id: "voiceform-capture",
     title: "VoiceForm: capture page form",
     contexts: ["page"],
   });
+  // Never request mic on install (B-1a) — open setup/onboarding with value-first copy.
+  if (details.reason === "install") {
+    void chrome.runtime.openOptionsPage();
+  }
 });
+
+// B-2: clicking the toolbar icon opens the Side Panel workspace
+try {
+  void chrome.sidePanel?.setPanelBehavior?.({ openPanelOnActionClick: true });
+} catch {
+    /* sidePanel API missing in older Chromium — popup still opens */
+}
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId !== "voiceform-capture") return;

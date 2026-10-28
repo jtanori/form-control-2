@@ -3,7 +3,7 @@
 - **Item:** [`backlog/post-mvp/UX-001`](../backlog/post-mvp/UX-001-extension-ux-audit-redesign.md) · [issue #41](https://github.com/jtanori/form-control-2/issues/41)
 - **Scope:** browser extension surfaces only (Android overlay adoption is a Phase C optional handoff)
 - **Inputs:** source as of `v0.1.0-mvp` + mic recorder-window fix (#40); dogfooding notes from the first real session
-- **Status:** Phase A ✅ · Phase B ⚠️ **revised by stakeholder direction — see below** · Phase C ⏳
+- **Status:** Phase A ✅ · Phase B ⚠️ **revised by stakeholder direction — see below** · Phase C 🚧 (C1 foundations; spikes below)
 
 > **⚠️ Direction update (stakeholder, on #41) — read first**
 >
@@ -214,3 +214,60 @@ Cursor ←→🔊 demoted to Details (or a “Page tools” popover) — they’
 - [ ] Context menu → show toast/notification instead of silent log (F6)
 - [ ] Error copy pass per B4 table (grep `setStatus` to prove none remain raw)
 - [ ] E2E green (hooks unchanged) + typecheck + unit
+
+---
+
+## Phase C — Spike write-ups (build gates)
+
+### Spike #1 — Options-page `getUserMedia` + persisted grant (B-1a gate)
+
+**Question:** can the extension request mic permission from a full-tab
+options/onboarding page, have it persist, and later record without a re-prompt
+in other extension contexts?
+
+**Finding: YES (platform-documented behavior).**
+
+- Options pages are normal tabs at a `chrome-extension://` origin — the
+  permission prompt cannot “dismiss” the way it does in an action popup
+  (which closes on focus loss; that was the `Permission dismissed` root cause,
+  PR #40).
+- A grant issued for the extension origin persists across contexts
+  (`navigator.permissions.query({ name: "microphone" })` → `granted`) and
+  subsequent `getUserMedia` calls in the Side Panel / popup / offscreen
+  document resolve **without** a prompt while the grant holds.
+- We implement: options page owns the **Enable Voice Control** button (B-1a
+  just-in-time copy), records state via Permissions API, and offers
+  **Re-check Permission** on denial.
+- **Manual verification checklist** (release QA): fresh profile → install →
+  options → Enable → Allow once → reopen Side Panel → capture works with no
+  bubble; revoke via site settings → UI shows denial banner + Re-check.
+
+**Decision:** proceed with options-page setup (C1) and Side Panel as the
+primary runtime (B-2). E2E surface decision: **Side Panel page
+(`sidepanel.html`) retargeted as the test surface** (same React tree as the
+old popup; opened as a `chrome-extension://` tab in Playwright exactly like
+popup.html was) — popup demoted to launcher, so keeping E2E on the popup would
+test a dead surface.
+
+### Spike #2 — Mic capture channel for page-tap flows (B-7/B-8 gate)
+
+**Question:** where does audio get captured when the user taps the *page*
+(interacting with the page closes the popup; content scripts can never call
+`getUserMedia`)?
+
+**Finding (implemented order per B-1a):**
+
+1. **Offscreen document (`chrome.offscreen`, reason `USER_MEDIA`) — primary.**
+   Documented pattern for MV3 audio capture without any visible window;
+   extension-origin page reuses the B-1 grant silently; SW owns
+   `chrome.offscreen.createDocument` lifecycle (single instance,
+   `reasons: ["USER_MEDIA"]`) and pipes AudioChunks → `TRANSCRIBE`.
+2. **Side Panel as capture host — fallback only.** Panel survives page
+   interaction, but capture-in-panel couples audio to panel lifetime (user
+   closes panel → stream dies mid-utterance) and the panel is a *visible*
+   surface; offscreen is strictly better when it works.
+
+**Status:** C1 ships the workspace + setup; **C2 (B-7/B-8) builds on
+offscreen per this finding.** Manual verification for C2: granted profile →
+tap form on page → chime → speak → chunk arrives at SW while the panel stays
+idle; confirm no prompt re-fires.

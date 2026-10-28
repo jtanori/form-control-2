@@ -135,8 +135,8 @@ def test_manifest_permissions_are_minimal():
     assert "activeTab" not in perms
     assert "tabs" not in perms
     assert "nativeMessaging" not in perms
-    # Only what the code actually calls.
-    assert perms == {"storage", "contextMenus", "alarms"}
+    # Only what the code actually calls (sidePanel added for UX-001 B-2).
+    assert perms == {"storage", "contextMenus", "alarms", "sidePanel"}
     # Host access is scoped to Core only, not <all_urls>.
     assert manifest["host_permissions"] == [
         "http://localhost:8020/*",
