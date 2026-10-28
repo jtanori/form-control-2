@@ -73,6 +73,36 @@ secondary window” idea):**
   surfaces follow a small, explicit rule set (one accent, pill controls,
   material/blur, typography hierarchy, progressive disclosure, calm motion) —
   see B-0; applies to every surface in this item.
+- ✅ **Architecture brief (stakeholder) — build past today’s constraints:**
+  - **Chrome Side Panel API** as the persistent workspace (transcript,
+    commands, form list, controls) — native docked panel tied to the tab;
+    *not* a floating second window (consistent with the “no juggling” rule)
+    and *not* the popup (dies on page interaction). Resolves the
+    popup-closes-on-tap constraint that motivated spike #2.
+  - **DOM isolation + SPA resilience for all injected UI:** Shadow DOM
+    container on `document.body` (host CSS can’t leak in, our styles can’t
+    leak out) + **MutationObserver** to re-apply indicators/focus rings when
+    React/Vue CRMs tear the form down and rebuild it.
+  - **Micro-interaction standards:** non-destructive focus rings (inset
+    box-shadow + thin accent glow, no modals), in-field **`LISTENING…`**
+    badge with animated wave dot, **live transcript preview** floating above
+    the active element (catch misrecognitions pre-commit), and a **3-second
+    floating confirm pill** for high-stakes actions (“Say ‘Confirm’ or click”)
+    on top of the existing `confirmRequired` gate.
+
+### Reference architecture & docs (stakeholder-provided)
+
+1. Chrome **Side Panel API** —
+   <https://developer.chrome.com/docs/extensions/reference/api/sidePanel>
+2. MDN — **Using the Shadow DOM** —
+   <https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM>
+3. Chrome Extensions **best practices** (performance, layout shift,
+   non-intrusive UX) —
+   <https://developer.chrome.com/docs/extensions/get-started/best-practices>
+4. Chrome Web Store **best practices** (trust, permissions posture) —
+   <https://developer.chrome.com/docs/webstore/best-practices>
+5. Community write-ups on **CSS/JS interference in extensions** (React/Tailwind
+   + shadow roots inside content scripts).
 
 ### Research — how others teach an extension (desk research, refine during Phase C)
 
@@ -125,11 +155,13 @@ it (and the reviewer can check taste against rules, not vibes):
 | **Calm motion** | Short (~150–250 ms), ease-out transitions; one “listening” affordance; no bouncing or looping chrome animations |
 | **Honest empty states** | Empty = one line of guidance + one example, not a wall of tips |
 
-Scope: popup, options/onboarding, zen panel (B-8), helper chip (B-7).
+Scope: **Side Panel workspace (B-2)**, popup, options/onboarding, zen panel
+(B-8), helper chip + in-page cues (B-6/B-7).
 Implementation: extend the existing `popup.css` custom-property tokens
 (radius, spacing, shadow, blur, accent, muted) — one token file shared by all
-extension HTML; do not fork styles per surface. Light **and** dark parity via
-the existing `prefers-color-scheme` block.
+extension HTML (popup, side panel, options, onboarding); do not fork styles
+per surface. Light **and** dark parity via the existing
+`prefers-color-scheme` block.
 
 **B-1. Configuration page (`options_ui`, full tab — the only setup surface)**
 
@@ -147,17 +179,62 @@ the existing `prefers-color-scheme` block.
 - Feasibility spike (above) is a **Phase C gate**: write the finding into the
   audit doc before merging UI that depends on it.
 
-**B-2. Popup = the only runtime surface (no Stage window)**
+**B-1a. Microphone permissions — just-in-time flow (stakeholder brief)**
 
-- All recording happens **in the popup**, because mic setup already happened:
-  `getUserMedia` resolves without a prompt while permission is granted.
-- If permission is missing/revoked (prompt would kill the popup): show the
-  friendly copy + one button **“Open microphone setup”** → jumps to the
-  options page. Never open a companion window.
-- Delete `recorder.html` flow as the primary path (keep code only if the spike
-  proves popup recording impossible — then audit must say why and propose the
-  alternative; still no unvetted second window).
-- Typed path unchanged (E2E contract: `.card`, `Confirm`, `Executed` stay).
+Architecture fact that drives the UX: **content scripts cannot call
+`getUserMedia`**, and prompting from a surface that dies on focus (popup) or
+on install is hostile. Canonical MV3 split:
+
+| Layer | Role |
+|---|---|
+| **Side Panel or Options page** | *Requests* permission (persistent, extension-origin, prompt can’t “dismiss” the surface) with contextual value-first copy |
+| **Offscreen document** (`chrome.offscreen`, reason `USER_MEDIA`) | *Captures* audio in the background once granted — the modern solution for recording/STT without a visible window |
+| **Content script** | Never touches `getUserMedia`; only renders cues |
+
+**Progressive-disclosure flow (never request on install):**
+
+1. **Value before prompt** — first voice affordance (Side Panel / onboarding)
+   explains *why* before the bubble:
+   > “VoiceForm uses speech-to-text to fill complex CRM forms faster. We only
+   > listen when you activate voice controls.”
+   Single primary button: **“Enable Voice Control”**.
+2. **Native prompt, contextual** — that button triggers
+   `navigator.mediaDevices.getUserMedia({ audio: true })`; keep our own UI
+   adjacent to where Chrome anchors the bubble (top-left / address bar / panel)
+   so the prompt clearly belongs to us.
+3. **Graceful denial** — never a dead end:
+   > “Microphone access is currently blocked. Click the mic icon in the
+   > address bar to allow access, or retry below.”
+   with a **Re-check Permission** button (`navigator.permissions.query` +
+   re-request). Denial state persists visibly (muted mic + banner), typed path
+   always available.
+
+**Manifest/checklist:** declare `offscreen` (and `activeTab` where it suffices)
+— no blanket host permissions for audio; **never** `getUserMedia` on install;
+hot-mic state always visible; fallback path for blockers (above).
+
+**B-2. Side Panel = the persistent runtime workspace (replaces popup-as-primary)**
+
+*Stakeholder architecture brief — supersedes the earlier “popup-only” idea.*
+
+- **`chrome.sidePanel`** (manifest `side_panel.default_path`, open from the
+  toolbar icon / action click per `sidePanel.setPanelBehavior`):
+  - Native panel **docked to the tab** — persists across page clicks, scrolls,
+    and site re-renders; *not* a floating window the user must babysit (still
+    honors the “no juggling” rule), and *not* the popup (which dies on any
+    page interaction — so tap-to-talk, live transcript, and command review can
+    live here).
+  - Hosts: form list (B-3), transcript + **live preview**, command cards +
+    Confirm (keep E2E hooks — decide whether E2E drives popup or panel; the
+    Confirm gate stays either way), health strip, session/settings entry.
+- **Popup shrinks to quick entry**: open side panel, last status, “?”, typed
+  one-shot field (E2E may stay on popup if cheapest — call it in spike #1).
+- **Mic home:** prefer **Side Panel for `getUserMedia`** (extension-origin,
+  prompt doesn’t destroy the surface) with options page (B-1) as the explicit
+  setup path; **spike #2 revised** — evaluate side panel *and* offscreen
+  `USER_MEDIA` as the listener for page-tap flows (B-7), pick the smallest
+  mechanism that passes; document in audit.
+- Delete `recorder.html` from the happy path (dead once panel+options exist).
 
 **B-3. Launch flow starts with form identification**
 
@@ -208,41 +285,78 @@ After B-3 identifies forms (and whenever a command targets one):
 - **Other detected forms:** same indicator **muted** (low-opacity border) with
   a **slight blur** (`filter: blur(1–2 px)` on non-active form containers, or
   a translucent scrim over them) so page context stays readable.
-- Prefer **overlay elements positioned to the form’s rect** (content-script
-  injected, shadow-DOM, pointer-events: none) over mutating site CSS — avoids
-  breaking page layout/CSP; fall back to `outline` on the `<form>` when simpler.
+- **Isolation (hard requirement):** every in-page visual lives in a single
+  **shadow-DOM host** appended to `document.body`
+  (`container.attachShadow({ mode: 'open' })` → render cue layer inside).
+  Host CRM CSS cannot restyle our pills/rings; our tokens cannot leak into
+  the page. Blueprint: stakeholder brief §2.
+- **SPA resilience (hard requirement):** a **MutationObserver** watches
+  `document.body` (route/step re-renders in React/Vue CRMs) and **re-applies**
+  indicators, focus rings, chip, and aria hooks the moment the form DOM is
+  rebuilt. Indicator state (active form id + node ids) lives in the SW/side
+  panel so re-apply is automatic, not user-driven.
+- Anchor strategy: host node on `document.body`, position overlays to the
+  form’s viewport rect; `pointer-events: none` on decorative layers; fall back
+  to `outline` on the `<form>` only when simpler.
 - Clears on: dismiss, submit, unmount; follows selection changes from B-3.
 - Zen mode (B-8) may dim everything except the active form further.
 
 **B-7. Tap-to-talk initiation (how filling starts, and with what)**
 
 - **Helper chip** anchored to the active form: “Tap and talk to start filling
-  your form” (Apple-style pill, soft material, dismissible).
+  your form” (Apple-style pill, soft material, dismissible, shadow-DOM).
 - **Tap anywhere on the form** (or the chip) → focus the **first interactive
-  field**, apply the existing green cursor highlight, play a **soft start
-  sound** (WebAudio cue — no bundled asset), and begin listening.
+  field**, apply the **non-destructive focus ring** (smooth inset box-shadow +
+  thin accent glow — never a blocking modal; B-0), play a **soft start sound**
+  (WebAudio cue — no bundled asset), and begin listening **on the Side Panel /
+  offscreen channel** (spike #2), *not* in the popup.
 - **While talking, fields fill sequentially:** utterance → fill focused field →
   advance focus → next utterance. (Phrase-level loop first; true streaming
   partial-fill is stretch — spec it, don’t block on it.)
+- **In-field micro-feedback (hard requirement):**
+  - tiny **`LISTENING…`** badge inside the active input with an animated
+    sound-wave dot (styled in shadow DOM; must not alter the field’s stored
+    value or fire spurious input events);
+  - **live transcript preview** floating just above the active element so the
+    user catches misrecognitions **before** committing (replaces text on
+    accept; Esc/discard undoes).
 - **Controls** (buttons/checkbox/selects/links) get **navigation &
   activation instructions**, surfaced in the helper + onboarding:
   “next / back” (virtual cursor), “check / uncheck”, “select …”, “submit /
   continue”. Map to existing `NAV_*` + command actions — no new NLU verbs
   beyond what CORE-001 already parses unless the audit proves a gap.
-- Safety: Confirm gate **stays** for scriptable multi-step parses (E2E
-  contract); tap-to-talk mode confirms per-utterance or per-field (focus acts
-  as implicit review) — decide in spike write-up, default = keep explicit
-  Confirm for submits/risky actions only (already `confirmRequired`).
+- **High-stakes safety cushion (hard requirement):** submitting, clearing, or
+  other `confirmRequired` actions never fire on voice alone — a temporary
+  **floating action pill**: *“Voice command: ‘Submit registration’ — say
+  **Confirm** or click to execute”* with a **3-second** window (counts down,
+  Esc/timeout cancels). Stacks on top of the existing Confirm gate (E2E keeps
+  asserting an explicit confirm step).
+- **“Always know you’re heard” (hard requirement, stakeholder brief):**
+  - **Idle vs listening states:** idle mic = subtle/muted; listening = soft
+    glowing panel border + waveform (in-field badge above) — one glance tells
+    hot vs cold.
+  - **Audio chimes:** ultra-subtle start **and** stop blips (WebAudio) so
+    recognition boundaries are never a guess.
+  - **Global kill switch:** Esc (and a persistent mute button in the Side
+    Panel) instantly stops recognition — unmissable, always available.
 
-**Feasibility spike #2 (gate with B-7/B-8):** interacting with the page closes
-the popup, so listening can’t live there. Investigate **MV3 offscreen
-document** (`chrome.offscreen`, reason `USER_MEDIA`, Chrome 109+): extension-
-origin page → reuses the grant from B-1, survives popup/page focus, streams
-audio to the SW → `TRANSCRIBE` → commands → content script. Verify:
-mic grant reuse without prompt, latency acceptable for sequential fill, SW
-lifetime rules. **If offscreen fails the spike → document alternative in
-`docs/ux-audit.md` before building B-7/B-8** (same rule as spike #1; still no
-user-visible second window).
+**Feasibility spike #2 (revised — gates B-7/B-8):** interacting with the page
+closes the popup, so the listener cannot live there. Content scripts can
+**never** call `getUserMedia` (platform rule). Per B-1a the canonical split is:
+permission **requested** from Side Panel/Options (persistent surface),
+audio **captured** by an **offscreen document** (`chrome.offscreen`, reason
+`USER_MEDIA`, Chrome 109+). Evaluate, in order:
+1. **Offscreen capture** after Side Panel/Options grant (the modern default —
+   verify prompt attaches to a surviving surface and capture continues while
+   the user clicks the page);
+2. **Side Panel itself as capture host** — only if offscreen proves
+   insufficient (e.g. latency), since offscreen keeps audio headless.
+Verify: grant reuse without re-prompt, capture continuity during page
+interaction, latency acceptable for sequential fill, SW lifetime rules,
+`offscreen` manifest permission posture (QA-001-compatible).
+**Document the winner (or the failure + alternative) in `docs/ux-audit.md`
+before building B-7/B-8** — same rule as spike #1; still no user-visible
+floating second window.
 
 **B-8. Zen / reading mode (exploratory — evaluate as B-7’s host)**
 
@@ -266,61 +380,77 @@ user-visible second window).
 
 ### Phase C — Implement (revised scope)
 
-1. **Spike #1:** options-page `getUserMedia` + persisted grant → note in audit.  
-2. **Spike #2:** offscreen document (`USER_MEDIA`) as the page-interaction mic
-   channel → note in audit (gates B-7/B-8).  
-3. `options.html` (B-1) + manifest `options_ui`.  
-4. Popup: inline recording when granted; “Open microphone setup” when not;
-   **remove Stage window from the happy path**.  
-5. Form identification panel (B-3) + **active-form indicators (B-6)**.  
-6. **Tutorial (B-5):** `onboarding.html` + `onInstalled` + popup “?” + demo
+1. **Spike #1:** options-page `getUserMedia` + persisted grant (+ decide
+   whether E2E stays on popup or moves to side panel) → note in audit.  
+2. **Spike #2:** Side Panel vs offscreen `USER_MEDIA` as page-tap listener →
+   note in audit (gates B-7/B-8).  
+3. **Side Panel workspace (B-2)** + manifest `side_panel`; popup demoted to
+   quick entry; shared shell with options/onboarding.  
+4. `options.html` (B-1) + manifest `options_ui`.  
+5. **Shadow-DOM cue layer + MutationObserver re-apply** (B-6): active/muted
+   form indicators survive SPA re-renders.  
+6. Form identification panel (B-3) as first block of the side panel.  
+7. **Tutorial (B-5):** `onboarding.html` + `onInstalled` + popup “?” + demo
    page + badge; desk-research reality check appended to audit.  
-7. **B-7 tap-to-talk** (chip, focus, sound, sequential fill, control
-   instructions) on the spike-#2 channel; **B-8 zen panel** if spike holds
-   (else split note in audit).  
-8. **B-0 design pass** across popup/options/onboarding/zen: token file,
-   pill controls, one accent, light/dark.  
-9. Copy/error pass; context-menu silent-log fix if touched.  
-10. E2E: existing flow green; recorder-window tests → new path; optional
-    form-list assertion.
+8. **B-7 tap-to-talk** on the spike-#2 channel (chip, focus ring, sound,
+   sequential fill, `LISTENING…` badge, live transcript, 3 s confirm pill,
+   control instructions); **B-8 zen panel** if spike holds.  
+9. **B-0 design pass** across side panel/popup/options/onboarding/zen: token
+   file, pill controls, one accent, light/dark.  
+10. Copy/error pass; context-menu silent-log fix if touched.  
+11. E2E: existing flow green on chosen surface; recorder-window tests → new
+    path; optional form-list + indicator assertions.
 
 ## Files & deliverables
 
 - `/docs/ux-audit.md` — direction update + both spike write-ups + research
   appendix (final pattern choice)
-- `/extensions/browser/manifest.json` (`options_ui`, `offscreen` if spike #2
-  passes), `src/options/**`, `src/onboarding/**` (or tabs of one page),
-  `src/popup/**`, `src/content/*` (indicators, chip, zen overlay, form
-  grouping helper), `src/offscreen/**` (if needed), `demo.html`
+- `/extensions/browser/manifest.json` (`side_panel`, `options_ui`, `offscreen`
+  only if spike #2 needs it), `src/sidepanel/**`, `src/options/**`,
+  `src/onboarding/**`, `src/popup/**`, `src/content/*` (shadow-DOM cue layer,
+  MutationObserver, form grouping, zen overlay), `src/offscreen/**` (if
+  needed), `demo.html`
 - Shared token stylesheet (B-0) consumed by all extension HTML
 - Remove/demote `src/recorder/**` from the happy path (per B-2)
-- `/tests/e2e/browser-flow.spec.ts` updates if popup selectors change
+- `/tests/e2e/browser-flow.spec.ts` updates for chosen surface + selectors
 
 ## Acceptance criteria
 
 - [ ] Feasibility spike #1 written up (options-page mic works / alternative
       documented **before** further UI build).
-- [ ] Feasibility spike #2 written up (offscreen mic channel) **before** B-7/B-8
-      build; fallback documented if it fails.
+- [ ] Feasibility spike #2 written up (side panel vs offscreen) **before**
+      B-7/B-8 build; fallback documented if both fail.
 - [ ] Configuration page exists and can: grant mic, show Core/STT health,
       complete onboarding without the popup.
-- [ ] **No secondary window in the configured happy path** — voice records
-      inside the popup (B-7’s offscreen listener is invisible infrastructure,
-      not a window); no `chrome.windows.create` for recording.
-- [ ] On popup launch, the user sees **detected forms** (count + labels)
-      before command entry; parse context can be scoped to a chosen form.
+- [ ] **Mic is never requested on install** — value-first copy + single
+      “Enable Voice Control” action triggers the prompt (B-1a); denial shows
+      the non-punitive banner + **Re-check Permission**, typed path intact.
+- [ ] Manifest declares only needed perms (`side_panel`, `options_ui`,
+      `offscreen` if used, `activeTab` where it suffices) — auditable under
+      QA-001 rules.
+- [ ] **Hot-mic is always visible:** idle vs listening states, start/stop
+      chimes, Esc + Side-Panel mute kill switch (B-7).
+- [ ] **Side Panel hosts the runtime flow** (form list, transcript, cards,
+      Confirm) and **persists across page interaction**; no user-managed
+      floating window anywhere.
+- [ ] On launch, the user sees **detected forms** (count + labels) before
+      command entry; context scoped to a chosen form.
 - [ ] **Active form** shows the 2–3 px indicator; other forms show the muted,
-      slightly blurred variant; indicators clear on dismiss/submit.
-- [ ] **Tap-to-talk works end-to-end:** tap form → first field focused +
-      sound cue → speech fills fields sequentially; control vocabulary
-      (next/back/check/submit) documented in onboarding.
+      slightly blurred variant — **and both re-apply after a simulated SPA
+      form re-render** (MutationObserver test or manual note).
+- [ ] **All in-page UI renders inside a shadow root** — verified no style
+      leak in either direction (spot-check against a CSS-reset host page).
+- [ ] **Tap-to-talk works end-to-end:** tap → focus ring + sound → sequential
+      fill; **`LISTENING…` in-field badge** + **live transcript preview**;
+      control vocabulary documented in onboarding.
+- [ ] **High-stakes actions show the 3-second confirm pill** (say Confirm /
+      click) in addition to the programmatic Confirm gate.
 - [ ] **Zen mode (if shipped in this item):** input list + guided pass;
       submit/dismiss restores the original page with no residue.
-- [ ] **Tutorial launchable in one click** from the popup (“?”); auto-opens on
-      first install; demo-form step completes the full loop; badge clears.
-- [ ] **Design review:** B-0 rules visible on every surface (one accent, pill
-      primary, single token file, light/dark parity) — checked against the
-      table, not ad-hoc.
+- [ ] **Tutorial launchable in one click** (popup “?”), auto-opens on install,
+      demo-form full loop, badge clears.
+- [ ] **Design review:** B-0 rules visible on every surface — checked against
+      the table, not ad-hoc.
 - [ ] Research reality-check appended to `docs/ux-audit.md` (final pattern +
       why, referencing ≥2 shipped extensions).
 - [ ] A cold user completes setup + tutorial + T1/T2 with no external docs.

@@ -28,15 +28,23 @@
 >    other detected forms muted border + slight blur (attention, not hiding).
 > 6. **Tap-to-talk** — in-form helper chip → tap focuses first field + sound
 >    cue → sequential voice fill; control vocabulary (next/back/check/submit).
->    Requires **spike #2: offscreen `USER_MEDIA` document** (popup closes on
->    page interaction, so listening cannot live there).
+>    **Mic channel = Side Panel (preferred) or offscreen `USER_MEDIA` — spike
+>    #2** (popup closes on page interaction; floating windows stay banned).
 > 7. **Zen / reading mode (exploratory)** — quiet overlay guiding through the
 >    form’s inputs; submit/dismiss restores the original page. Likely host for
 >    #6’s interaction loop.
 > 8. **Design language: Apple-inspired simplicity** — B-0 table in the UX-001
 >    item: one accent, grayscale rest, pill controls, material/blur surfaces,
 >    typography-as-hierarchy, progressive disclosure, calm motion; single token
->    file across popup/options/onboarding/zen, light + dark.
+>    file across all surfaces, light + dark.
+> 9. **Architecture brief (stakeholder):** **Side Panel API** = persistent
+>    runtime workspace (docked, survives clicks/SPA re-renders — supersedes
+>    popup-as-primary); all in-page UI in a **Shadow DOM host on
+>    `document.body`** (no style bleed either way) + **MutationObserver** to
+>    re-apply cues when React/Vue CRMs rebuild the form; micro-interactions:
+>    non-destructive focus rings, in-field **`LISTENING…`** badge, **live
+>    transcript preview**, **3-second confirm pill** for high-stakes voice
+>    actions. Reference links in the UX-001 item.
 >
 > Phase A (map, scores, friction, constraints) still stands. The “Console +
 > Stage” write-up below is retained as the superseded draft for traceability.
