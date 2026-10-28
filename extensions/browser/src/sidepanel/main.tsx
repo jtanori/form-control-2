@@ -6,7 +6,6 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "../popup/App";
 import { FormList } from "./FormList";
-import "../ui/tokens.css";
 import "../popup/popup.css";
 
 const el = document.getElementById("root");

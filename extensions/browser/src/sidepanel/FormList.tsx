@@ -67,9 +67,9 @@ export function FormList() {
       aria-label="Detected forms"
       style={{
         margin: "10px 10px 0",
-        background: "var(--card)",
-        border: "1px solid var(--border)",
-        borderRadius: "var(--radius)",
+        background: "var(--vf-surface)",
+        border: "1px solid var(--vf-hairline)",
+        borderRadius: "var(--vf-radius-card)",
         padding: "10px 12px",
         display: "flex",
         flexDirection: "column",
@@ -92,7 +92,7 @@ export function FormList() {
         </span>
       </div>
       {forms.length === 0 && !error && (
-        <div className="hint" style={{ fontSize: 12, color: "var(--muted)" }}>
+        <div className="hint" style={{ fontSize: 12, color: "var(--vf-text-secondary)" }}>
           Detected automatically as you browse — no button needed.
         </div>
       )}

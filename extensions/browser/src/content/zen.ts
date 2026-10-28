@@ -5,6 +5,7 @@
 
 import type { FormNode, FormSnapshot } from "@shared/types";
 import { extractFormSnapshot } from "./context-extractor";
+import { SHADOW_HOST_VARS } from "./shadow-tokens";
 
 const HOST_ID = "voiceform-zen-host";
 
@@ -32,27 +33,35 @@ export function zenOpen(snapshot?: FormSnapshot): void {
   root.innerHTML = "";
   const style = document.createElement("style");
   style.textContent = `
-    .veil { position: fixed; inset: 0; background: rgba(15,23,42,.42);
+    ${SHADOW_HOST_VARS}
+    .veil { position: fixed; inset: 0;
+      background: color-mix(in srgb, var(--vf-text-primary) 42%, transparent);
       backdrop-filter: blur(2px); z-index: 2147483000; }
     .panel { position: fixed; top: 12vh; left: 50%; transform: translateX(-50%);
-      width: min(420px, 92vw); background: rgba(255,255,255,.92);
-      color: #111; border-radius: 16px; padding: 18px;
-      box-shadow: 0 20px 50px rgba(0,0,0,.35);
-      font: 14px/1.45 -apple-system, system-ui, sans-serif;
+      width: min(420px, 92vw);
+      background: color-mix(in srgb, var(--vf-surface-elevated) 94%, transparent);
+      color: var(--vf-text-primary);
+      border-radius: var(--vf-radius-sheet); padding: 18px;
+      box-shadow: var(--vf-shadow-floating);
+      font: var(--vf-type-body) / 1.45 var(--vf-font-family);
+      border: var(--vf-border-hairline) solid var(--vf-hairline);
       backdrop-filter: blur(16px) saturate(180%); z-index: 2147483100; }
-    @media (prefers-color-scheme: dark) {
-      .panel { background: rgba(17,24,39,.94); color: #f9fafb; }
-    }
-    h2 { margin: 0 0 4px; font-size: 16px; }
-    .meta { opacity: .65; font-size: 12px; margin-bottom: 10px; }
+    h2 { margin: 0 0 4px; font: var(--vf-type-subheading) var(--vf-font-family); }
+    .meta { color: var(--vf-text-secondary); font: var(--vf-type-caption); margin-bottom: 10px; }
     ul { list-style: none; margin: 0; padding: 0; max-height: 40vh; overflow: auto; }
-    li { padding: 8px 10px; border-radius: 10px; display: flex; justify-content: space-between; gap: 8px; }
-    li.cur { background: rgba(37,99,235,.14); outline: 1px solid rgba(37,99,235,.45); }
-    .val { opacity: .6; font-size: 12px; }
+    li { padding: 8px 10px; border-radius: var(--vf-radius-control);
+      display: flex; justify-content: space-between; gap: 8px; }
+    li.cur { background: var(--vf-accent-50);
+      outline: 1px solid var(--vf-accent-500); }
+    .val { color: var(--vf-text-secondary); font: var(--vf-type-caption); }
     .row { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
-    button { border: 0; border-radius: 999px; padding: 8px 14px; font: inherit; cursor: pointer; }
-    .primary { background: #2563eb; color: #fff; }
-    .ghost { background: transparent; border: 1px solid rgba(127,127,127,.45); }
+    button { border: 0; border-radius: var(--vf-radius-pill);
+      padding: 8px 14px; font: var(--vf-type-body-medium); font-family: var(--vf-font-family);
+      cursor: pointer; min-height: 36px; }
+    .primary { background: var(--vf-accent-600); color: var(--vf-on-accent); }
+    .ghost { background: transparent;
+      border: var(--vf-border-hairline) solid var(--vf-border-strong);
+      color: var(--vf-text-primary); }
   `;
   const veil = document.createElement("div");
   veil.className = "veil";

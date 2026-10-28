@@ -1,4 +1,9 @@
-/** Visual feedback for execution + virtual cursor (EXT-003 / EXT-005). */
+/** Visual feedback for execution + virtual cursor (EXT-003 / EXT-005).
+ * Document-level style tag: host pages don't resolve our CSS vars, so outline
+ * literals come from shadow-tokens (mirrors contracts/design/tokens.json).
+ */
+
+import { VF_ACCENT_500, VF_WARNING } from "./shadow-tokens";
 
 const EXEC_CLASS = "voiceform-exec-highlight";
 const CURSOR_CLASS = "voiceform-cursor";
@@ -11,11 +16,11 @@ function ensureStyles(): void {
   style.id = "voiceform-styles";
   style.textContent = `
 .${EXEC_CLASS} {
-  outline: 3px dashed #ff0 !important;
+  outline: 3px dashed ${VF_WARNING} !important;
   outline-offset: 2px !important;
 }
 .${CURSOR_CLASS} {
-  outline: 3px solid #00ff88 !important;
+  outline: 3px solid ${VF_ACCENT_500} !important;
   z-index: 999999 !important;
   outline-offset: 2px !important;
 }

@@ -1,4 +1,4 @@
-import * as esbuild from "esbuild";
+﻿import * as esbuild from "esbuild";
 import { cp, mkdir, readFile, writeFile, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -38,7 +38,7 @@ await esbuild.build({
   format: "esm",
 });
 
-// Popup (React) — demoted launcher (B-2).
+// Popup (React) â€” demoted launcher (B-2).
 await esbuild.build({
   ...common,
   entryPoints: [join(pkgRoot, "src/popup/main.tsx")],
@@ -49,7 +49,7 @@ await esbuild.build({
   define: { "process.env.NODE_ENV": '"production"' },
 });
 
-// Side Panel workspace (B-2) — the primary runtime surface.
+// Side Panel workspace (B-2) â€” the primary runtime surface.
 await esbuild.build({
   ...common,
   entryPoints: [join(pkgRoot, "src/sidepanel/main.tsx")],
@@ -60,7 +60,7 @@ await esbuild.build({
   define: { "process.env.NODE_ENV": '"production"' },
 });
 
-// Options / onboarding (B-1, B-1a, B-5) — durable full tab.
+// Options / onboarding (B-1, B-1a, B-5) â€” durable full tab.
 await esbuild.build({
   ...common,
   entryPoints: [join(pkgRoot, "src/options/options.ts")],
@@ -68,7 +68,7 @@ await esbuild.build({
   format: "iife",
 });
 
-// Offscreen capture (C2 / spike #2) — USER_MEDIA, invisible.
+// Offscreen capture (C2 / spike #2) â€” USER_MEDIA, invisible.
 await esbuild.build({
   ...common,
   entryPoints: [join(pkgRoot, "src/offscreen/offscreen.ts")],
@@ -80,11 +80,11 @@ await esbuild.build({
 await cp(join(pkgRoot, "manifest.json"), join(dist, "manifest.json"));
 await cp(join(pkgRoot, "src/popup/popup.html"), join(dist, "popup.html"));
 await cp(join(pkgRoot, "src/popup/popup.css"), join(dist, "popup.css"));
-await cp(join(pkgRoot, "src/ui/tokens.css"), join(dist, "tokens.css"));
+await cp(join(pkgRoot, "..", "..", "contracts", "design", "tokens.css"), join(dist, "tokens.css"));
 await cp(join(pkgRoot, "src/sidepanel/sidepanel.html"), join(dist, "sidepanel.html"));
 await cp(join(pkgRoot, "src/options/options.html"), join(dist, "options.html"));
 await cp(join(pkgRoot, "src/offscreen/offscreen.html"), join(dist, "offscreen.html"));
-// Demo sandbox form (B-5) — repo fixture copied into the extension.
+// Demo sandbox form (B-5) â€” repo fixture copied into the extension.
 await cp(
   join(pkgRoot, "..", "..", "tests", "fixtures", "form-checkout.html"),
   join(dist, "demo.html"),
@@ -108,5 +108,5 @@ console.log(
     "options.js",
     "offscreen.js",
     "tokens.css",
-  ].join(", ")})…`,
+  ].join(", ")})â€¦`,
 );
