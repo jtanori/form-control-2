@@ -71,31 +71,46 @@ test("voiceform extension: parse → confirm → fills checkout form", async ({}
   testInfo.annotations.push({ type: "sessionId", description: sessionId });
 
   const context = await launchExtensionContext();
+  const mark = (s: string) => console.log(`STEP ${s}`);
   try {
+    mark("launch");
     const sw = await extensionServiceWorker(context);
     const id = await extensionId(sw);
+    mark(`sw ${id}`);
 
     // Point the bridge at the stub Core (host_permissions already allow :8020).
     await sw.evaluate(async (coreUrl) => {
       await chrome.storage.sync.set({ coreUrl });
     }, MOCK_CORE);
+    mark("storage");
 
     // Real page under test.
     const page = await context.newPage();
     await page.goto(FIXTURE_URL, { waitUntil: "domcontentloaded" });
     await expect(page.locator("#email")).toBeVisible();
+    mark("fixture");
 
-    // Popup as a tab (same React UI the toolbar opens).
+    // Workspace as a tab (B-2 spike #1: E2E surface = sidepanel.html — same
+    // React tree the docked panel uses; popup is demoted to a launcher).
     const popup = await context.newPage();
-    await popup.goto(`chrome-extension://${id}/popup.html`);
-    await expect(popup.locator("h1")).toHaveText("VoiceForm");
+    await popup.goto(`chrome-extension://${id}/sidepanel.html`, {
+      timeout: 15_000,
+    });
+    mark("sidepanel loaded");
+    await expect(popup.locator("h1")).toHaveText("VoiceForm", { timeout: 10_000 });
+    mark("h1");
 
     // Typed-command path (STT stub exists; typing is deterministic for CI).
-    await popup.locator('input[name="typed"]').fill(TRANSCRIPT);
-    await popup.getByRole("button", { name: "Parse" }).click();
+    await popup.locator('input[name="typed"]').fill(TRANSCRIPT, { timeout: 10_000 });
+    mark("filled");
+    // dispatchEvent: FormList's 4s poll can keep the node "unstable" for
+    // Playwright actionability; the React handler is what matters.
+    await popup.getByRole("button", { name: "Parse" }).dispatchEvent("click");
+    mark("parse clicked");
 
     // (3) Confirmation UI before anything executes — cards + Confirm/Cancel.
     await expect(popup.locator(".card").first()).toBeVisible({ timeout: 20_000 });
+    mark("cards");
     await expect(popup.locator(".cmd-title").first()).toContainText("fill");
     await expect(popup.locator(".cmd-title").nth(1)).toContainText("click");
     const confirm = popup.getByRole("button", { name: "Confirm" });
@@ -134,16 +149,24 @@ test("voiceform extension: parse → confirm → fills checkout form", async ({}
 });
 
 test("stt endpoint answers the transcript stub (G1 plumbing)", async ({ request }) => {
+  // If a live Docker Core occupies :8020, webServer reuses it (by design) —
+  // whisper won't decode fake bytes. Only assert against the stub server.
+  const health = await request.get(`${MOCK_CORE}/api/v1/health`);
+  const body = (await health.json().catch(() => ({}))) as { version?: string };
+  test.skip(
+    body.version !== "0.0.0-mock",
+    `port 8020 is a live core (v${body.version}) — stub not in charge`,
+  );
   const resp = await request.post(`${MOCK_CORE}/stt/transcribe`, {
     multipart: { audio: { name: "speech.webm", mimeType: "audio/webm", buffer: Buffer.from("fake") } },
   });
   expect(resp.status()).toBe(200);
-  const body = await resp.json();
-  expect(body).toMatchObject({
+  const stt = await resp.json();
+  expect(stt).toMatchObject({
     transcript: expect.any(String),
     language: "en",
     confidence: expect.any(Number),
     duration_sec: expect.any(Number),
   });
-  expect(body.transcript.length).toBeGreaterThan(0);
+  expect(stt.transcript.length).toBeGreaterThan(0);
 });

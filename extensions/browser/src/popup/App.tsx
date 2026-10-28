@@ -4,7 +4,7 @@
  * Clarification flow via CLARIFY. Text fallback when STT is unavailable.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Command, ParseResponse } from "@shared/types";
 import { createLogger } from "@shared/logger";
 
@@ -55,12 +55,20 @@ export function App() {
   const [ambiguity, setAmbiguity] = useState<AmbiguityInfo | null>(null);
   const [coreUrl, setCoreUrl] = useState("http://localhost:8020");
   const [sessionId, setSessionId] = useState("");
+  const [elapsed, setElapsed] = useState(0);
+
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     void (async () => {
       setSessionId(await getSessionId());
       setCoreUrl(await fetchCoreUrl());
     })();
+    return () => {
+      if (timerRef.current) window.clearInterval(timerRef.current);
+    };
   }, []);
 
   const toDrafts = useCallback((commands: Command[]): CommandDraft[] =>
@@ -85,36 +93,81 @@ export function App() {
   }, [toDrafts]);
 
   /**
-   * The action popup closes when Chrome's mic prompt takes focus, which
-   * aborts getUserMedia ("Permission dismissed"). Recording therefore runs in
-   * a durable companion window that survives the prompt.
+   * Side Panel context (B-2/spike #1): the panel is a durable extension
+   * page — the mic prompt cannot dismiss it, and the grant made on the
+   * options page is reused silently. Replaces the old Stage window.
    */
-  const openRecorder = useCallback(async () => {
+  const startRecording = useCallback(async () => {
     setStatus("");
     setStatusKind("");
-    const url = chrome.runtime.getURL("recorder.html");
+    setTranscript("");
+    setParse(null);
+    setDrafts([]);
     try {
-      await chrome.windows.create({
-        url,
-        type: "popup",
-        width: 400,
-        height: 440,
-        focused: true,
-      });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        void finishRecording(blob);
+      };
+      recorder.start();
+      recorderRef.current = recorder;
       setPhase("recording");
-      setStatusKind("ok");
-      setStatus("Voice window opened — speak, then Confirm there.");
-      log.info("recorder window opened", { sessionId });
+      setElapsed(0);
+      timerRef.current = window.setInterval(() => setElapsed((s) => s + 1), 1000);
+      log.info("recording started (side panel)", { sessionId });
     } catch (err) {
-      // Fallback: older/edge builds without windows API — keep popup honest.
       setStatusKind("error");
       setStatus(
-        err instanceof Error
-          ? `Could not open voice window: ${err.message}. Use the text box below.`
-          : "Could not open voice window. Use the text box below.",
+        err instanceof Error && /Permission|NotAllowed/i.test(err.message)
+          ? "Microphone not allowed yet — open ? Setup and press Enable Voice Control."
+          : `Mic unavailable: ${err instanceof Error ? err.message : "unknown"}. Type a command instead.`,
       );
+      setPhase("idle");
     }
   }, [sessionId]);
+
+  const stopRecording = useCallback(() => {
+    if (timerRef.current) window.clearInterval(timerRef.current);
+    recorderRef.current?.stop();
+    setPhase("transcribing");
+    setStatus("Transcribing…");
+    setStatusKind("");
+  }, []);
+
+  const finishRecording = useCallback(
+    async (blob: Blob) => {
+      try {
+        const tx = await sendMessage<{ transcript?: string }>({
+          type: "TRANSCRIBE",
+          blob,
+          sessionId,
+        });
+        if (!tx.ok) throw new Error(tx.error ?? "transcription failed");
+        const text = tx.transcript ?? "";
+        if (!text) {
+          setPhase("idle");
+          setStatusKind("error");
+          setStatus("No speech recognized — try again or type instead.");
+          return;
+        }
+        setTranscript(text);
+        await runParse(text);
+      } catch (err) {
+        setPhase("idle");
+        setStatusKind("error");
+        setStatus(
+          err instanceof Error ? err.message : "Transcription failed — type instead.",
+        );
+      }
+    },
+    [sessionId],
+  );
 
   const runParse = useCallback(
     async (text: string) => {
@@ -281,6 +334,13 @@ export function App() {
     await sendMessage({ type: "SET_CORE_URL", coreUrl: url });
   }, []);
 
+  const recordingLabel = useMemo(() => {
+    if (phase !== "recording") return "●";
+    const m = Math.floor(elapsed / 60);
+    const s = String(elapsed % 60).padStart(2, "0");
+    return `${m}:${s}`;
+  }, [phase, elapsed]);
+
   return (
     <div className="app">
       <header>
@@ -293,11 +353,17 @@ export function App() {
       <div className="row" style={{ justifyContent: "center" }}>
         <button
           type="button"
-          className="mic"
-          onClick={() => void openRecorder()}
-          title="Open the voice window (mic permission asked there, not here)"
+          className={`mic${phase === "recording" ? " recording" : ""}`}
+          onClick={() =>
+            phase === "recording" ? stopRecording() : void startRecording()
+          }
+          title={
+            phase === "recording"
+              ? "Stop"
+              : "Record (mic setup lives in ? Setup if blocked)"
+          }
         >
-          ●
+          {recordingLabel}
         </button>
         <button type="button" onClick={() => void onNav("NAV_PREV")} title="Previous field">
           ←
@@ -311,7 +377,7 @@ export function App() {
       </div>
 
       <div className={`transcript${transcript ? "" : " empty"}`}>
-        {transcript || "● opens the voice window — or type a command below…"}
+        {transcript || "● to talk (needs mic in ? Setup) — or type a command below…"}
       </div>
 
       <form

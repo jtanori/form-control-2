@@ -76,6 +76,12 @@ jobs:
           test -f dist/background.js
           test -f dist/popup.html
           test -f dist/popup.js
+          test -f dist/sidepanel.html
+          test -f dist/sidepanel.js
+          test -f dist/options.html
+          test -f dist/options.js
+          test -f dist/tokens.css
+          test -f dist/demo.html
 
   android:
     name: Android (form-core tests + debug APK)
