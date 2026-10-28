@@ -164,7 +164,7 @@ async function sendMessageToTab<T>(
   return chrome.tabs.sendMessage(target, message) as Promise<T>;
 }
 
-async function getSessionId(): Promise<string> {
+export async function getSessionId(): Promise<string> {
   const stored = await chrome.storage.session.get(["sessionId"]);
   if (stored.sessionId) return stored.sessionId as string;
   const sessionId = `sess-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -356,8 +356,21 @@ export async function handleMessage(
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  const type = (message as { type?: string })?.type;
+  // Voice/orchestration messages are handled in voice.ts (own listener).
+  const voiceTypes = new Set([
+    "TAP_TO_TALK",
+    "AUDIO_BLOB",
+    "CONFIRM_PILL_RESULT",
+    "LISTENING_STARTED",
+    "LISTENING_ERROR",
+    "OFFSCREEN_START",
+    "OFFSCREEN_STOP",
+  ]);
+  if (voiceTypes.has(type ?? "")) return false;
+
   // Form registry (B-3) must record the *sender's* tab, not "active".
-  if (message?.type === "FORM_REGISTRY" && sender.tab?.id !== undefined) {
+  if (type === "FORM_REGISTRY" && sender.tab?.id !== undefined) {
     void recordFormRegistry(
       message.forms as FormSummary[],
       (message.href as string) ?? sender.tab.url ?? "",

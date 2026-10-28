@@ -3,7 +3,7 @@
 - **Item:** [`backlog/post-mvp/UX-001`](../backlog/post-mvp/UX-001-extension-ux-audit-redesign.md) · [issue #41](https://github.com/jtanori/form-control-2/issues/41)
 - **Scope:** browser extension surfaces only (Android overlay adoption is a Phase C optional handoff)
 - **Inputs:** source as of `v0.1.0-mvp` + mic recorder-window fix (#40); dogfooding notes from the first real session
-- **Status:** Phase A ✅ · Phase B ⚠️ **revised by stakeholder direction — see below** · Phase C 🚧 (C1 foundations; spikes below)
+- **Status:** Phase A ✅ · Phase B ⚠️ **revised by stakeholder direction — see below** · Phase C ✅ C1 (workspace/options/registry/cues) · C2 ✅ (offscreen tap-to-talk, confirm pill, zen) · residual manual QA on device
 
 > **⚠️ Direction update (stakeholder, on #41) — read first**
 >

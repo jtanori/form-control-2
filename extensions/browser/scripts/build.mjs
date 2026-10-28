@@ -68,6 +68,14 @@ await esbuild.build({
   format: "iife",
 });
 
+// Offscreen capture (C2 / spike #2) — USER_MEDIA, invisible.
+await esbuild.build({
+  ...common,
+  entryPoints: [join(pkgRoot, "src/offscreen/offscreen.ts")],
+  outfile: join(dist, "offscreen.js"),
+  format: "iife",
+});
+
 // Static assets.
 await cp(join(pkgRoot, "manifest.json"), join(dist, "manifest.json"));
 await cp(join(pkgRoot, "src/popup/popup.html"), join(dist, "popup.html"));
@@ -75,6 +83,7 @@ await cp(join(pkgRoot, "src/popup/popup.css"), join(dist, "popup.css"));
 await cp(join(pkgRoot, "src/ui/tokens.css"), join(dist, "tokens.css"));
 await cp(join(pkgRoot, "src/sidepanel/sidepanel.html"), join(dist, "sidepanel.html"));
 await cp(join(pkgRoot, "src/options/options.html"), join(dist, "options.html"));
+await cp(join(pkgRoot, "src/offscreen/offscreen.html"), join(dist, "offscreen.html"));
 // Demo sandbox form (B-5) — repo fixture copied into the extension.
 await cp(
   join(pkgRoot, "..", "..", "tests", "fixtures", "form-checkout.html"),
@@ -97,6 +106,7 @@ console.log(
     "popup.js",
     "sidepanel.js",
     "options.js",
+    "offscreen.js",
     "tokens.css",
   ].join(", ")})…`,
 );
