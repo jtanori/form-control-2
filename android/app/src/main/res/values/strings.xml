@@ -9,6 +9,22 @@
     <string name="overlay_collapsed_hint">Tap to open VoiceForm</string>
     <string name="overlay_empty_fields">Choose a field or form to start.</string>
     <string name="overlay_more_fields">+%1$d more</string>
+
+    <!-- Zen sheet (spec §6.4 simplified — P2 parity; copy.json zen.*) -->
+    <string name="zen_open">Zen</string>
+    <string name="zen_title">Form guidance</string>
+    <string name="zen_final_review">Review your changes.</string>
+    <string name="zen_current">Current field</string>
+    <string name="zen_count">%1$d of %2$d</string>
+    <string name="zen_empty">No fields to guide through.</string>
+    <string name="zen_speak">🎤 Speak value</string>
+    <string name="zen_back">Previous field</string>
+    <string name="zen_next">Next field</string>
+    <string name="zen_dismiss">Dismiss</string>
+    <string name="zen_review_meta">Review your changes. Submit goes through the shared confirm pill.</string>
+    <string name="zen_continue_editing">Continue editing</string>
+    <string name="zen_submit">Submit</string>
+    <string name="zen_no_submit">No submit action found</string>
     <string name="confirm">Confirm</string>
     <string name="cancel">Cancel</string>
     <string name="clarify">Clarify</string>

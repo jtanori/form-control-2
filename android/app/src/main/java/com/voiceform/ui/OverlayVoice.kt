@@ -12,6 +12,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import com.voiceform.CoreSettings
@@ -19,7 +20,10 @@ import com.voiceform.Log
 import com.voiceform.R
 import com.voiceform.VoiceFormService
 import com.voiceform.model.Command
+import com.voiceform.model.CommandTarget
 import com.voiceform.model.ExecutionResult
+import com.voiceform.model.FormNode
+import com.voiceform.model.NodeAction
 import com.voiceform.model.NodeType
 import com.voiceform.model.ParseResponse
 import com.voiceform.model.isRisky
@@ -49,6 +53,8 @@ class OverlayVoice(private val service: VoiceFormService) {
 
     private companion object {
         const val MAX_FIELD_ROWS = 8
+        val SUBMIT_LIKE =
+            Regex("(?i)\\b(submit|continue|place order|pay|purchase|checkout|sign in|log in)\\b")
     }
 
     private val wm = service.getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -72,6 +78,28 @@ class OverlayVoice(private val service: VoiceFormService) {
     private var fieldList: LinearLayout? = null
     private var fieldListScroll: View? = null
     private var fieldListEmpty: TextView? = null
+    private var workspace: LinearLayout? = null
+    private var zenPanel: LinearLayout? = null
+    private var zenCount: TextView? = null
+    private var zenProgress: ProgressBar? = null
+    private var zenFieldValue: TextView? = null
+    private var zenList: LinearLayout? = null
+    private var zenEmpty: TextView? = null
+    private var zenFieldRow: LinearLayout? = null
+    private var zenSpeak: Button? = null
+    private var zenBack: Button? = null
+    private var zenNext: Button? = null
+    private var zenDismiss: Button? = null
+    private var zenReviewMeta: TextView? = null
+    private var zenReviewRow: LinearLayout? = null
+    private var zenEdit: Button? = null
+    private var zenSubmit: Button? = null
+
+    private var zenOpen = false
+    private var zenReview = false
+    private var zenIndex = 0
+    private var zenNodes: List<FormNode> = emptyList()
+    private var zenSubmitPending = false // close Zen only after approved submit (P2 parity)
 
     private var voice: VoiceClient? = null
     private var pendingCommands: List<Command> = emptyList()
@@ -115,18 +143,53 @@ class OverlayVoice(private val service: VoiceFormService) {
         fieldList = view.findViewById(R.id.fieldList)
         fieldListScroll = view.findViewById(R.id.fieldListScroll)
         fieldListEmpty = view.findViewById(R.id.fieldListEmpty)
+        workspace = view.findViewById(R.id.workspace)
+        zenPanel = view.findViewById(R.id.zenPanel)
+        zenCount = view.findViewById(R.id.zenCount)
+        zenProgress = view.findViewById(R.id.zenProgress)
+        zenFieldValue = view.findViewById(R.id.zenFieldValue)
+        zenList = view.findViewById(R.id.zenList)
+        zenEmpty = view.findViewById(R.id.zenEmpty)
+        zenFieldRow = view.findViewById(R.id.zenFieldRow)
+        zenSpeak = view.findViewById(R.id.zenSpeak)
+        zenBack = view.findViewById(R.id.zenBack)
+        zenNext = view.findViewById(R.id.zenNext)
+        zenDismiss = view.findViewById(R.id.zenDismiss)
+        zenReviewMeta = view.findViewById(R.id.zenReviewMeta)
+        zenReviewRow = view.findViewById(R.id.zenReviewRow)
+        zenEdit = view.findViewById(R.id.zenEdit)
+        zenSubmit = view.findViewById(R.id.zenSubmit)
+
+        view.findViewById<Button>(R.id.zenOpen).setOnClickListener { openZen() }
+        zenSpeak?.setOnClickListener { onZenSpeak() }
+        zenBack?.setOnClickListener { stepZen(-1) }
+        zenNext?.setOnClickListener { stepZen(1) }
+        zenDismiss?.setOnClickListener { closeZen() }
+        zenEdit?.setOnClickListener {
+            zenReview = false
+            paintZen()
+        }
+        zenSubmit?.setOnClickListener { onZenSubmit() }
 
         fab?.setOnClickListener {
             if (state == State.COLLAPSED) expand()
         }
-        // Collapse without dismissing (header tap)
+        // Collapse without dismissing (header tap) — §8.3 order: Zen → pill → collapse
         header?.setOnClickListener {
-            if (state == State.IDLE) collapse()
+            when {
+                zenOpen -> closeZen()
+                state == State.REVIEWING -> cancelReview()
+                state == State.IDLE -> collapse()
+            }
         }
-        // §8.3 precedence: cancel pending pill before dismissing
+        // §8.3 precedence: Zen → pill → collapse → dismiss; never confirms
         view.findViewById<Button>(R.id.close).setOnClickListener {
-            if (state == State.REVIEWING) cancelReview()
-            else hide()
+            when {
+                zenOpen -> closeZen()
+                state == State.REVIEWING -> cancelReview()
+                state == State.COLLAPSED -> hide()
+                else -> collapse()
+            }
         }
         primary?.setOnClickListener { onPrimary() }
         view.findViewById<Button>(R.id.reviewCancel).setOnClickListener { cancelReview() }
@@ -189,6 +252,25 @@ class OverlayVoice(private val service: VoiceFormService) {
         fieldList = null
         fieldListScroll = null
         fieldListEmpty = null
+        workspace = null
+        zenPanel = null
+        zenCount = null
+        zenProgress = null
+        zenFieldValue = null
+        zenList = null
+        zenEmpty = null
+        zenFieldRow = null
+        zenSpeak = null
+        zenBack = null
+        zenNext = null
+        zenDismiss = null
+        zenReviewMeta = null
+        zenReviewRow = null
+        zenEdit = null
+        zenSubmit = null
+        zenOpen = false
+        zenReview = false
+        zenSubmitPending = false
         state = State.COLLAPSED
     }
 
@@ -211,13 +293,19 @@ class OverlayVoice(private val service: VoiceFormService) {
         collapsed?.visibility = if (isCollapsed) View.VISIBLE else View.GONE
         expanded?.visibility = if (isCollapsed) View.GONE else View.VISIBLE
 
+        // Zen replaces the workspace (§6.4); pill row stays shared above it
+        workspace?.visibility =
+            if (isCollapsed || zenOpen) View.GONE else View.VISIBLE
+        zenPanel?.visibility =
+            if (!isCollapsed && zenOpen) View.VISIBLE else View.GONE
+
         listeningRow?.visibility =
             if (state == State.LISTENING) View.VISIBLE else View.GONE
         reviewRow?.visibility =
             if (state == State.REVIEWING) View.VISIBLE else View.GONE
 
         primary?.visibility =
-            if (state == State.REVIEWING) View.GONE else View.VISIBLE
+            if (state == State.REVIEWING || zenOpen) View.GONE else View.VISIBLE
         primary?.isEnabled = state == State.IDLE || state == State.LISTENING
         primary?.text =
             when (state) {
@@ -282,6 +370,126 @@ class OverlayVoice(private val service: VoiceFormService) {
             more.setPadding(0, 8, 0, 0)
             list.addView(more)
         }
+    }
+
+    // ---------- Zen (§6.4 simplified — P2 parity) ----------
+
+    private fun openZen() {
+        zenNodes = service.sessionSnapshot()?.nodes
+            ?.filter { !it.offscreen && it.label.isNotBlank() }
+            ?: emptyList()
+        zenOpen = true
+        zenReview = false
+        zenIndex = 0
+        applyState()
+        paintZen()
+    }
+
+    private fun closeZen() {
+        zenOpen = false
+        zenReview = false
+        zenSubmitPending = false
+        stopListening(silent = true) // §8.3.1: dismiss Zen cancels capture
+        if (state == State.LISTENING) state = State.IDLE // capture was cancelled
+        applyState()
+        refreshFieldList()
+    }
+
+    private fun stepZen(delta: Int) {
+        if (zenNodes.isEmpty()) return
+        zenIndex = (zenIndex + delta).coerceIn(0, zenNodes.size - 1)
+        if (zenReview && delta != 0) zenReview = false
+        paintZen()
+    }
+
+    private fun paintZen() {
+        val count = zenNodes.size
+        zenCount?.text = getString(R.string.zen_count, zenIndex + 1, count)
+        zenProgress?.progress =
+            if (count == 0) 0
+            else if (zenReview) 100
+            else ((zenIndex + 1) * 100 / count)
+
+        if (count == 0) {
+            zenEmpty?.visibility = View.VISIBLE
+            zenFieldRow?.visibility = View.GONE
+            zenReviewRow?.visibility = View.GONE
+            zenReviewMeta?.visibility = View.GONE
+            zenFieldValue?.text = getString(R.string.zen_empty)
+            return
+        }
+        zenEmpty?.visibility = View.GONE
+
+        val list = zenList ?: return
+        list.removeAllViews()
+        val rowLayout = R.layout.overlay_field_row
+        zenNodes.forEachIndexed { i, node ->
+            val row = LayoutInflater.from(service).inflate(rowLayout, list, false)
+            row.findViewById<TextView>(R.id.rowLabel).text =
+                node.displayLabel ?: node.label
+            row.findViewById<TextView>(R.id.rowValue).text = nodeDisplayValue(node)
+            if (i == zenIndex) row.setBackgroundColor(service.getColor(R.color.vf_accent_soft))
+            row.setOnClickListener {
+                zenIndex = i
+                zenReview = false
+                paintZen()
+            }
+            list.addView(row)
+        }
+
+        val current = zenNodes[zenIndex]
+        zenFieldValue?.text =
+            (current.displayLabel ?: current.label) +
+                (current.value?.let { " = $it" } ?: "")
+
+        zenFieldRow?.visibility = if (zenReview) View.GONE else View.VISIBLE
+        zenReviewRow?.visibility = if (zenReview) View.VISIBLE else View.GONE
+        zenReviewMeta?.visibility = if (zenReview) View.VISIBLE else View.GONE
+        zenBack?.isEnabled = zenIndex > 0
+        if (zenReview) {
+            val submitTarget = zenNodes.firstOrNull {
+                it.type == NodeType.BUTTON && SUBMIT_LIKE.containsMatchIn(it.label)
+            }
+            zenSubmit?.isEnabled = submitTarget != null
+            zenSubmit?.text =
+                if (submitTarget == null) getString(R.string.zen_no_submit)
+                else getString(R.string.zen_submit)
+        }
+    }
+
+    private fun nodeDisplayValue(node: FormNode): String =
+        node.value
+            ?: when {
+                node.type == NodeType.CHECKBOX ->
+                    if (node.checked == true) "✓" else "☐"
+                else -> "—"
+            }
+
+    private fun onZenSpeak() {
+        if (state == State.LISTENING) stopListening(silent = false)
+        else if (state == State.IDLE) startListening()
+    }
+
+    private fun onZenSubmit() {
+        val submitTarget = zenNodes.firstOrNull {
+            it.type == NodeType.BUTTON && SUBMIT_LIKE.containsMatchIn(it.label)
+        } ?: return
+        val command = Command(
+            action = NodeAction.CLICK,
+            target = CommandTarget(
+                nodeId = submitTarget.nodeId,
+                label = submitTarget.label,
+            ),
+        )
+        pendingCommands = listOf(command)
+        // Zen stays open until the pill is approved (P2 parity); D1 ungated
+        zenSubmitPending = true
+        state = State.REVIEWING
+        applyState()
+        reviewTitle?.text = getString(R.string.confirm_submit)
+        reviewCommands?.text = submitTarget.label
+        startCountdown()
+        setStatus(getString(R.string.confirm))
     }
 
     private fun onPrimary() {
@@ -430,16 +638,30 @@ class OverlayVoice(private val service: VoiceFormService) {
         val commands = pendingCommands
         pendingCommands = emptyList()
         state = State.IDLE
+        val fromZen = zenSubmitPending
+        zenSubmitPending = false
+        if (fromZen) zenOpen = false // §6.4: Zen closes only after approved submit
         applyState()
         runExecute(commands)
+        if (zenOpen) refreshZenSnapshot()
     }
 
     private fun cancelReview() {
         cancelCountdown()
         pendingCommands = emptyList()
+        zenSubmitPending = false // pill killed → Zen stays open (P2 parity)
         state = State.IDLE
         applyState()
         setStatus(getString(R.string.confirm_cancelled))
+    }
+
+    /** Re-pull node values after an execution while Zen is open. */
+    private fun refreshZenSnapshot() {
+        zenNodes = service.sessionSnapshot()?.nodes
+            ?.filter { !it.offscreen && it.label.isNotBlank() }
+            ?: emptyList()
+        if (zenIndex >= zenNodes.size) zenIndex = (zenNodes.size - 1).coerceAtLeast(0)
+        paintZen()
     }
 
     private fun runExecute(commands: List<Command>) {
@@ -472,6 +694,7 @@ class OverlayVoice(private val service: VoiceFormService) {
         )
         refreshBadge()
         refreshFieldList()
+        if (zenOpen) refreshZenSnapshot()
     }
 
     private fun setStatus(text: String) {
