@@ -369,6 +369,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     "LISTENING_ERROR",
     "OFFSCREEN_START",
     "OFFSCREEN_STOP",
+    "ZEN_EXECUTE",
   ]);
   if (voiceTypes.has(type ?? "")) return false;
 

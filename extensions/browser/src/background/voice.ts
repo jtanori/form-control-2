@@ -6,6 +6,7 @@
 
 import { createLogger } from "@shared/logger";
 import type { Command, ExtensionMessage, ParseResponse } from "@shared/types";
+import { copy } from "../ui/copy";
 import { getSessionId, handleMessage, resolveTabId } from "./bridge";
 
 const log = createLogger("ext.voice");
@@ -210,12 +211,52 @@ export function installVoiceHandlers(): void {
             {
               type: "SET_LISTENING_UI",
               listening: false,
-              error: "Cancelled.",
+              error: copy("confirm.cancelled"),
             },
             pendingTabId,
           );
         }
         sendResponse({ ok: true });
+      })();
+      return true;
+    }
+
+    // Zen review Submit (§6.4) — same safety path as voice (D1: pill visible, ungated).
+    if (type === "ZEN_EXECUTE") {
+      void (async () => {
+        try {
+          const { commands } = message as unknown as { commands: Command[] };
+          if (!commands?.length) {
+            sendResponse({ ok: false, error: "no commands" });
+            return;
+          }
+          const tabId = sender.tab?.id;
+          pendingTabId = tabId;
+          if (isRisky(commands)) {
+            await toTab(
+              {
+                type: "SHOW_CONFIRM_PILL",
+                question: `Voice command ready — say “Confirm” or tap in 3s`,
+                commands,
+                seconds: 3,
+              },
+              tabId,
+            );
+          } else {
+            const sessionId = await getSessionId();
+            await handleMessage({
+              type: "EXECUTE",
+              sessionId,
+              commands,
+            } as ExtensionMessage);
+          }
+          sendResponse({ ok: true });
+        } catch (err) {
+          sendResponse({
+            ok: false,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
       })();
       return true;
     }
