@@ -7,6 +7,8 @@
     <string name="overlay_title">VoiceForm</string>
     <string name="overlay_mic">Mic</string>
     <string name="overlay_collapsed_hint">Tap to open VoiceForm</string>
+    <string name="overlay_empty_fields">Choose a field or form to start.</string>
+    <string name="overlay_more_fields">+%1$d more</string>
     <string name="confirm">Confirm</string>
     <string name="cancel">Cancel</string>
     <string name="clarify">Clarify</string>

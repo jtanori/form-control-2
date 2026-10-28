@@ -129,6 +129,41 @@
             android:textSize="12sp"
             android:visibility="gone" />
 
+        <!-- Primary: Start/Stop listening (§6.7) -->
+        <Button
+            android:id="@+id/primary"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@color/vf_accent"
+            android:text="@string/voice_start"
+            android:textColor="@color/vf_on_accent" />
+
+        <!-- Field/form list (§6.7 + AND-006 "count + list"): label → value rows -->
+        <ScrollView
+            android:id="@+id/fieldListScroll"
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:layout_marginTop="8dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/fieldList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+
+        <TextView
+            android:id="@+id/fieldListEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/overlay_empty_fields"
+            android:textColor="@color/vf_text_tertiary"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
         <!-- Command review / confirm pill (§6.7 + §3.3 — text countdown, ungated D1) -->
         <LinearLayout
             android:id="@+id/reviewRow"
@@ -180,15 +215,5 @@
                     android:textColor="@color/vf_on_accent" />
             </LinearLayout>
         </LinearLayout>
-
-        <!-- Primary: Start/Stop listening (§6.7) -->
-        <Button
-            android:id="@+id/primary"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="@color/vf_accent"
-            android:text="@string/voice_start"
-            android:textColor="@color/vf_on_accent" />
     </LinearLayout>
 </LinearLayout>

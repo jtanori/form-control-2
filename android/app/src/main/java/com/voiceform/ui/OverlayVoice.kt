@@ -20,6 +20,7 @@ import com.voiceform.R
 import com.voiceform.VoiceFormService
 import com.voiceform.model.Command
 import com.voiceform.model.ExecutionResult
+import com.voiceform.model.NodeType
 import com.voiceform.model.ParseResponse
 import com.voiceform.model.isRisky
 import com.voiceform.voice.VoiceClient
@@ -46,6 +47,10 @@ class OverlayVoice(private val service: VoiceFormService) {
 
     private enum class State { COLLAPSED, IDLE, LISTENING, PARSING, REVIEWING }
 
+    private companion object {
+        const val MAX_FIELD_ROWS = 8
+    }
+
     private val wm = service.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val main = Handler(Looper.getMainLooper())
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -64,6 +69,9 @@ class OverlayVoice(private val service: VoiceFormService) {
     private var reviewCommands: TextView? = null
     private var reviewConfirm: Button? = null
     private var primary: Button? = null
+    private var fieldList: LinearLayout? = null
+    private var fieldListScroll: View? = null
+    private var fieldListEmpty: TextView? = null
 
     private var voice: VoiceClient? = null
     private var pendingCommands: List<Command> = emptyList()
@@ -104,6 +112,9 @@ class OverlayVoice(private val service: VoiceFormService) {
         reviewCommands = view.findViewById(R.id.reviewCommands)
         reviewConfirm = view.findViewById(R.id.reviewConfirm)
         primary = view.findViewById(R.id.primary)
+        fieldList = view.findViewById(R.id.fieldList)
+        fieldListScroll = view.findViewById(R.id.fieldListScroll)
+        fieldListEmpty = view.findViewById(R.id.fieldListEmpty)
 
         fab?.setOnClickListener {
             if (state == State.COLLAPSED) expand()
@@ -147,6 +158,7 @@ class OverlayVoice(private val service: VoiceFormService) {
             root = view as LinearLayout
             applyState()
             refreshBadge()
+            refreshFieldList()
             setStatus(service.getString(R.string.overlay_collapsed_hint))
         } catch (e: SecurityException) {
             Log.e("overlay", "overlay permission missing", mapOf("error" to (e.message ?: "")))
@@ -174,6 +186,9 @@ class OverlayVoice(private val service: VoiceFormService) {
         reviewCommands = null
         reviewConfirm = null
         primary = null
+        fieldList = null
+        fieldListScroll = null
+        fieldListEmpty = null
         state = State.COLLAPSED
     }
 
@@ -181,6 +196,7 @@ class OverlayVoice(private val service: VoiceFormService) {
         state = State.IDLE
         applyState()
         refreshBadge()
+        refreshFieldList()
         setStatus(service.getString(R.string.voice_start))
     }
 
@@ -222,6 +238,50 @@ class OverlayVoice(private val service: VoiceFormService) {
         header?.text =
             if (count > 0) "${getString(R.string.overlay_title)} · $count fields"
             else getString(R.string.overlay_title)
+    }
+
+    /** §6.7 field rows: `label → value` for interactive fields (AND-006 list parity). */
+    private fun refreshFieldList() {
+        val list = fieldList ?: return
+        val fields = service.sessionSnapshot()?.nodes
+            ?.filter {
+                it.type == NodeType.INPUT || it.type == NodeType.CHECKBOX ||
+                    it.type == NodeType.SELECT
+            }
+            ?.filter { it.label.isNotBlank() }
+            ?: emptyList()
+
+        list.removeAllViews()
+        if (fields.isEmpty()) {
+            fieldListScroll?.visibility = View.GONE
+            fieldListEmpty?.visibility = View.VISIBLE
+            return
+        }
+        fieldListScroll?.visibility = View.VISIBLE
+        fieldListEmpty?.visibility = View.GONE
+
+        val rowLayout = R.layout.overlay_field_row
+        for (node in fields.take(MAX_FIELD_ROWS)) {
+            val row = LayoutInflater.from(service).inflate(rowLayout, list, false)
+            row.findViewById<TextView>(R.id.rowLabel).text =
+                node.displayLabel ?: node.label
+            row.findViewById<TextView>(R.id.rowValue).text =
+                node.value
+                    ?: if (node.type == NodeType.CHECKBOX) {
+                        if (node.checked == true) "✓" else "☐"
+                    } else {
+                        "—"
+                    }
+            list.addView(row)
+        }
+        if (fields.size > MAX_FIELD_ROWS) {
+            val more = TextView(service)
+            more.text = getString(R.string.overlay_more_fields, fields.size - MAX_FIELD_ROWS)
+            more.setTextColor(service.getColor(R.color.vf_text_tertiary))
+            more.textSize = 11f
+            more.setPadding(0, 8, 0, 0)
+            list.addView(more)
+        }
     }
 
     private fun onPrimary() {
@@ -411,6 +471,7 @@ class OverlayVoice(private val service: VoiceFormService) {
             ),
         )
         refreshBadge()
+        refreshFieldList()
     }
 
     private fun setStatus(text: String) {
