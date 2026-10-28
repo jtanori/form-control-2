@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceForm Universal — Design System, Catalog & Surfaces</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: ['class', '[data-theme="dark"]'],
+            theme: {
+                extend: {
+                    colors: {
+                        vf: {
+                            bg: 'var(--vf-bg)',
+                            surface: 'var(--vf-surface)',
+                            elevated: 'var(--vf-surface-elevated)',
+                            subtle: 'var(--vf-surface-subtle)',
+                            'text-primary': 'var(--vf-text-primary)',
+                            'text-secondary': 'var(--vf-text-secondary)',
+                            'text-tertiary': 'var(--vf-text-tertiary)',
+                            hairline: 'var(--vf-hairline)',
+                            'border-strong': 'var(--vf-border-strong)',
+                            'accent-50': 'var(--vf-accent-50)',
+                            'accent-100': 'var(--vf-accent-100)',
+                            'accent-200': 'var(--vf-accent-200)',
+                            'accent-300': 'var(--vf-accent-300)',
+                            'accent-400': 'var(--vf-accent-400)',
+                            'accent-500': 'var(--vf-accent-500)',
+                            'accent-600': 'var(--vf-accent-600)',
+                            'accent-700': 'var(--vf-accent-700)',
+                            success: 'var(--vf-success)',
+                            warning: 'var(--vf-warning)',
+                            danger: 'var(--vf-danger)',
+                            info: 'var(--vf-info)',
+                            'focus-ring': 'var(--vf-focus-ring)',
+                            'disabled-fill': 'var(--vf-disabled-fill)',
+                            'disabled-text': 'var(--vf-disabled-text)',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                    borderRadius: {
+                        'vf-control': 'var(--vf-radius-control)',
+                        'vf-card': 'var(--vf-radius-card)',
+                        'vf-sheet': 'var(--vf-radius-sheet)',
+                        'vf-pill': 'var(--vf-radius-pill)',
+                    },
+                    boxShadow: {
+                        'vf-card': 'var(--vf-shadow-card)',
+                        'vf-panel': 'var(--vf-shadow-panel)',
+                        'vf-floating': 'var(--vf-shadow-floating)',
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        :root {
+            color-scheme: light;
+            --vf-bg: #FFFFFF;
+            --vf-surface: #F7F8FA;
+            --vf-surface-elevated: #FFFFFF;
+            --vf-surface-subtle: #F1F3F6;
+            --vf-text-primary: #0B0F14;
+            --vf-text-secondary: #667085;
+            --vf-text-tertiary: #8993A3;
+            --vf-hairline: #E5E7EB;
+            --vf-border-strong: #CBD2DC;
+            --vf-accent-50: #EFF6FF;
+            --vf-accent-100: #DBEAFE;
+            --vf-accent-200: #BFDBFE;
+            --vf-accent-300: #93C5FD;
+            --vf-accent-400: #60A5FA;
+            --vf-accent-500: #3B82F6;
+            --vf-accent-600: #2878F0;
+            --vf-accent-700: #1D5FC7;
+            --vf-success: #0D9488;
+            --vf-warning: #B7791F;
+            --vf-danger: #D94848;
+            --vf-info: #64748B;
+            --vf-focus-ring: #2878F0;
+            --vf-disabled-fill: #EEF1F5;
+            --vf-disabled-text: #98A2B3;
+            --vf-radius-control: 12px;
+            --vf-radius-card: 14px;
+            --vf-radius-sheet: 22px;
+            --vf-radius-pill: 999px;
+            --vf-shadow-card: 0 1px 2px rgba(15,23,42,.04);
+            --vf-shadow-panel: 0 4px 16px rgba(15,23,42,.08);
+            --vf-shadow-floating: 0 8px 24px rgba(0,0,0,.14);
+            --vf-motion-fast: 120ms;
+            --vf-motion-standard: 180ms;
+            --vf-motion-panel: 220ms;
+            --vf-ease-out: cubic-bezier(.2,.8,.2,1);
+        }
+
+        [data-theme="dark"] {
+            color-scheme: dark;
+            --vf-bg: #0B0F14;
+            --vf-surface: #111827;
+            --vf-surface-elevated: #172033;
+            --vf-surface-subtle: #1C2638;
+            --vf-text-primary: #F3F5F7;
+            --vf-text-secondary: #A3ADBC;
+            --vf-text-tertiary: #7F8A9C;
+            --vf-hairline: #293344;
+            --vf-border-strong: #3B475B;
+            --vf-accent-50: #101F36;
+            --vf-accent-100: #142A49;
+            --vf-accent-200: #1D3B63;
+            --vf-accent-300: #28528A;
+            --vf-accent-400: #3470BD;
+            --vf-accent-500: #3B82F6;
+            --vf-accent-600: #5B9BFF;
+            --vf-accent-700: #83B4FF;
+            --vf-success: #34B8A6;
+            --vf-warning: #E7B14D;
+            --vf-danger: #FF7777;
+            --vf-info: #94A3B8;
+            --vf-focus-ring: #83B4FF;
+            --vf-disabled-fill: #202A3A;
+            --vf-disabled-text: #69778D;
+        }
+
+        body {
+            background-color: var(--vf-bg);
+            color: var(--vf-text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            transition: background-color var(--vf-motion-standard) var(--vf-ease-out), color var(--vf-motion-standard) var(--vf-ease-out);
+        }
+
+        /* Pulse animation for active listening */
+        @keyframes vf-listening-pulse {
+            0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+            70% { transform: scale(1.08); opacity: 0.8; box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+            100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        .vf-pulse-active {
+            animation: vf-listening-pulse 1600ms infinite cubic-bezier(0.4, 0, 0.6, 1);
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--vf-hairline);
+            border-radius: 999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--vf-text-tertiary);
+        }
+
+        /* Inset Focus Styles */
+        .vf-focus-target:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--vf-bg), 0 0 0 4px var(--vf-focus-ring);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-vf-accent-100 selection:text-vf-accent-700">
+
+    <!-- TOP GLOBAL HEADER / NAVIGATION TAB BAR -->
+    <header class="sticky top-0 z-50 border-b border-vf-hairline bg-vf-surface-elevated/90 backdrop-blur-md px-4 lg:px-8 py-3 flex items-center justify-between transition-colors">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-vf-accent-600 flex items-center justify-center text-white font-bold text-base shadow-sm">
+                VF
+            </div>
+            <div>
+                <h1 class="text-base font-semibold leading-none text-vf-text-primary">VoiceForm Universal</h1>
+                <p class="text-xs text-vf-text-secondary mt-0.5">Multi-Surface Specification & Visual Artifacts v1.0</p>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex items-center bg-vf-surface-subtle p-1 rounded-vf-pill border border-vf-hairline">
+            <button id="nav-btn-ds" onclick="switchTab('ds')" class="px-3.5 py-1.5 text-xs md:text-sm font-medium rounded-vf-pill transition-all duration-150 text-vf-text-primary bg-vf-surface-elevated shadow-sm">
+                Design System
+            </button>
+            <button id="nav-btn-catalog" onclick="switchTab('catalog')" class="px-3.5 py-1.5 text-xs md:text-sm font-medium rounded-vf-pill transition-all duration-150 text-vf-text-secondary hover:text-vf-text-primary">
+                Component Catalog
+            </button>
+            <button id="nav-btn-surfaces" onclick="switchTab('surfaces')" class="px-3.5 py-1.5 text-xs md:text-sm font-medium rounded-vf-pill transition-all duration-150 text-vf-text-secondary hover:text-vf-text-primary">
+                Surfaces (7 Prototypes)
+            </button>
+        </nav>
+
+        <!-- Global Theme Toggle -->
+        <div class="flex items-center gap-2">
+            <button onclick="toggleTheme()" class="p-2 rounded-vf-pill bg-vf-surface hover:bg-vf-surface-subtle text-vf-text-secondary hover:text-vf-text-primary border border-vf-hairline transition-colors flex items-center gap-1.5 text-xs font-medium" title="Toggle Light/Dark Theme">
+                <span id="theme-icon">🌙</span>
+                <span id="theme-text" class="hidden sm:inline">Dark</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8">
+
+        <!-- =================================================================== -->
+        <!-- TAB 1: DESIGN SYSTEM -->
+        <!-- =================================================================== -->
+        <section id="tab-ds" class="space-y-8">
+            <div class="border-b border-vf-hairline pb-4">
+                <h2 class="text-2xl font-semibold text-vf-text-primary">1. Design System Specification</h2>
+                <p class="text-sm text-vf-text-secondary mt-1">Apple-calm aesthetic, single blue accent, tokenized hierarchy, WCAG AA compliant contrast rules.</p>
+            </div>
+
+            <!-- Color Tokens & Accent Ramp -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-vf-text-primary">Color Token Hierarchy & Single Blue Accent</h3>
+                    <span class="text-xs text-vf-text-tertiary">1 Accent Hue + Muted Feedback Tokens</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    <!-- Surface Tokens -->
+                    <div class="p-3 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-2">
+                        <div class="h-10 rounded-vf-control bg-vf-bg border border-vf-hairline flex items-center justify-center text-xs font-mono">bg</div>
+                        <div><p class="text-xs font-semibold">vf.color.bg</p><p class="text-[10px] text-vf-text-tertiary">Main canvas</p></div>
+                    </div>
+                    <div class="p-3 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-2">
+                        <div class="h-10 rounded-vf-control bg-vf-surface border border-vf-hairline flex items-center justify-center text-xs font-mono">surface</div>
+                        <div><p class="text-xs font-semibold">vf.color.surface</p><p class="text-[10px] text-vf-text-tertiary">Card fill</p></div>
+                    </div>
+                    <div class="p-3 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-2">
+                        <div class="h-10 rounded-vf-control bg-vf-surface-elevated border border-vf-hairline flex items-center justify-center text-xs font-mono shadow-sm">elevated</div>
+                        <div><p class="text-xs font-semibold">surface-elevated</p><p class="text-[10px] text-vf-text-tertiary">Floating popover</p></div>
+                    </div>
+                    <div class="p-3 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-2">
+                        <div class="h-10 rounded-vf-control bg-vf-surface-subtle border border-vf-hairline flex items-center justify-center text-xs font-mono">subtle</div>
+                        <div><p class="text-xs font-semibold">surface-subtle</p><p class="text-[10px] text-vf-text-tertiary">Quiet row fill</p></div>
+                    </div>
+
+                    <!-- Blue Accent Ramp -->
+                    <div class="p-3 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-2">
+                        <div class="h-10 rounded-vf-control bg-vf-accent-50 border border-vf-accent-200 flex items-center justify-center text-xs font-mono text-vf-accent-700">accent-50</div>
+                        <div><p class="text-xs font-semibold">accent-50</p><p class="text-[10px] text-vf-text-tertiary">Accent wash</p></div>
+                    </div>
+                    <div class="p-3 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-2">
+                        <div class="h-10 rounded-vf-control bg-vf-accent-600 text-white flex items-center justify-center text-xs font-mono">accent-600</div>
+                        <div><p class="text-xs font-semibold">accent-600</p><p class="text-[10px] text-vf-text-tertiary">Primary control</p></div>
+                    </div>
+
+                    <!-- Feedback Semantics -->
+                    <div class="p-3 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-2">
+                        <div class="h-10 rounded-vf-control bg-vf-success text-white flex items-center justify-center text-xs font-mono">success</div>
+                        <div><p class="text-xs font-semibold">vf.color.success</p><p class="text-[10px] text-vf-text-tertiary">Verified edit</p></div>
+                    </div>
+                    <div class="p-3 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-2">
+                        <div class="h-10 rounded-vf-control bg-vf-warning text-white flex items-center justify-center text-xs font-mono">warning</div>
+                        <div><p class="text-xs font-semibold">vf.color.warning</p><p class="text-[10px] text-vf-text-tertiary">Recoverable state</p></div>
+                    </div>
+                    <div class="p-3 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-2">
+                        <div class="h-10 rounded-vf-control bg-vf-danger text-white flex items-center justify-center text-xs font-mono">danger</div>
+                        <div><p class="text-xs font-semibold">vf.color.danger</p><p class="text-[10px] text-vf-text-tertiary">Error / Destructive</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typography & Spacing Scale -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Typography Ramp -->
+                <div class="p-5 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-4">
+                    <h3 class="text-base font-semibold text-vf-text-primary">Typography Ramp</h3>
+                    <div class="space-y-3">
+                        <div class="border-b border-vf-hairline pb-2">
+                            <span class="text-[10px] text-vf-text-tertiary uppercase font-mono block">vf.type.title (24/30px 600)</span>
+                            <span class="text-2xl font-semibold">VoiceForm Universal System</span>
+                        </div>
+                        <div class="border-b border-vf-hairline pb-2">
+                            <span class="text-[10px] text-vf-text-tertiary uppercase font-mono block">vf.type.heading (18/24px 600)</span>
+                            <span class="text-lg font-semibold">Detected Form Workspace</span>
+                        </div>
+                        <div class="border-b border-vf-hairline pb-2">
+                            <span class="text-[10px] text-vf-text-tertiary uppercase font-mono block">vf.type.subheading (15/20px 600)</span>
+                            <span class="text-[15px] font-semibold">Salesforce Opportunity Contact Form</span>
+                        </div>
+                        <div class="border-b border-vf-hairline pb-2">
+                            <span class="text-[10px] text-vf-text-tertiary uppercase font-mono block">vf.type.body (14/20px 400)</span>
+                            <span class="text-sm font-normal text-vf-text-primary">Passive detection runs locally. No microphone audio is captured without explicit start action.</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-vf-text-tertiary uppercase font-mono block">vf.type.caption (12/16px 400)</span>
+                            <span class="text-xs text-vf-text-secondary">Monotonic 3-second delay required before explicit confirmation.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Spacing & Radii Scale -->
+                <div class="p-5 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-4">
+                    <h3 class="text-base font-semibold text-vf-text-primary">Radius, Elevation & Spacing</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-xs font-semibold text-vf-text-secondary mb-2">Border Radii</p>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="px-3 py-2 rounded-vf-control border border-vf-border-strong text-xs font-mono bg-vf-bg">control (12px)</div>
+                                <div class="px-3 py-2 rounded-vf-card border border-vf-border-strong text-xs font-mono bg-vf-bg">card (14px)</div>
+                                <div class="px-3 py-2 rounded-vf-sheet border border-vf-border-strong text-xs font-mono bg-vf-bg">sheet (22px)</div>
+                                <div class="px-3 py-2 rounded-vf-pill border border-vf-border-strong text-xs font-mono bg-vf-bg">pill (999px)</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-xs font-semibold text-vf-text-secondary mb-2">Elevations & Shadows</p>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="p-3 bg-vf-surface-elevated rounded-vf-card shadow-vf-card border border-vf-hairline text-xs">
+                                    <p class="font-semibold">vf.shadow.card</p>
+                                    <p class="text-[10px] text-vf-text-tertiary">0 1px 2px rgba(15,23,42,.04)</p>
+                                </div>
+                                <div class="p-3 bg-vf-surface-elevated rounded-vf-card shadow-vf-floating border border-vf-hairline text-xs">
+                                    <p class="font-semibold">vf.shadow.floating</p>
+                                    <p class="text-[10px] text-vf-text-tertiary">0 8px 24px rgba(0,0,0,.14)</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Motion Interactive Harness -->
+                        <div class="pt-2 border-t border-vf-hairline">
+                            <p class="text-xs font-semibold text-vf-text-secondary mb-2">Motion Tokens Test Harness</p>
+                            <div class="flex items-center gap-3">
+                                <button id="motion-test-btn" onclick="triggerMotionTest()" class="px-4 py-2 bg-vf-accent-600 text-white text-xs font-medium rounded-vf-pill transition-all duration-180 hover:bg-vf-accent-700 active:scale-95">
+                                    Trigger Motion (180ms ease-out)
+                                </button>
+                                <div id="motion-box" class="w-8 h-8 rounded-vf-control bg-vf-accent-500 transition-all duration-180 ease-out"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code Mappings: CSS Custom Properties & Android Compose -->
+            <div class="p-5 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-semibold text-vf-text-primary">Platform Implementation Mappings</h3>
+                    <span class="text-xs font-mono text-vf-text-tertiary">CSS Custom Variables & Jetpack Compose</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <pre class="text-xs font-mono p-3 bg-vf-bg border border-vf-hairline rounded-vf-control overflow-x-auto text-vf-text-secondary"><code>/* CSS Custom Tokens Baseline */
+:root {
+  --vf-bg: #FFFFFF;
+  --vf-surface: #F7F8FA;
+  --vf-accent-600: #2878F0;
+  --vf-radius-control: 12px;
+  --vf-motion-standard: 180ms;
+}</code></pre>
+                    <pre class="text-xs font-mono p-3 bg-vf-bg border border-vf-hairline rounded-vf-control overflow-x-auto text-vf-text-secondary"><code>// Android Jetpack Compose Mapping
+private val VoiceFormLight = lightColorScheme(
+    primary = Color(0xFF2878F0),
+    background = Color(0xFFFFFFFF),
+    surface = Color(0xFFF7F8FA),
+    error = Color(0xFFD94848)
+)</code></pre>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- =================================================================== -->
+        <!-- TAB 2: COMPONENT CATALOG -->
+        <!-- =================================================================== -->
+        <section id="tab-catalog" class="hidden space-y-8">
+            <div class="border-b border-vf-hairline pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-semibold text-vf-text-primary">2. Component Catalog (20 Specifications)</h2>
+                    <p class="text-sm text-vf-text-secondary mt-1">Interactive playground with state toggles, safety contracts, and live code previews.</p>
+                </div>
+
+                <!-- Global Catalog State Toggle -->
+                <div class="flex items-center gap-1.5 bg-vf-surface-subtle p-1 rounded-vf-pill border border-vf-hairline text-xs">
+                    <span class="text-vf-text-tertiary px-2 font-medium">State:</span>
+                    <button onclick="setCatalogState('default')" class="catalog-state-btn px-2.5 py-1 rounded-vf-pill bg-vf-surface-elevated font-medium text-vf-text-primary shadow-sm">Default</button>
+                    <button onclick="setCatalogState('hover')" class="catalog-state-btn px-2.5 py-1 rounded-vf-pill font-medium text-vf-text-secondary">Hover</button>
+                    <button onclick="setCatalogState('focus')" class="catalog-state-btn px-2.5 py-1 rounded-vf-pill font-medium text-vf-text-secondary">Focus</button>
+                    <button onclick="setCatalogState('disabled')" class="catalog-state-btn px-2.5 py-1 rounded-vf-pill font-medium text-vf-text-secondary">Disabled</button>
+                    <button onclick="setCatalogState('error')" class="catalog-state-btn px-2.5 py-1 rounded-vf-pill font-medium text-vf-text-secondary">Error</button>
+                </div>
+            </div>
+
+            <!-- Grid of 20 Components -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- 1. PrimaryPill -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Button/PrimaryPill</span>
+                            <span class="text-[10px] bg-vf-accent-50 text-vf-accent-700 px-1.5 py-0.5 rounded">Required</span>
+                        </div>
+                        <p class="text-xs text-vf-text-secondary">The single primary action for the active surface state.</p>
+                    </div>
+                    <div class="p-4 bg-vf-bg rounded-vf-control border border-vf-hairline flex items-center justify-center min-h-[70px]">
+                        <button id="cmp-primary-pill" class="px-5 py-2.5 bg-vf-accent-600 hover:bg-vf-accent-700 text-white font-medium text-sm rounded-vf-pill transition-all duration-150 flex items-center gap-2 shadow-sm vf-focus-target">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/></svg>
+                            <span>Start Voice</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. SecondaryGhostPill -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Button/SecondaryGhostPill</span>
+                        <p class="text-xs text-vf-text-secondary">Safe alternative, cancel, skip, or manual fallback.</p>
+                    </div>
+                    <div class="p-4 bg-vf-bg rounded-vf-control border border-vf-hairline flex items-center justify-center min-h-[70px]">
+                        <button id="cmp-secondary-pill" class="px-5 py-2.5 bg-transparent border border-vf-hairline hover:bg-vf-surface-subtle text-vf-text-primary font-medium text-sm rounded-vf-pill transition-all duration-150">
+                            Type Instead
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. ConfirmPill (Strict 3s Monotonic Gate) -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3 md:col-span-2 lg:col-span-1">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Safety/ConfirmPill</span>
+                            <span class="text-[10px] bg-vf-danger/10 text-vf-danger font-medium px-1.5 py-0.5 rounded">Safety Gate</span>
+                        </div>
+                        <p class="text-xs text-vf-text-secondary">Requires monotonic 3s minimum delay before explicit confirmation.</p>
+                    </div>
+                    <div class="p-4 bg-vf-bg rounded-vf-control border border-vf-hairline flex flex-col items-center justify-center space-y-2 min-h-[90px]">
+                        <div id="confirm-pill-demo" class="flex items-center justify-between w-full p-2 rounded-vf-pill bg-vf-surface border border-vf-hairline">
+                            <span class="text-xs font-medium px-2 text-vf-text-primary">Submit Form?</span>
+                            <div class="flex items-center gap-2">
+                                <button id="confirm-btn-gate" disabled onclick="handleConfirmGateClick()" class="px-3 py-1.5 bg-vf-disabled-fill text-vf-disabled-text text-xs font-medium rounded-vf-pill transition-all cursor-not-allowed">
+                                    Confirm (3s)
+                                </button>
+                                <button onclick="resetConfirmGate()" class="p-1.5 hover:bg-vf-surface-subtle text-vf-text-tertiary hover:text-vf-text-primary rounded-full">✕</button>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="startConfirmGateTimer()" class="text-[11px] text-vf-accent-600 hover:underline">Start 3s Gate</button>
+                            <span class="text-[10px] text-vf-text-tertiary">| No auto-submit on 0s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. ListeningBadge (1600ms pulse) -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Status/ListeningBadge</span>
+                        <p class="text-xs text-vf-text-secondary">Restrained 1600ms pulse cycle when microphone is active.</p>
+                    </div>
+                    <div class="p-4 bg-vf-bg rounded-vf-control border border-vf-hairline flex items-center justify-center min-h-[70px]">
+                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-vf-pill bg-vf-accent-50 border border-vf-accent-200 text-vf-accent-700 text-xs font-semibold">
+                            <span class="w-2.5 h-2.5 rounded-full bg-vf-accent-600 vf-pulse-active"></span>
+                            <span>LISTENING…</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. TranscriptPreview -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Transcript/PreviewBubble</span>
+                        <p class="text-xs text-vf-text-secondary">Live speech transcript with 120-180ms debounced render batching.</p>
+                    </div>
+                    <div class="p-4 bg-vf-bg rounded-vf-control border border-vf-hairline flex items-center justify-center min-h-[70px]">
+                        <div class="w-full p-2.5 rounded-vf-card bg-vf-surface-subtle border border-vf-hairline text-xs">
+                            <p class="text-[10px] text-vf-text-tertiary font-mono mb-0.5">I HEARD (PARTIAL)</p>
+                            <p class="font-medium text-vf-text-primary">“Set company to Acme Inc…”</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. ActionCard -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Command/ActionCard</span>
+                        <p class="text-xs text-vf-text-secondary">Parsed command showing action, target, and value.</p>
+                    </div>
+                    <div class="p-3 bg-vf-bg rounded-vf-control border border-vf-hairline min-h-[70px]">
+                        <div class="p-3 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-1">
+                            <div class="flex items-center justify-between text-xs font-semibold text-vf-text-primary">
+                                <span>Set Field Value</span>
+                                <button class="text-vf-accent-600 hover:underline text-[11px]">Edit</button>
+                            </div>
+                            <p class="text-xs text-vf-text-secondary">Target: <span class="font-medium text-vf-text-primary">Company Name</span></p>
+                            <p class="text-xs text-vf-text-secondary">Value: <span class="font-medium text-vf-accent-700">Acme Inc.</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. StatusDot & 8. StatusChip -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Status/Dot & Chip</span>
+                        <p class="text-xs text-vf-text-secondary">Status indicator tokens with paired text labels.</p>
+                    </div>
+                    <div class="p-4 bg-vf-bg rounded-vf-control border border-vf-hairline flex flex-wrap items-center justify-center gap-3 min-h-[70px]">
+                        <div class="flex items-center gap-1.5 text-xs text-vf-text-primary">
+                            <span class="w-2 h-2 rounded-full bg-vf-success"></span>
+                            <span>Core Ready</span>
+                        </div>
+                        <div class="px-2.5 py-1 rounded-vf-pill bg-vf-surface-subtle border border-vf-hairline text-xs font-medium text-vf-text-secondary flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-vf-accent-500"></span>
+                            <span>3 Forms Found</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 9. TextField -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Input/TextField</span>
+                        <p class="text-xs text-vf-text-secondary">Manual entry fallback with visible label and focus glow.</p>
+                    </div>
+                    <div class="p-3 bg-vf-bg rounded-vf-control border border-vf-hairline min-h-[70px]">
+                        <label class="text-xs font-medium text-vf-text-secondary mb-1 block">Company Name</label>
+                        <input type="text" value="Acme Inc." class="w-full px-3 py-1.5 bg-vf-surface border border-vf-hairline rounded-vf-control text-xs text-vf-text-primary focus:outline-none focus:border-vf-accent-600 focus:ring-1 focus:ring-vf-accent-600">
+                    </div>
+                </div>
+
+                <!-- 10. Segmented -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Control/Segmented</span>
+                        <p class="text-xs text-vf-text-secondary">Mutually exclusive choices with keyboard arrow support.</p>
+                    </div>
+                    <div class="p-3 bg-vf-bg rounded-vf-control border border-vf-hairline flex items-center justify-center min-h-[70px]">
+                        <div class="flex w-full p-1 bg-vf-surface-subtle rounded-vf-pill border border-vf-hairline text-xs font-medium">
+                            <button class="flex-1 py-1 rounded-vf-pill bg-vf-surface-elevated text-vf-text-primary shadow-sm text-center">All</button>
+                            <button class="flex-1 py-1 rounded-vf-pill text-vf-text-secondary hover:text-vf-text-primary text-center">Web</button>
+                            <button class="flex-1 py-1 rounded-vf-pill text-vf-text-secondary hover:text-vf-text-primary text-center">Native</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 11. FormItem -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Row/FormItem</span>
+                        <p class="text-xs text-vf-text-secondary">Detected form or field candidate row with source context.</p>
+                    </div>
+                    <div class="p-3 bg-vf-bg rounded-vf-control border border-vf-hairline min-h-[70px]">
+                        <div class="p-2.5 rounded-vf-card bg-vf-surface border border-vf-hairline hover:border-vf-accent-300 flex items-center justify-between cursor-pointer">
+                            <div>
+                                <p class="text-xs font-semibold text-vf-text-primary">Contact Form</p>
+                                <p class="text-[10px] text-vf-text-secondary">Salesforce · 6 fields detected</p>
+                            </div>
+                            <span class="text-xs text-vf-text-tertiary">›</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 12. HelperChip -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Control/HelperChip</span>
+                        <p class="text-xs text-vf-text-secondary">Small suggested speech commands or hints.</p>
+                    </div>
+                    <div class="p-4 bg-vf-bg rounded-vf-control border border-vf-hairline flex items-center justify-center gap-2 flex-wrap min-h-[70px]">
+                        <button class="px-2.5 py-1 rounded-vf-pill bg-vf-accent-50 border border-vf-accent-200 text-vf-accent-700 text-xs font-medium hover:bg-vf-accent-100 transition-colors">
+                            Say: “Set company to Acme”
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 13. HealthStrip -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Health/HealthStrip</span>
+                        <p class="text-xs text-vf-text-secondary">Compact status indicators for Core NLU, Speech STT, and Mic.</p>
+                    </div>
+                    <div class="p-3 bg-vf-bg rounded-vf-control border border-vf-hairline min-h-[70px]">
+                        <div class="flex items-center justify-around py-2 px-3 bg-vf-surface rounded-vf-card border border-vf-hairline text-xs">
+                            <span class="flex items-center gap-1.5 text-vf-text-secondary"><span class="w-2 h-2 rounded-full bg-vf-success"></span>Core</span>
+                            <span class="flex items-center gap-1.5 text-vf-text-secondary"><span class="w-2 h-2 rounded-full bg-vf-success"></span>Speech</span>
+                            <span class="flex items-center gap-1.5 text-vf-text-secondary"><span class="w-2 h-2 rounded-full bg-vf-success"></span>Mic</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 14. PermissionBlockedBanner -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Permission/BlockedBanner</span>
+                        <p class="text-xs text-vf-text-secondary">Informs missing permission with actionable recovery path.</p>
+                    </div>
+                    <div class="p-3 bg-vf-bg rounded-vf-control border border-vf-hairline min-h-[70px]">
+                        <div class="p-3 rounded-vf-card bg-vf-surface border border-vf-warning/30 space-y-2">
+                            <p class="text-xs font-semibold text-vf-text-primary">Microphone access is off</p>
+                            <p class="text-[11px] text-vf-text-secondary">Enable permission to speak form filling commands.</p>
+                            <button class="px-3 py-1 bg-vf-accent-600 text-white text-xs font-medium rounded-vf-pill">Open Settings</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 15. DragHandle -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Overlay/DragHandle</span>
+                        <p class="text-xs text-vf-text-secondary">Discoverable movement affordance for floating surfaces.</p>
+                    </div>
+                    <div class="p-4 bg-vf-bg rounded-vf-control border border-vf-hairline flex items-center justify-center min-h-[70px]">
+                        <div class="w-12 h-1.5 rounded-full bg-vf-border-strong cursor-grab active:cursor-grabbing"></div>
+                    </div>
+                </div>
+
+                <!-- 16. SegmentedProgress -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Progress/SegmentedProgress</span>
+                        <p class="text-xs text-vf-text-secondary">Multi-step setup or field progress bar paired with text.</p>
+                    </div>
+                    <div class="p-4 bg-vf-bg rounded-vf-control border border-vf-hairline space-y-2 min-h-[70px]">
+                        <div class="flex justify-between text-xs text-vf-text-secondary font-medium">
+                            <span>Step 2 of 3</span>
+                            <span>66%</span>
+                        </div>
+                        <div class="flex gap-1.5 h-1.5 w-full">
+                            <div class="flex-1 bg-vf-accent-600 rounded-full"></div>
+                            <div class="flex-1 bg-vf-accent-600 rounded-full"></div>
+                            <div class="flex-1 bg-vf-hairline rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 17. InlineError -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Feedback/InlineError</span>
+                        <p class="text-xs text-vf-text-secondary">Local error notice directly anchored to affected target.</p>
+                    </div>
+                    <div class="p-3 bg-vf-bg rounded-vf-control border border-vf-hairline min-h-[70px]">
+                        <div class="flex items-center gap-2 text-xs text-vf-danger">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span>Which field do you mean? Multiple matches found.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 18. IconButton -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Control/IconButton</span>
+                        <p class="text-xs text-vf-text-secondary">44px minimum target for close, edit, or settings actions.</p>
+                    </div>
+                    <div class="p-4 bg-vf-bg rounded-vf-control border border-vf-hairline flex items-center justify-center gap-3 min-h-[70px]">
+                        <button class="w-10 h-10 rounded-full border border-vf-hairline hover:bg-vf-surface-subtle flex items-center justify-center text-vf-text-primary" title="Settings">⚙️</button>
+                        <button class="w-10 h-10 rounded-full border border-vf-hairline hover:bg-vf-surface-subtle flex items-center justify-center text-vf-text-primary" title="Close">✕</button>
+                    </div>
+                </div>
+
+                <!-- 19. DisclosureRow -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Control/DisclosureRow</span>
+                        <p class="text-xs text-vf-text-secondary">Progressive disclosure accordion for advanced details.</p>
+                    </div>
+                    <div class="p-3 bg-vf-bg rounded-vf-control border border-vf-hairline min-h-[70px]">
+                        <details class="group text-xs">
+                            <summary class="flex items-center justify-between font-medium text-vf-text-primary cursor-pointer list-none py-1">
+                                <span>Advanced Diagnostics</span>
+                                <span class="group-open:rotate-180 transition-transform">▼</span>
+                            </summary>
+                            <p class="mt-2 text-vf-text-secondary text-[11px] leading-relaxed border-t border-vf-hairline pt-2">Local NLU model confidence: 0.94. Audio frame rate: 16kHz PCM local-only.</p>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- 20. ZenSheet Preview -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-mono font-semibold text-vf-accent-600">VF/Sheet/Zen</span>
+                        <p class="text-xs text-vf-text-secondary">One-field-at-a-time guided form completion sheet container.</p>
+                    </div>
+                    <div class="p-3 bg-vf-bg rounded-vf-control border border-vf-hairline min-h-[70px]">
+                        <div class="p-3 rounded-vf-sheet bg-vf-surface border border-vf-hairline space-y-1 text-xs">
+                            <div class="flex justify-between text-vf-text-secondary text-[11px]"><span>FIELD 2 OF 6</span><span>Zen Mode</span></div>
+                            <p class="font-semibold text-vf-text-primary">Company Name</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- =================================================================== -->
+        <!-- TAB 3: PROPOSED SURFACES (7 PROTOTYPES) -->
+        <!-- =================================================================== -->
+        <section id="tab-surfaces" class="hidden space-y-8">
+            <div class="border-b border-vf-hairline pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-semibold text-vf-text-primary">3. The Proposed Surfaces (7 Live Prototypes)</h2>
+                    <p class="text-sm text-vf-text-secondary mt-1">Full interaction models adhering to non-destructive form detection & monotonic safety confirmation.</p>
+                </div>
+
+                <!-- Surface Picker Selector -->
+                <div class="flex flex-wrap gap-1.5 bg-vf-surface-subtle p-1 rounded-vf-pill border border-vf-hairline text-xs">
+                    <button onclick="selectSurface('surf-01')" id="surf-tab-surf-01" class="surf-picker-btn px-3 py-1.5 rounded-vf-pill bg-vf-surface-elevated font-medium text-vf-text-primary shadow-sm">VF-SURF-01 (Side Panel)</button>
+                    <button onclick="selectSurface('surf-02')" id="surf-tab-surf-02" class="surf-picker-btn px-3 py-1.5 rounded-vf-pill font-medium text-vf-text-secondary">02 (Options)</button>
+                    <button onclick="selectSurface('surf-03')" id="surf-tab-surf-03" class="surf-picker-btn px-3 py-1.5 rounded-vf-pill font-medium text-vf-text-secondary">03 (In-Page)</button>
+                    <button onclick="selectSurface('surf-04')" id="surf-tab-surf-04" class="surf-picker-btn px-3 py-1.5 rounded-vf-pill font-medium text-vf-text-secondary">04 (Zen Sheet)</button>
+                    <button onclick="selectSurface('surf-05')" id="surf-tab-surf-05" class="surf-picker-btn px-3 py-1.5 rounded-vf-pill font-medium text-vf-text-secondary">05 (Mini Popup)</button>
+                    <button onclick="selectSurface('surf-06')" id="surf-tab-surf-06" class="surf-picker-btn px-3 py-1.5 rounded-vf-pill font-medium text-vf-text-secondary">06A/B (Android Overlay)</button>
+                    <button onclick="selectSurface('surf-07')" id="surf-tab-surf-07" class="surf-picker-btn px-3 py-1.5 rounded-vf-pill font-medium text-vf-text-secondary">07 (Android Setup)</button>
+                </div>
+            </div>
+
+            <!-- PROTOTYPE CONTAINERS -->
+
+            <!-- SURFACE 1: Browser Side Panel (VF-SURF-01) -->
+            <div id="surf-01" class="surface-view max-w-md mx-auto rounded-vf-card border border-vf-hairline bg-vf-surface shadow-vf-panel overflow-hidden">
+                <div class="p-3 border-b border-vf-hairline bg-vf-surface-elevated flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 rounded-full bg-vf-accent-600 text-white font-bold text-[10px] flex items-center justify-center">VF</div>
+                        <span class="text-xs font-semibold text-vf-text-primary">VoiceForm Side Panel</span>
+                    </div>
+                    <span class="text-[10px] bg-vf-accent-50 text-vf-accent-700 px-2 py-0.5 rounded-full font-mono">VF-SURF-01</span>
+                </div>
+
+                <div class="p-4 space-y-4">
+                    <!-- Section: Detected Forms -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-semibold text-vf-text-secondary uppercase">Detected Forms</span>
+                            <span class="px-1.5 py-0.5 rounded-vf-pill bg-vf-surface-subtle text-[11px] font-mono text-vf-text-primary">3 Found</span>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="p-2.5 rounded-vf-card bg-vf-accent-50 border border-vf-accent-200 flex items-center justify-between cursor-pointer">
+                                <div>
+                                    <p class="text-xs font-semibold text-vf-text-primary">New Opportunity Form</p>
+                                    <p class="text-[10px] text-vf-text-secondary">Salesforce · 8 fields detected</p>
+                                </div>
+                                <span class="text-xs text-vf-accent-600 font-bold">Active</span>
+                            </div>
+                            <div class="p-2.5 rounded-vf-card bg-vf-surface-elevated border border-vf-hairline flex items-center justify-between opacity-70">
+                                <div>
+                                    <p class="text-xs font-medium text-vf-text-primary">Contact Inquiry</p>
+                                    <p class="text-[10px] text-vf-text-secondary">HubSpot · 4 fields</p>
+                                </div>
+                                <span class="text-xs text-vf-text-tertiary">›</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Voice Session Controls -->
+                    <div class="p-4 rounded-vf-card bg-vf-surface-elevated border border-vf-hairline space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-vf-text-primary">Voice Command Session</span>
+                            <span id="surf1-status-badge" class="text-[11px] text-vf-text-tertiary font-mono">IDLE</span>
+                        </div>
+
+                        <div id="surf1-transcript-area" class="hidden p-2.5 rounded-vf-control bg-vf-surface-subtle border border-vf-hairline text-xs">
+                            <p class="text-[10px] text-vf-text-tertiary font-mono">LIVE TRANSCRIPT</p>
+                            <p id="surf1-transcript-text" class="text-xs font-medium text-vf-text-primary mt-0.5">“Set company to Acme Inc.”</p>
+                        </div>
+
+                        <!-- Primary Voice Trigger -->
+                        <button id="surf1-start-btn" onclick="simulateSurf1Session()" class="w-full py-2.5 bg-vf-accent-600 hover:bg-vf-accent-700 text-white font-medium text-xs rounded-vf-pill transition-all duration-150 flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/></svg>
+                            <span>Start Voice Session</span>
+                        </button>
+                    </div>
+
+                    <!-- Health Strip -->
+                    <div class="flex items-center justify-around py-2 px-3 bg-vf-surface-subtle rounded-vf-card border border-vf-hairline text-[11px]">
+                        <span class="flex items-center gap-1.5 text-vf-text-secondary"><span class="w-2 h-2 rounded-full bg-vf-success"></span>Core</span>
+                        <span class="flex items-center gap-1.5 text-vf-text-secondary"><span class="w-2 h-2 rounded-full bg-vf-success"></span>Speech</span>
+                        <span class="flex items-center gap-1.5 text-vf-text-secondary"><span class="w-2 h-2 rounded-full bg-vf-success"></span>Mic</span>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- SURFACE 2: Options / Onboarding (VF-SURF-02) -->
+            <div id="surf-02" class="surface-view hidden max-w-lg mx-auto rounded-vf-card border border-vf-hairline bg-vf-surface p-6 space-y-6 shadow-vf-panel">
+                <div class="flex items-center justify-between border-b border-vf-hairline pb-3">
+                    <h3 class="text-base font-semibold text-vf-text-primary">Onboarding & Permission Setup</h3>
+                    <span class="text-xs font-mono text-vf-accent-600">VF-SURF-02</span>
+                </div>
+
+                <!-- Step 1 Progress -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs text-vf-text-secondary font-medium">
+                        <span>Step 1 of 3 — Microphone Access Rationale</span>
+                        <span>33%</span>
+                    </div>
+                    <div class="flex gap-1.5 h-1.5 w-full">
+                        <div class="flex-1 bg-vf-accent-600 rounded-full"></div>
+                        <div class="flex-1 bg-vf-hairline rounded-full"></div>
+                        <div class="flex-1 bg-vf-hairline rounded-full"></div>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-vf-card bg-vf-surface-elevated border border-vf-hairline text-center space-y-3">
+                    <div class="w-12 h-12 rounded-full bg-vf-accent-50 text-vf-accent-600 mx-auto flex items-center justify-center text-xl">🎙️</div>
+                    <div>
+                        <h4 class="text-sm font-semibold text-vf-text-primary">Microphone Access Required</h4>
+                        <p class="text-xs text-vf-text-secondary mt-1">VoiceForm Universal needs access only when you explicitly press 'Start Voice' to speak commands into form fields.</p>
+                    </div>
+                    <div class="pt-2 flex gap-2">
+                        <button onclick="alert('In production, this triggers OS Microphone Permission Dialog.')" class="flex-1 py-2 bg-vf-accent-600 text-white text-xs font-medium rounded-vf-pill">Enable Voice</button>
+                        <button class="px-4 py-2 bg-vf-surface-subtle border border-vf-hairline text-vf-text-secondary text-xs font-medium rounded-vf-pill">Skip for Now</button>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- SURFACE 3: In-Page Cues (VF-SURF-03) -->
+            <div id="surf-03" class="surface-view hidden max-w-2xl mx-auto rounded-vf-card border border-vf-hairline bg-vf-surface p-6 space-y-4 shadow-vf-card">
+                <div class="flex items-center justify-between border-b border-vf-hairline pb-2">
+                    <span class="text-xs font-semibold text-vf-text-secondary uppercase">Web Page Canvas Context</span>
+                    <span class="text-xs font-mono text-vf-accent-600">VF-SURF-03</span>
+                </div>
+
+                <!-- Simulated Web Form with Voice Focus Ring -->
+                <div class="p-5 rounded-vf-card bg-vf-bg border border-vf-hairline space-y-4 relative">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-semibold text-vf-text-secondary">CRM Lead Contact Form</h4>
+                        <span class="text-[10px] bg-vf-accent-50 text-vf-accent-700 px-2 py-0.5 rounded-full">Detected Form Border</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-xs font-medium text-vf-text-secondary block mb-1">Company Name</label>
+                            <div class="relative">
+                                <input type="text" value="Acme Inc." class="w-full px-3 py-2 bg-vf-surface border-2 border-vf-accent-500 rounded-vf-control text-xs text-vf-text-primary focus:outline-none ring-2 ring-vf-accent-200">
+                                <div class="absolute right-2 top-2 px-2 py-0.5 bg-vf-accent-50 text-vf-accent-700 rounded-vf-pill text-[10px] font-semibold flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-vf-accent-600 vf-pulse-active"></span> Active Target
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Anchored Floating Transcript Bubble -->
+                        <div class="p-2.5 rounded-vf-card bg-vf-surface-elevated border border-vf-hairline shadow-vf-floating text-xs space-y-1">
+                            <span class="text-[10px] text-vf-text-tertiary font-mono">VOICE TRANSCRIPT PREVIEW</span>
+                            <p class="font-medium text-vf-text-primary">“Set company to Acme Inc.”</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- SURFACE 4: Zen Sheet (VF-SURF-04) -->
+            <div id="surf-04" class="surface-view hidden max-w-md mx-auto rounded-vf-sheet border border-vf-hairline bg-vf-surface-elevated p-5 space-y-4 shadow-vf-floating">
+                <!-- Drag Handle -->
+                <div class="w-10 h-1 bg-vf-border-strong rounded-full mx-auto"></div>
+
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] text-vf-text-tertiary font-mono uppercase">Zen Guided Mode</span>
+                        <h3 class="text-sm font-semibold text-vf-text-primary">Field 2 of 6 — Company Name</h3>
+                    </div>
+                    <button class="p-1 rounded-full hover:bg-vf-surface-subtle text-xs">✕</button>
+                </div>
+
+                <div class="space-y-1">
+                    <div class="flex gap-1 h-1 w-full">
+                        <div class="flex-1 bg-vf-accent-600 rounded-full"></div>
+                        <div class="flex-1 bg-vf-accent-600 rounded-full"></div>
+                        <div class="flex-1 bg-vf-hairline rounded-full"></div>
+                        <div class="flex-1 bg-vf-hairline rounded-full"></div>
+                        <div class="flex-1 bg-vf-hairline rounded-full"></div>
+                        <div class="flex-1 bg-vf-hairline rounded-full"></div>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-2">
+                    <label class="text-xs font-medium text-vf-text-secondary">Current Field Value</label>
+                    <input type="text" value="Acme Inc." class="w-full px-3 py-2 bg-vf-bg border border-vf-hairline rounded-vf-control text-xs font-medium">
+                </div>
+
+                <div class="flex gap-2">
+                    <button class="px-4 py-2 bg-vf-surface border border-vf-hairline text-vf-text-primary text-xs font-medium rounded-vf-pill">Previous</button>
+                    <button class="flex-1 py-2 bg-vf-accent-600 text-white text-xs font-medium rounded-vf-pill">Next Field ›</button>
+                </div>
+            </div>
+
+
+            <!-- SURFACE 5: Mini Popup (VF-SURF-05) -->
+            <div id="surf-05" class="surface-view hidden max-w-[300px] mx-auto rounded-vf-card border border-vf-hairline bg-vf-surface-elevated p-4 space-y-3 shadow-vf-floating">
+                <div class="flex items-center justify-between border-b border-vf-hairline pb-2">
+                    <span class="text-xs font-semibold text-vf-text-primary">VoiceForm Quick Launcher</span>
+                    <span class="text-[10px] text-vf-text-tertiary">VF-SURF-05</span>
+                </div>
+
+                <div class="py-4 text-center space-y-2">
+                    <button onclick="switchTab('surfaces'); selectSurface('surf-01')" class="w-12 h-12 rounded-full bg-vf-accent-600 text-white mx-auto flex items-center justify-center text-lg shadow-sm hover:scale-105 transition-transform">
+                        🎙️
+                    </button>
+                    <p class="text-xs font-medium text-vf-text-primary">Tap to open Side Panel Workspace</p>
+                    <span class="text-[10px] text-vf-text-secondary block">3 forms detected on this tab</span>
+                </div>
+            </div>
+
+
+            <!-- SURFACE 6A/B: Android Floating Overlay Collapsed & Expanded -->
+            <div id="surf-06" class="surface-view hidden max-w-sm mx-auto space-y-4">
+                <div class="text-center">
+                    <span class="text-xs font-mono text-vf-accent-600">VF-SURF-06A & VF-SURF-06B (Android Overlay)</span>
+                </div>
+
+                <!-- Collapsed State -->
+                <div class="p-4 rounded-vf-card bg-vf-surface border border-vf-hairline space-y-2">
+                    <p class="text-xs font-semibold text-vf-text-secondary">Collapsed Floating Launcher (VF-SURF-06A)</p>
+                    <div class="w-12 h-12 rounded-full bg-vf-accent-600 text-white flex items-center justify-center shadow-vf-floating font-bold text-xs cursor-pointer">
+                        VF
+                    </div>
+                </div>
+
+                <!-- Expanded State -->
+                <div class="p-4 rounded-vf-sheet bg-vf-surface-elevated border border-vf-hairline space-y-3 shadow-vf-floating">
+                    <div class="w-8 h-1 bg-vf-border-strong rounded-full mx-auto"></div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-semibold text-vf-text-primary">VoiceForm Android Overlay</span>
+                        <span class="text-[10px] bg-vf-accent-50 text-vf-accent-700 px-2 py-0.5 rounded-full">Expanded</span>
+                    </div>
+                    <div class="p-2.5 rounded-vf-control bg-vf-surface border border-vf-hairline text-xs">
+                        <p class="text-[10px] text-vf-text-tertiary">TARGET FIELD</p>
+                        <p class="font-medium text-vf-text-primary">Company Name → Acme Inc.</p>
+                    </div>
+                    <button class="w-full py-2 bg-vf-accent-600 text-white text-xs font-medium rounded-vf-pill">Stop Listening</button>
+                </div>
+            </div>
+
+
+            <!-- SURFACE 7: Android Setup Activity (VF-SURF-07) -->
+            <div id="surf-07" class="surface-view hidden max-w-md mx-auto rounded-vf-card border border-vf-hairline bg-vf-surface p-6 space-y-5 shadow-vf-panel">
+                <div class="flex items-center justify-between border-b border-vf-hairline pb-3">
+                    <h3 class="text-base font-semibold text-vf-text-primary">Set up VoiceForm Android</h3>
+                    <span class="text-xs font-mono text-vf-accent-600">VF-SURF-07</span>
+                </div>
+
+                <div class="space-y-4 text-xs">
+                    <div class="p-3 rounded-vf-card bg-vf-surface-elevated border border-vf-hairline space-y-1">
+                        <p class="font-semibold text-vf-text-primary">1. Enable Accessibility Service</p>
+                        <p class="text-vf-text-secondary">Required to identify form field nodes in native apps.</p>
+                        <button class="mt-2 px-3 py-1 bg-vf-accent-600 text-white text-xs font-medium rounded-vf-pill">Open Android Settings</button>
+                    </div>
+
+                    <div class="p-3 rounded-vf-card bg-vf-surface-elevated border border-vf-hairline space-y-1">
+                        <p class="font-semibold text-vf-text-primary">2. Microphone Permission</p>
+                        <p class="text-vf-text-secondary">Required to capture audio when explicitly requested.</p>
+                    </div>
+
+                    <div class="p-3 rounded-vf-card bg-vf-surface-subtle border border-vf-hairline flex items-center justify-between">
+                        <span>Check Status: Accessibility & Mic</span>
+                        <span class="text-vf-success font-semibold">● Ready</span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-vf-hairline bg-vf-surface py-4 px-6 text-center text-xs text-vf-text-tertiary">
+        VoiceForm Universal Specification & Component Catalog — Single File HTML Implementation
+    </footer>
+
+    <!-- INTERACTIVE SCRIPT LOGIC -->
+    <script>
+        // Global Theme Management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            document.getElementById('theme-icon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+            document.getElementById('theme-text').textContent = newTheme === 'dark' ? 'Light' : 'Dark';
+        }
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            ['ds', 'catalog', 'surfaces'].forEach(id => {
+                const section = document.getElementById(`tab-${id}`);
+                const btn = document.getElementById(`nav-btn-${id}`);
+                if (id === tabId) {
+                    section.classList.remove('hidden');
+                    btn.classList.add('bg-vf-surface-elevated', 'text-vf-text-primary', 'shadow-sm');
+                    btn.classList.remove('text-vf-text-secondary');
+                } else {
+                    section.classList.add('hidden');
+                    btn.classList.remove('bg-vf-surface-elevated', 'text-vf-text-primary', 'shadow-sm');
+                    btn.classList.add('text-vf-text-secondary');
+                }
+            });
+        }
+
+        // Surface Picker Logic
+        function selectSurface(surfId) {
+            document.querySelectorAll('.surface-view').forEach(view => view.classList.add('hidden'));
+            document.querySelectorAll('.surf-picker-btn').forEach(btn => {
+                btn.classList.remove('bg-vf-surface-elevated', 'text-vf-text-primary', 'shadow-sm');
+                btn.classList.add('text-vf-text-secondary');
+            });
+
+            const targetView = document.getElementById(surfId);
+            const targetBtn = document.getElementById(`surf-tab-${surfId}`);
+            if (targetView) targetView.classList.remove('hidden');
+            if (targetBtn) {
+                targetBtn.classList.add('bg-vf-surface-elevated', 'text-vf-text-primary', 'shadow-sm');
+                targetBtn.classList.remove('text-vf-text-secondary');
+            }
+        }
+
+        // Motion Test Harness Trigger
+        function triggerMotionTest() {
+            const box = document.getElementById('motion-box');
+            box.style.transform = 'scale(1.25) rotate(45deg)';
+            box.style.backgroundColor = 'var(--vf-accent-600)';
+            setTimeout(() => {
+                box.style.transform = 'scale(1) rotate(0deg)';
+                box.style.backgroundColor = 'var(--vf-accent-500)';
+            }, 180);
+        }
+
+        // Catalog Component State Switcher
+        function setCatalogState(state) {
+            document.querySelectorAll('.catalog-state-btn').forEach(btn => {
+                btn.classList.remove('bg-vf-surface-elevated', 'text-vf-text-primary', 'shadow-sm');
+                btn.classList.add('text-vf-text-secondary');
+            });
+            event.target.classList.add('bg-vf-surface-elevated', 'text-vf-text-primary', 'shadow-sm');
+
+            const primaryPill = document.getElementById('cmp-primary-pill');
+            const secondaryPill = document.getElementById('cmp-secondary-pill');
+
+            if (state === 'disabled') {
+                primaryPill.setAttribute('disabled', 'true');
+                primaryPill.className = "px-5 py-2.5 bg-vf-disabled-fill text-vf-disabled-text font-medium text-sm rounded-vf-pill cursor-not-allowed flex items-center gap-2";
+                secondaryPill.setAttribute('disabled', 'true');
+                secondaryPill.className = "px-5 py-2.5 bg-vf-disabled-fill text-vf-disabled-text font-medium text-sm rounded-vf-pill cursor-not-allowed";
+            } else if (state === 'hover') {
+                primaryPill.removeAttribute('disabled');
+                primaryPill.className = "px-5 py-2.5 bg-vf-accent-700 text-white font-medium text-sm rounded-vf-pill flex items-center gap-2 shadow-md";
+                secondaryPill.removeAttribute('disabled');
+                secondaryPill.className = "px-5 py-2.5 bg-vf-surface-subtle text-vf-text-primary font-medium text-sm rounded-vf-pill";
+            } else if (state === 'focus') {
+                primaryPill.removeAttribute('disabled');
+                primaryPill.className = "px-5 py-2.5 bg-vf-accent-600 text-white font-medium text-sm rounded-vf-pill flex items-center gap-2 ring-2 ring-vf-focus-ring ring-offset-2";
+                secondaryPill.removeAttribute('disabled');
+                secondaryPill.className = "px-5 py-2.5 bg-transparent border border-vf-hairline text-vf-text-primary font-medium text-sm rounded-vf-pill ring-2 ring-vf-focus-ring";
+            } else { // Default
+                primaryPill.removeAttribute('disabled');
+                primaryPill.className = "px-5 py-2.5 bg-vf-accent-600 hover:bg-vf-accent-700 text-white font-medium text-sm rounded-vf-pill transition-all duration-150 flex items-center gap-2 shadow-sm";
+                secondaryPill.removeAttribute('disabled');
+                secondaryPill.className = "px-5 py-2.5 bg-transparent border border-vf-hairline hover:bg-vf-surface-subtle text-vf-text-primary font-medium text-sm rounded-vf-pill transition-all duration-150";
+            }
+        }
+
+        // Monotonic 3-Second Confirmation Gate Logic
+        let gateTimer = null;
+        let gateTimeRemaining = 3;
+
+        function startConfirmGateTimer() {
+            clearInterval(gateTimer);
+            gateTimeRemaining = 3;
+            const btn = document.getElementById('confirm-btn-gate');
+            btn.setAttribute('disabled', 'true');
+            btn.className = "px-3 py-1.5 bg-vf-disabled-fill text-vf-disabled-text text-xs font-medium rounded-vf-pill cursor-not-allowed";
+            btn.textContent = `Confirm (${gateTimeRemaining}s)`;
+
+            gateTimer = setInterval(() => {
+                gateTimeRemaining--;
+                if (gateTimeRemaining > 0) {
+                    btn.textContent = `Confirm (${gateTimeRemaining}s)`;
+                } else {
+                    clearInterval(gateTimer);
+                    btn.removeAttribute('disabled');
+                    btn.className = "px-3 py-1.5 bg-vf-accent-600 hover:bg-vf-accent-700 text-white text-xs font-medium rounded-vf-pill cursor-pointer shadow-sm";
+                    btn.textContent = "Confirm";
+                }
+            }, 1000);
+        }
+
+        function handleConfirmGateClick() {
+            alert("Action Explicitly Confirmed and Authorized!");
+            resetConfirmGate();
+        }
+
+        function resetConfirmGate() {
+            clearInterval(gateTimer);
+            const btn = document.getElementById('confirm-btn-gate');
+            btn.setAttribute('disabled', 'true');
+            btn.className = "px-3 py-1.5 bg-vf-disabled-fill text-vf-disabled-text text-xs font-medium rounded-vf-pill cursor-not-allowed";
+            btn.textContent = "Confirm (3s)";
+        }
+
+        // Simulate Session for Surface 1
+        function simulateSurf1Session() {
+            const btn = document.getElementById('surf1-start-btn');
+            const badge = document.getElementById('surf1-status-badge');
+            const transcriptArea = document.getElementById('surf1-transcript-area');
+
+            badge.textContent = "LISTENING…";
+            badge.className = "text-[11px] text-vf-accent-600 font-mono font-bold animate-pulse";
+            btn.textContent = "Stop Listening";
+            btn.className = "w-full py-2.5 bg-vf-danger text-white font-medium text-xs rounded-vf-pill transition-all";
+            transcriptArea.classList.remove('hidden');
+
+            btn.onclick = () => {
+                badge.textContent = "DONE";
+                badge.className = "text-[11px] text-vf-success font-mono font-bold";
+                btn.textContent = "Start Voice Session";
+                btn.className = "w-full py-2.5 bg-vf-accent-600 hover:bg-vf-accent-700 text-white font-medium text-xs rounded-vf-pill transition-all";
+                btn.onclick = simulateSurf1Session;
+            };
+        }
+    </script>
+</body>
+</html>

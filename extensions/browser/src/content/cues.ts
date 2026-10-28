@@ -5,6 +5,7 @@
  */
 
 import type { FormSummary, Rect } from "@shared/types";
+import { SHADOW_HOST_VARS } from "./shadow-tokens";
 
 const HOST_ID = "voiceform-cue-host";
 
@@ -23,25 +24,30 @@ function ensureHost(): ShadowRoot | null {
     document.body.appendChild(host);
   }
   shadow = host.shadowRoot ?? host.attachShadow({ mode: "open" });
-  if (!shadow.querySelector("style")) {
+  if (!shadow.querySelector("#vf-cue-style")) {
     const style = document.createElement("style");
+    style.id = "vf-cue-style";
     style.textContent = `
       :host { all: initial; }
+      ${SHADOW_HOST_VARS}
       .layer { position: absolute; left: 0; top: 0; pointer-events: none;
                z-index: 2147483646; }
       .frame { position: fixed; border-radius: 6px; transition:
-               border-color 180ms ease-out, opacity 180ms ease-out,
-               filter 180ms ease-out; }
-      .frame.active { border: 3px solid rgba(37, 99, 235, 0.85);
-        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18); }
-      .frame.muted { border: 2px solid rgba(107, 114, 128, 0.35);
+               border-color var(--vf-motion-standard, 180ms) var(--vf-ease-out),
+               opacity var(--vf-motion-standard, 180ms) var(--vf-ease-out),
+               filter var(--vf-motion-standard, 180ms) var(--vf-ease-out); }
+      .frame.active {
+        border: 3px solid color-mix(in srgb, var(--vf-accent-600) 85%, transparent);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--vf-accent-600) 20%, transparent); }
+      .frame.muted {
+        border: 2px solid color-mix(in srgb, var(--vf-text-secondary) 45%, transparent);
         filter: blur(1.5px); opacity: 0.75; }
       .chip { position: fixed; right: 16px; bottom: 16px;
-        font: 600 12px/1.4 -apple-system, system-ui, sans-serif;
-        color: #fff; background: rgba(17, 24, 39, 0.88);
+        font: 600 12px/1.4 var(--vf-font-family);
+        color: var(--vf-on-accent); background: var(--vf-accent-600);
         backdrop-filter: blur(12px) saturate(180%);
-        padding: 8px 14px; border-radius: 999px;
-        box-shadow: 0 4px 16px rgba(0,0,0,.25); display: none; }
+        padding: 8px 14px; border-radius: var(--vf-radius-pill);
+        box-shadow: var(--vf-shadow-floating); display: none; }
       .chip.show { display: block; }
     `;
     shadow.appendChild(style);

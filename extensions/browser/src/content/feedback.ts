@@ -3,6 +3,8 @@
  * B-8 zen mode lives in zen.ts; this file is the hot-mic UX.
  */
 
+import { SHADOW_HOST_VARS } from "./shadow-tokens";
+
 const HOST_ID = "voiceform-cue-host";
 
 let shadow: ShadowRoot | null = null;
@@ -27,33 +29,44 @@ function ensure(): typeof ui {
     const style = document.createElement("style");
     style.id = "vf-feedback-style";
     style.textContent = `
+      ${SHADOW_HOST_VARS}
       .vf-chip { position: fixed; right: 16px; bottom: 72px;
-        font: 600 12px/1.4 -apple-system, system-ui, sans-serif; color: #fff;
-        background: rgba(17,24,39,.88); backdrop-filter: blur(12px) saturate(180%);
-        padding: 8px 14px; border-radius: 999px; box-shadow: 0 4px 16px rgba(0,0,0,.25);
+        font: 600 12px/1.4 var(--vf-font-family); color: var(--vf-on-accent);
+        background: var(--vf-accent-600); backdrop-filter: blur(12px) saturate(180%);
+        padding: 8px 14px; border-radius: var(--vf-radius-pill);
+        box-shadow: var(--vf-shadow-floating);
         display: none; z-index: 2147483647; }
       .vf-chip.show { display: block; }
-      .vf-listen { position: fixed; z-index: 2147483647; font: 600 10px/1 system-ui;
-        color: #fff; background: #2563eb; border-radius: 999px; padding: 3px 8px;
-        display: none; animation: vf-blink 1.2s ease-in-out infinite; }
+      .vf-listen { position: fixed; z-index: 2147483647;
+        font: 600 10px/1 var(--vf-font-family);
+        color: var(--vf-on-accent); background: var(--vf-accent-500);
+        border-radius: var(--vf-radius-pill); padding: 3px 8px;
+        display: none; animation: vf-blink var(--vf-listening-pulse) var(--vf-ease-out) infinite; }
       .vf-listen.show { display: block; }
       .vf-preview { position: fixed; z-index: 2147483647; max-width: 280px;
-        font: 500 12px/1.4 system-ui; color: #111; background: rgba(255,255,255,.94);
-        border: 1px solid rgba(0,0,0,.08); border-radius: 12px; padding: 8px 10px;
-        box-shadow: 0 4px 16px rgba(0,0,0,.18); display: none; }
+        font: 500 12px/1.4 var(--vf-font-family);
+        color: var(--vf-text-primary); background: var(--vf-surface-elevated);
+        border: var(--vf-border-hairline) solid var(--vf-hairline);
+        border-radius: var(--vf-radius-card); padding: 8px 10px;
+        box-shadow: var(--vf-shadow-floating); display: none; }
       .vf-preview.show { display: block; }
-      .vf-preview.err { color: #991b1b; }
+      .vf-preview.err { color: var(--vf-danger); }
       @keyframes vf-blink { 50% { opacity: .45; } }
+      @media (prefers-reduced-motion: reduce) {
+        .vf-listen { animation: none; }
+      }
       .vf-pill2 { position: fixed; z-index: 2147483647; left: 50%; transform: translateX(-50%);
-        bottom: 24px; font: 600 13px/1.4 system-ui; color: #fff;
-        background: rgba(17,24,39,.92); backdrop-filter: blur(12px);
-        border-radius: 999px; padding: 12px 18px; display: none;
-        box-shadow: 0 8px 28px rgba(0,0,0,.35); gap: 12px; align-items: center; }
+        bottom: 24px; font: 600 13px/1.4 var(--vf-font-family);
+        color: var(--vf-on-accent);
+        background: var(--vf-accent-600); backdrop-filter: blur(12px);
+        border-radius: var(--vf-radius-pill); padding: 12px 18px; display: none;
+        box-shadow: var(--vf-shadow-floating); gap: 12px; align-items: center; }
       .vf-pill2.show { display: flex; }
-      .vf-pill2 button { border: 0; border-radius: 999px; padding: 8px 14px;
-        font: inherit; cursor: pointer; }
-      .vf-pill2 .yes { background: #2563eb; color: #fff; }
-      .vf-pill2 .no { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.35); }
+      .vf-pill2 button { border: 0; border-radius: var(--vf-radius-pill);
+        padding: 8px 14px; font: inherit; cursor: pointer; }
+      .vf-pill2 .yes { background: var(--vf-surface); color: var(--vf-accent-700, var(--vf-accent-600)); }
+      .vf-pill2 .no { background: transparent; color: var(--vf-on-accent);
+        border: 1px solid color-mix(in srgb, var(--vf-on-accent) 35%, transparent); }
     `;
     shadow.appendChild(style);
   }

@@ -18,9 +18,9 @@
         gap: 14px;
       }
       .step {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
+        background: var(--vf-surface);
+        border: 1px solid var(--vf-hairline);
+        border-radius: var(--vf-radius-card);
         padding: 16px;
         display: flex;
         flex-direction: column;
@@ -33,7 +33,7 @@
       .step p {
         margin: 0;
         font-size: 13px;
-        color: var(--muted);
+        color: var(--vf-text-secondary);
         line-height: 1.5;
       }
       .row {
@@ -43,7 +43,7 @@
         align-items: center;
       }
       .banner {
-        border-radius: var(--radius);
+        border-radius: var(--vf-radius-card);
         padding: 10px 14px;
         font-size: 13px;
         display: none;
@@ -52,14 +52,14 @@
         display: block;
       }
       .banner.warn {
-        background: color-mix(in srgb, var(--danger) 12%, transparent);
-        border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
-        color: var(--fg);
+        background: color-mix(in srgb, var(--vf-danger) 12%, transparent);
+        border: 1px solid color-mix(in srgb, var(--vf-danger) 40%, transparent);
+        color: var(--vf-text-primary);
       }
       .banner.ok {
-        background: color-mix(in srgb, var(--ok) 12%, transparent);
-        border: 1px solid color-mix(in srgb, var(--ok) 40%, transparent);
-        color: var(--fg);
+        background: color-mix(in srgb, var(--vf-success) 12%, transparent);
+        border: 1px solid color-mix(in srgb, var(--vf-success) 40%, transparent);
+        color: var(--vf-text-primary);
       }
       .health {
         display: flex;
@@ -68,10 +68,10 @@
         align-items: center;
       }
       input[type="text"] {
-        border: 1px solid var(--border);
-        background: var(--bg);
-        color: var(--fg);
-        border-radius: var(--radius-pill);
+        border: 1px solid var(--vf-hairline);
+        background: var(--vf-bg);
+        color: var(--vf-text-primary);
+        border-radius: var(--vf-radius-pill);
         padding: 8px 14px;
         font: inherit;
         min-width: 280px;
@@ -80,7 +80,7 @@
   </head>
   <body>
     <h1 style="font-size: 22px; margin: 0 0 6px">VoiceForm setup</h1>
-    <p style="color: var(--muted); font-size: 13px; margin-top: 0">
+    <p style="color: var(--vf-text-secondary); font-size: 13px; margin-top: 0">
       One-time setup — voice works everywhere once these three steps are green.
       We never ask for the microphone during install.
     </p>
@@ -140,7 +140,7 @@
     </div>
 
     <details style="margin-top: 16px">
-      <summary style="cursor: pointer; color: var(--muted); font-size: 13px">
+      <summary style="cursor: pointer; color: var(--vf-text-secondary); font-size: 13px">
         Diagnostics
       </summary>
       <div class="row" style="margin-top: 8px">

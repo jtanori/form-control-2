@@ -1,0 +1,203 @@
+/* UX-003-C — canonical --vf-* tokens (spec-v1.md §1.7 + type/space/motion).
+   Generated-from tokens.json — edit both together. Light + dark (D6/D9 clean). */
+:root {
+  color-scheme: light;
+
+  --vf-bg: #ffffff;
+  --vf-surface: #f7f8fa;
+  --vf-surface-elevated: #ffffff;
+  --vf-surface-subtle: #f1f3f6;
+  --vf-text-primary: #0b0f14;
+  --vf-text-secondary: #667085;
+  --vf-text-tertiary: #8993a3;
+  --vf-hairline: #e5e7eb;
+  --vf-border-strong: #cbd2dc;
+  --vf-accent-50: #eff6ff;
+  --vf-accent-100: #dbeafe;
+  --vf-accent-200: #bfdbfe;
+  --vf-accent-300: #93c5fd;
+  --vf-accent-400: #60a5fa;
+  --vf-accent-500: #3b82f6;
+  --vf-accent-600: #2878f0;
+  --vf-accent-700: #1d5fc7;
+  --vf-success: #0d9488;
+  --vf-warning: #b7791f;
+  --vf-danger: #d94848;
+  --vf-info: #64748b;
+  --vf-scrim: rgba(15, 23, 42, 0.08);
+  --vf-focus-ring: #2878f0;
+  --vf-disabled-fill: #eef1f5;
+  --vf-disabled-text: #98a2b3;
+  --vf-on-accent: #ffffff; /* text/icons on accent fills (Compose onPrimary) */
+
+  --vf-font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  --vf-type-title: 600 24px/30px var(--vf-font-family);
+  --vf-type-heading: 600 18px/24px var(--vf-font-family);
+  --vf-type-subheading: 600 15px/20px var(--vf-font-family);
+  --vf-type-body: 400 14px/20px var(--vf-font-family);
+  --vf-type-body-medium: 500 14px/20px var(--vf-font-family);
+  --vf-type-caption: 400 12px/16px var(--vf-font-family);
+  --vf-type-micro: 500 11px/14px var(--vf-font-family);
+
+  --vf-space-1: 4px;
+  --vf-space-2: 8px;
+  --vf-space-3: 12px;
+  --vf-space-4: 16px;
+  --vf-space-5: 20px;
+  --vf-space-6: 24px;
+  --vf-space-8: 32px;
+
+  --vf-radius-control: 12px;
+  --vf-radius-pill: 999px;
+  --vf-radius-card: 14px;
+  --vf-radius-sheet: 22px;
+  --vf-radius-overlay: 24px;
+  --vf-border-hairline: 1px;
+
+  --vf-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --vf-shadow-panel: 0 4px 16px rgba(15, 23, 42, 0.08);
+  --vf-shadow-floating: 0 8px 24px rgba(0, 0, 0, 0.14);
+  --vf-blur-floating: 8px;
+
+  --vf-motion-fast: 120ms;
+  --vf-motion-standard: 180ms;
+  --vf-motion-panel: 220ms;
+  --vf-motion-sheet: 250ms;
+  --vf-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --vf-listening-pulse: 1600ms;
+  --vf-confirm-minimum: 3000ms; /* display only — gating deferred (D1) */
+
+  --vf-focus-inset: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --vf-bg: #0b0f14;
+    --vf-surface: #111827;
+    --vf-surface-elevated: #172033;
+    --vf-surface-subtle: #1c2638;
+    --vf-text-primary: #f3f5f7;
+    --vf-text-secondary: #a3adbc;
+    --vf-text-tertiary: #7f8a9c;
+    --vf-hairline: #293344;
+    --vf-border-strong: #3b475b;
+    --vf-accent-50: #101f36;
+    --vf-accent-100: #142a49;
+    --vf-accent-200: #1d3b63;
+    --vf-accent-300: #28528a;
+    --vf-accent-400: #3470bd;
+    --vf-accent-500: #3b82f6;
+    --vf-accent-600: #5b9bff;
+    --vf-accent-700: #83b4ff;
+    --vf-success: #34b8a6;
+    --vf-warning: #e7b14d;
+    --vf-danger: #ff7777;
+    --vf-info: #94a3b8;
+    --vf-scrim: rgba(0, 0, 0, 0.32);
+    --vf-focus-ring: #83b4ff;
+    --vf-disabled-fill: #202a3a;
+    --vf-disabled-text: #69778d;
+    --vf-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --vf-shadow-panel: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --vf-shadow-floating: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ---- shared primitives (VF/* class map — components-map.md) ---- */
+.vf-btn {
+  border: var(--vf-border-hairline) solid var(--vf-hairline);
+  background: var(--vf-surface);
+  color: var(--vf-text-primary);
+  border-radius: var(--vf-radius-pill);
+  padding: var(--vf-space-3) var(--vf-space-4);
+  font: var(--vf-type-body-medium);
+  font-family: var(--vf-font-family);
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
+  transition:
+    opacity var(--vf-motion-fast) var(--vf-ease-out),
+    background var(--vf-motion-fast) var(--vf-ease-out);
+}
+.vf-btn:hover {
+  background: var(--vf-surface-subtle);
+}
+.vf-btn:active {
+  background: var(--vf-surface-subtle);
+}
+.vf-btn:focus-visible {
+  outline: var(--vf-focus-inset) solid var(--vf-focus-ring);
+  outline-offset: 1px;
+}
+.vf-btn:disabled {
+  background: var(--vf-disabled-fill);
+  color: var(--vf-disabled-text);
+  border-color: var(--vf-hairline);
+  cursor: not-allowed;
+}
+.vf-btn.primary {
+  background: var(--vf-accent-600);
+  border-color: var(--vf-accent-600);
+  color: #ffffff;
+}
+.vf-btn.primary:hover {
+  background: var(--vf-accent-700);
+  border-color: var(--vf-accent-700);
+}
+.vf-btn.primary:disabled {
+  background: var(--vf-disabled-fill);
+  border-color: var(--vf-hairline);
+  color: var(--vf-disabled-text);
+}
+.vf-btn.danger {
+  color: var(--vf-danger);
+}
+
+.vf-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vf-info);
+  flex: none;
+}
+.vf-dot.ok {
+  background: var(--vf-success);
+}
+.vf-dot.bad {
+  background: var(--vf-danger);
+}
+.vf-dot.warn {
+  background: var(--vf-warning);
+}
+.vf-dot.busy {
+  background: var(--vf-accent-500);
+  animation: vf-pulse var(--vf-listening-pulse) var(--vf-ease-out) infinite;
+}
+@keyframes vf-pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.vf-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--vf-radius-pill);
+  padding: 4px 12px;
+  font: var(--vf-type-caption);
+  background: var(--vf-surface-subtle);
+  border: var(--vf-border-hairline) solid var(--vf-hairline);
+  color: var(--vf-text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vf-btn,
+  .vf-dot.busy {
+    animation: none !important;
+    transition: none !important;
+  }
+}

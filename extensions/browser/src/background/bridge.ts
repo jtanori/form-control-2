@@ -204,7 +204,10 @@ async function updateBadge(): Promise<void> {
   const entries = await getFormRegistry();
   const count = entries.reduce((n, e) => n + e.forms.length, 0);
   await chrome.action.setBadgeText({ text: count > 0 ? String(count) : "" });
-  await chrome.action.setBadgeBackgroundColor({ color: count > 0 ? "#2563eb" : "#6b7280" });
+  // Literals mirror contracts/design/tokens.json (chrome.action cannot resolve CSS vars).
+  await chrome.action.setBadgeBackgroundColor({
+    color: count > 0 ? "#2878F0" : "#64748B",
+  });
 }
 
 export async function handleMessage(

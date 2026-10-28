@@ -1,25 +1,5 @@
-:root {
-  color-scheme: light dark;
-  --bg: #ffffff;
-  --fg: #111827;
-  --muted: #6b7280;
-  --card: #f3f4f6;
-  --border: #e5e7eb;
-  --accent: #2563eb;
-  --danger: #dc2626;
-  --ok: #059669;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #111827;
-    --fg: #f9fafb;
-    --muted: #9ca3af;
-    --card: #1f2937;
-    --border: #374151;
-    --accent: #3b82f6;
-  }
-}
+/* Component styles — tokens live in tokens.css (--vf-* only, D6/D9).
+   .card / .cmd-title are E2E hooks (D8) — never rename. */
 
 * {
   box-sizing: border-box;
@@ -27,15 +7,16 @@
 
 body {
   margin: 0;
-  font: 13px/1.45 system-ui, -apple-system, Segoe UI, sans-serif;
-  background: var(--bg);
-  color: var(--fg);
+  font: var(--vf-type-caption);
+  font-family: var(--vf-font-family);
+  background: var(--vf-bg);
+  color: var(--vf-text-primary);
   min-width: 340px;
   max-width: 380px;
 }
 
 .app {
-  padding: 12px;
+  padding: var(--vf-space-3);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -45,46 +26,53 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--vf-space-2);
 }
 
 h1 {
-  font-size: 14px;
+  font: var(--vf-type-subheading);
+  font-family: var(--vf-font-family);
   margin: 0;
-  font-weight: 650;
 }
 
 .session {
-  font-size: 11px;
-  color: var(--muted);
+  font: var(--vf-type-micro);
   font-family: ui-monospace, monospace;
+  color: var(--vf-text-tertiary);
 }
 
 .row {
   display: flex;
-  gap: 8px;
+  gap: var(--vf-space-2);
   align-items: center;
   flex-wrap: wrap;
 }
 
 button {
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--fg);
-  border-radius: 8px;
-  padding: 7px 12px;
-  font: inherit;
+  border: var(--vf-border-hairline) solid var(--vf-hairline);
+  background: var(--vf-surface);
+  color: var(--vf-text-primary);
+  border-radius: var(--vf-radius-control);
+  padding: var(--vf-space-2) var(--vf-space-3);
+  font: var(--vf-type-body);
+  font-family: var(--vf-font-family);
   cursor: pointer;
+  min-height: 36px;
+  transition: background var(--vf-motion-fast) var(--vf-ease-out);
+}
+button:focus-visible {
+  outline: var(--vf-focus-inset) solid var(--vf-focus-ring);
+  outline-offset: 1px;
 }
 
 button.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: var(--vf-accent-600);
+  border-color: var(--vf-accent-600);
+  color: #ffffff;
 }
 
 button.danger {
-  color: var(--danger);
+  color: var(--vf-danger);
 }
 
 button:disabled {
@@ -100,14 +88,14 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--border);
+  border: 2px solid var(--vf-border-strong);
 }
 
 .mic.recording {
-  background: var(--danger);
-  border-color: var(--danger);
-  color: #fff;
-  animation: pulse 1s ease-in-out infinite;
+  background: var(--vf-danger);
+  border-color: var(--vf-danger);
+  color: #ffffff;
+  animation: pulse var(--vf-listening-pulse) var(--vf-ease-out) infinite;
 }
 
 @keyframes pulse {
@@ -115,12 +103,17 @@ button:disabled {
     transform: scale(1.06);
   }
 }
+@media (prefers-reduced-motion: reduce) {
+  .mic.recording {
+    animation: none;
+  }
+}
 
 .transcript {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 10px;
+  background: var(--vf-surface);
+  border: var(--vf-border-hairline) solid var(--vf-hairline);
+  border-radius: var(--vf-radius-control);
+  padding: var(--vf-space-2) 10px;
   min-height: 36px;
   max-height: 72px;
   overflow: auto;
@@ -129,53 +122,58 @@ button:disabled {
 }
 
 .transcript.empty {
-  color: var(--muted);
+  color: var(--vf-text-secondary);
   font-style: italic;
 }
 
 .card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 10px;
+  background: var(--vf-surface);
+  border: var(--vf-border-hairline) solid var(--vf-hairline);
+  border-radius: var(--vf-radius-card);
+  padding: var(--vf-space-2) 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  box-shadow: var(--vf-shadow-card);
 }
 
 .card .cmd-title {
-  font-weight: 600;
+  font: var(--vf-type-body-medium);
+  font-family: var(--vf-font-family);
   display: flex;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--vf-space-2);
 }
 
 .badge {
-  font-size: 11px;
-  border-radius: 999px;
+  font: var(--vf-type-micro);
+  font-family: var(--vf-font-family);
+  border-radius: var(--vf-radius-pill);
   padding: 1px 8px;
-  background: var(--accent);
-  color: #fff;
+  background: var(--vf-accent-600);
+  color: #ffffff;
 }
 
 .badge.warn {
-  background: #d97706;
+  background: var(--vf-warning);
 }
 
 .card input {
   width: 100%;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--fg);
-  border-radius: 6px;
-  padding: 6px 8px;
-  font: inherit;
+  border: var(--vf-border-hairline) solid var(--vf-hairline);
+  background: var(--vf-bg);
+  color: var(--vf-text-primary);
+  border-radius: var(--vf-radius-control);
+  padding: 6px var(--vf-space-2);
+  font: var(--vf-type-body);
+  font-family: var(--vf-font-family);
 }
 
 .clarify {
-  border: 1px solid var(--accent);
-  border-radius: 8px;
-  padding: 8px 10px;
+  border: var(--vf-border-hairline) solid var(--vf-accent-500);
+  background: var(--vf-accent-50);
+  border-radius: var(--vf-radius-card);
+  padding: var(--vf-space-2) 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -183,41 +181,44 @@ button:disabled {
 
 .clarify p {
   margin: 0;
+  color: var(--vf-text-primary);
 }
 
 .status {
-  font-size: 12px;
-  color: var(--muted);
+  font: var(--vf-type-caption);
+  font-family: var(--vf-font-family);
+  color: var(--vf-text-secondary);
   min-height: 1.2em;
 }
 
 .status.error {
-  color: var(--danger);
+  color: var(--vf-danger);
 }
 
 .status.ok {
-  color: var(--ok);
+  color: var(--vf-success);
 }
 
 .actions {
   display: flex;
-  gap: 8px;
+  gap: var(--vf-space-2);
   justify-content: flex-end;
 }
 
 textarea.core-url {
   width: 100%;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--fg);
-  border-radius: 6px;
-  padding: 6px 8px;
-  font: inherit;
-  font-size: 12px;
+  border: var(--vf-border-hairline) solid var(--vf-hairline);
+  background: var(--vf-bg);
+  color: var(--vf-text-primary);
+  border-radius: var(--vf-radius-control);
+  padding: 6px var(--vf-space-2);
+  font: var(--vf-type-caption);
+  font-family: var(--vf-font-family);
 }
 
 details summary {
   cursor: pointer;
-  color: var(--muted);
-  font-size: 12px;
+  color: var(--vf-text-secondary);
+  font: var(--vf-type-caption);
+  font-family: var(--vf-font-family);
 }
