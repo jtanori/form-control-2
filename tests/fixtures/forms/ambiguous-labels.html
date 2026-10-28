@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Ambiguous labels — VoiceForm fixtures</title>
+  </head>
+  <body>
+    <h1>Two of everything</h1>
+    <p>Twin labels + twin submit-like buttons (M16 ambiguity / M17 no-match).</p>
+
+    <form id="amb" action="/go" method="post">
+      <fieldset>
+        <legend>Billing contact</legend>
+        <label for="email-a">Email address</label>
+        <input id="email-a" name="email_a" type="email" />
+      </fieldset>
+
+      <fieldset>
+        <legend>Shipping contact</legend>
+        <label for="email-b">Email address</label>
+        <input id="email-b" name="email_b" type="email" />
+      </fieldset>
+
+      <button type="submit" id="cont-a">Continue</button>
+      <button type="submit" id="cont-b">Continue</button>
+    </form>
+
+    <script>
+      document.getElementById("amb").addEventListener("submit", (e) => {
+        e.preventDefault();
+        document.body.dataset.submitted = String(Date.now());
+      });
+    </script>
+  </body>
+</html>
