@@ -3,7 +3,7 @@
  * literals come from shadow-tokens (mirrors contracts/design/tokens.json).
  */
 
-import { VF_ACCENT_500, VF_WARNING } from "./shadow-tokens";
+import { VF_ACCENT_500, VF_ACCENT_600 } from "./shadow-tokens";
 
 const EXEC_CLASS = "voiceform-exec-highlight";
 const CURSOR_CLASS = "voiceform-cursor";
@@ -16,11 +16,12 @@ function ensureStyles(): void {
   style.id = "voiceform-styles";
   style.textContent = `
 .${EXEC_CLASS} {
-  outline: 3px dashed ${VF_WARNING} !important;
+  outline: 2px solid ${VF_ACCENT_600} !important;
   outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, ${VF_ACCENT_600} 20%, transparent) !important;
 }
 .${CURSOR_CLASS} {
-  outline: 3px solid ${VF_ACCENT_500} !important;
+  outline: 2px solid ${VF_ACCENT_500} !important;
   z-index: 999999 !important;
   outline-offset: 2px !important;
 }

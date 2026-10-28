@@ -39,7 +39,7 @@
 | ID | Steps | Expected | Result | Reason / notes |
 |---|---|---|---|---|
 | M11 | Panel: type `fill the email address with test@example.com and click submit billing` on `checkout-plain` → Parse → **Confirm** | Cards before any fill; email filled + submit clicked; status “Executed…” (**D8 hooks**) | ☐ | *(E2E twin)* |
-| M12 | Panel ● on `login-plain` → speak a fill command | LISTENING → transcript → parse → cards/execute as applicable | ☐ | |
+| M12 | Panel **Start voice** (form selected) on `login-plain` → speak a fill command | LISTENING → transcript → parse → cards/execute as applicable | ☐ | |
 | M13 | **Tap `signup-aria` form** → chime → speak field values sequentially | LISTENING badge near field + preview bubble; fields fill in order; stop chime | ☐ | |
 | M14 | On `shipping-step`: voice/typed `next field`, `back`, `check…` where present | Navigation/activation works per control vocabulary | ☐ | |
 | M15 | On `checkout-plain`, issue `click submit billing` (voice or typed) | Confirm pill **appears with countdown text**; click Confirm executes; Cancel kills it (current behavior per D1) | ☐ | |

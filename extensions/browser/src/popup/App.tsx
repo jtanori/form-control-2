@@ -7,6 +7,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Command, ParseResponse } from "@shared/types";
 import { createLogger } from "@shared/logger";
+import { FormList } from "../sidepanel/FormList";
+import { HealthStrip } from "../sidepanel/HealthStrip";
+import { copy } from "../ui/copy";
 
 const log = createLogger("ext.popup");
 
@@ -56,6 +59,7 @@ export function App() {
   const [coreUrl, setCoreUrl] = useState("http://localhost:8020");
   const [sessionId, setSessionId] = useState("");
   const [elapsed, setElapsed] = useState(0);
+  const [activeFormKey, setActiveFormKey] = useState<string | null>(null);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -360,12 +364,47 @@ export function App() {
     await sendMessage({ type: "SET_CORE_URL", coreUrl: url });
   }, []);
 
+  /** History nav (D11 adopt-lite): last commands from Core session state. */
+  const onHistory = useCallback(async () => {
+    setStatusKind("");
+    setStatus("Loading history…");
+    try {
+      const res = await fetch(`${coreUrl}/api/v1/session/${sessionId}`, {
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!res.ok) throw new Error(`session -> ${res.status}`);
+      const data = (await res.json()) as { history?: Command[] };
+      const history = (data.history ?? []).slice(-5);
+      if (!history.length) {
+        setStatus("No commands in this session yet.");
+        return;
+      }
+      setStatusKind("ok");
+      setStatus(
+        `History: ${history
+          .map((h) => `${h.action} ${h.target.label ?? h.target.nodeId ?? ""}`)
+          .join(" · ")}`,
+      );
+    } catch (err) {
+      setStatusKind("error");
+      setStatus(
+        err instanceof Error
+          ? `History unavailable (${err.message}) — ${copy("permission.manual")}`
+          : "History unavailable",
+      );
+    }
+  }, [coreUrl, sessionId]);
+
   const recordingLabel = useMemo(() => {
-    if (phase !== "recording") return "●";
+    if (phase !== "recording") return copy("voice.start").replace("...", "");
     const m = Math.floor(elapsed / 60);
     const s = String(elapsed % 60).padStart(2, "0");
-    return `${m}:${s}`;
+    return `${copy("voice.stop")} ${m}:${String(s).padStart(2, "0")}`;
   }, [phase, elapsed]);
+
+  const onFormSelect = useCallback((key: string | null) => {
+    setActiveFormKey(key);
+  }, []);
 
   return (
     <div className="app">
@@ -376,21 +415,32 @@ export function App() {
         </span>
       </header>
 
+      <HealthStrip />
+
+      <FormList activeKey={activeFormKey} onSelect={onFormSelect} />
+
+      {/* Spec §6.1 primary: Start voice — gated on a selected form (D10).
+          Page-tap tap-to-talk remains a parallel entry (D10). */}
+      <button
+        type="button"
+        className="vf-btn primary"
+        style={{ width: "100%" }}
+        disabled={phase !== "recording" && !activeFormKey}
+        onClick={() =>
+          phase === "recording" ? stopRecording() : void startRecording()
+        }
+        title={
+          phase === "recording"
+            ? copy("voice.stop")
+            : activeFormKey
+              ? "Speak a command for the selected form"
+              : "Select a form first"
+        }
+      >
+        {recordingLabel}
+      </button>
+
       <div className="row" style={{ justifyContent: "center" }}>
-        <button
-          type="button"
-          className={`mic${phase === "recording" ? " recording" : ""}`}
-          onClick={() =>
-            phase === "recording" ? stopRecording() : void startRecording()
-          }
-          title={
-            phase === "recording"
-              ? "Stop"
-              : "Record (mic setup lives in ? Setup if blocked)"
-          }
-        >
-          {recordingLabel}
-        </button>
         <button type="button" onClick={() => void onNav("NAV_PREV")} title="Previous field">
           ←
         </button>
@@ -412,7 +462,7 @@ export function App() {
       </div>
 
       <div className={`transcript${transcript ? "" : " empty"}`}>
-        {transcript || "● to talk (needs mic in ? Setup) — or type a command below…"}
+        {transcript || "Start voice (select a form) — or type a command below…"}
       </div>
 
       <form
@@ -519,6 +569,26 @@ export function App() {
       )}
 
       <div className={`status ${statusKind}`}>{status}</div>
+
+      {/* Spec §6.1 bottom nav: Settings (always); History adopt-lite (D11) */}
+      <div className="row" style={{ justifyContent: "space-between" }}>
+        <button
+          type="button"
+          className="vf-btn"
+          style={{ flex: 1, minHeight: 36 }}
+          onClick={() => void chrome.runtime.openOptionsPage()}
+        >
+          Settings
+        </button>
+        <button
+          type="button"
+          className="vf-btn"
+          style={{ flex: 1, minHeight: 36 }}
+          onClick={() => void onHistory()}
+        >
+          History
+        </button>
+      </div>
 
       <details>
         <summary>Core URL</summary>

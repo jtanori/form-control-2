@@ -1,9 +1,9 @@
 /**
- * B-2 — popup demoted to quick entry: launch workspace, help, last status.
- * Full runtime flow (forms, transcript, cards, Confirm) lives in the Side Panel.
+ * B-2 / spec §6.5 — mini popup = launcher only: mic → Side Panel, form count, setup.
  */
 import { useCallback, useEffect, useState } from "react";
 import { createLogger } from "@shared/logger";
+import { copy } from "../ui/copy";
 
 const log = createLogger("ext.popup");
 
@@ -14,6 +14,7 @@ async function send<T>(message: Record<string, unknown>): Promise<T> {
 export function MiniApp() {
   const [status, setStatus] = useState("");
   const [sessionId, setSessionId] = useState("");
+  const [formCount, setFormCount] = useState<number | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -24,6 +25,14 @@ export function MiniApp() {
         sessionId: "",
       });
       if (st.ok) setStatus(`Core: ${st.coreUrl ?? "localhost:8020"}`);
+      try {
+        const reg = await send<{ ok: boolean; forms?: unknown[] }>({
+          type: "GET_FORM_REGISTRY",
+        });
+        if (reg.ok) setFormCount((reg.forms ?? []).length);
+      } catch {
+        /* count optional */
+      }
     })();
   }, []);
 
@@ -40,7 +49,7 @@ export function MiniApp() {
   }, []);
 
   return (
-    <div className="app">
+    <div className="app" style={{ minWidth: 280, maxWidth: 320 }}>
       <header>
         <h1>VoiceForm</h1>
         <span className="session" title={sessionId}>
@@ -48,8 +57,28 @@ export function MiniApp() {
         </span>
       </header>
 
-      <button type="button" className="vf-btn primary" onClick={() => void openWorkspace()}>
-        Open workspace
+      {/* §6.5 primary: mic routes to the Side Panel — popup never records here */}
+      <button
+        type="button"
+        className="vf-btn primary"
+        style={{ width: "100%" }}
+        onClick={() => void openWorkspace()}
+        title={copy("voice.start")}
+      >
+        🎤 {copy("voice.start").replace("...", "")}
+      </button>
+
+      <button
+        type="button"
+        className="vf-btn"
+        style={{ width: "100%" }}
+        onClick={() => void openWorkspace()}
+      >
+        {formCount === null
+          ? "Detected forms"
+          : formCount > 0
+            ? `Detected forms · ${formCount}`
+            : "Detected forms · none yet"}
       </button>
 
       <div className="row" style={{ justifyContent: "space-between" }}>
@@ -59,7 +88,7 @@ export function MiniApp() {
           onClick={() => void chrome.runtime.openOptionsPage()}
           title="Setup, microphone, tutorial"
         >
-          ? Setup & help
+          ? Setup
         </button>
         <span className="status">{status}</span>
       </div>
