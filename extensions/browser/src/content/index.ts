@@ -49,17 +49,21 @@ function onDocumentClick(ev: MouseEvent): void {
   if (!form) return;
   // Ignore pure link navigations
   if (target.closest("a[href]")) return;
-  listeningAnchor = form;
+  // Field-anchored feedback (spec §6.3): prefer the control over the form.
+  const interactive = target.closest(
+    "input, textarea, select, button, [role='button'], [role='checkbox']",
+  );
+  listeningAnchor = interactive ?? form;
   void chrome.runtime
     .sendMessage({ type: "TAP_TO_TALK" })
     .then(() => {
       hideHelperChip();
-      setListeningUi({ listening: true, anchor: form });
+      setListeningUi({ listening: true, anchor: listeningAnchor });
     })
     .catch((err) => {
       setListeningUi({
         listening: false,
-        anchor: form,
+        anchor: listeningAnchor,
         error:
           err instanceof Error
             ? err.message
