@@ -24,6 +24,19 @@
 >    on first install (welcome **tab**, not a popup modal); includes a safe
 >    **demo-form** full-loop step. Pattern research table lives in the UX-001
 >    item; reality-check against shipped extensions is a Phase C task.
+> 5. **Active-form indication** — accent 2–3 px border on the handled form;
+>    other detected forms muted border + slight blur (attention, not hiding).
+> 6. **Tap-to-talk** — in-form helper chip → tap focuses first field + sound
+>    cue → sequential voice fill; control vocabulary (next/back/check/submit).
+>    Requires **spike #2: offscreen `USER_MEDIA` document** (popup closes on
+>    page interaction, so listening cannot live there).
+> 7. **Zen / reading mode (exploratory)** — quiet overlay guiding through the
+>    form’s inputs; submit/dismiss restores the original page. Likely host for
+>    #6’s interaction loop.
+> 8. **Design language: Apple-inspired simplicity** — B-0 table in the UX-001
+>    item: one accent, grayscale rest, pill controls, material/blur surfaces,
+>    typography-as-hierarchy, progressive disclosure, calm motion; single token
+>    file across popup/options/onboarding/zen, light + dark.
 >
 > Phase A (map, scores, friction, constraints) still stands. The “Console +
 > Stage” write-up below is retained as the superseded draft for traceability.

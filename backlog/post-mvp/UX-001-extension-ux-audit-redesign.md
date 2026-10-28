@@ -56,6 +56,23 @@ secondary window” idea):**
   popup and automatically on first install) to open a short, guided
   “how this works” experience. Research how others do it first (below), pick a
   pattern, implement it as part of B-5.
+- ✅ **Clever active-form indication** — the form being handled gets a clear
+  affordance (≈2–3 px border); *other* detected forms get the same indicator in
+  a **muted tone** with a **slight blur**, so attention lands on one form
+  without hiding page context (B-6).
+- ✅ **Tap-to-talk initiation** — an in-form helper (“Tap and talk to start
+  filling your form”); tapping focuses the first field, a **sound cue** signals
+  listening, speech fills inputs **sequentially as the user talks**; for
+  non-text controls, standard navigation/activation voice instructions
+  (“next / back / check / submit”) (B-7).
+- ✅ **Zen / reading mode** (exploratory) — tapping a form starts a quiet
+  “reading mode” that lists the form’s inputs and guides the user through them
+  with simple voice commands; **submit or dismiss restores the original page**
+  untouched (B-8). Evaluate as the natural host for B-7’s interaction.
+- ✅ **Design language: simplistic, Apple-inspired** — controls, indicators and
+  surfaces follow a small, explicit rule set (one accent, pill controls,
+  material/blur, typography hierarchy, progressive disclosure, calm motion) —
+  see B-0; applies to every surface in this item.
 
 ### Research — how others teach an extension (desk research, refine during Phase C)
 
@@ -89,6 +106,30 @@ by this file** (see “Direction update” below).
 
 Deliverable: update `docs/ux-audit.md` Phase B to match this section
 (“Direction update — config page, no secondary window”), then build it.
+
+**B-0. Design language — Apple-inspired simplicity (applies to every surface)**
+
+Stakeholder direction: a **very simplistic UI** in the spirit of Apple
+controls, indicators, and surfaces. Codified so every Phase C screen inherits
+it (and the reviewer can check taste against rules, not vibes):
+
+| Rule | Meaning in our UI |
+|---|---|
+| **One accent, grayscale rest** | Single accent color for primary action/active state; everything else neutral. No rainbow statuses — use one warm + one muted gray system |
+| **Surfaces, not boxes** | Cards = soft fill + large radius (≈12–14 px), hairline borders or none; no hard boxed grids |
+| **Material & depth** | Subtle backdrop blur/translucency on overlays (zen panel, helper chip); soft, low-opacity shadows — never heavy drop shadows |
+| **Typography as hierarchy** | One type family (system UI stack: `-apple-system, SF…`), 2–3 sizes only; weight + opacity carry meaning, not more colors |
+| **Pill controls** | Primary buttons and status chips = full-radius pills, generous padding, large hit targets (≥36 px in popup) |
+| **Indicators over text** | State = dot/segmented control/badge first; sentence only when it adds the next step (pairs with B-6 muted indicators) |
+| **Progressive disclosure** | Each surface shows **one primary action** for the current phase; advanced stuff behind chevrons (settings, diagnostics) |
+| **Calm motion** | Short (~150–250 ms), ease-out transitions; one “listening” affordance; no bouncing or looping chrome animations |
+| **Honest empty states** | Empty = one line of guidance + one example, not a wall of tips |
+
+Scope: popup, options/onboarding, zen panel (B-8), helper chip (B-7).
+Implementation: extend the existing `popup.css` custom-property tokens
+(radius, spacing, shadow, blur, accent, muted) — one token file shared by all
+extension HTML; do not fork styles per surface. Light **and** dark parity via
+the existing `prefers-color-scheme` block.
 
 **B-1. Configuration page (`options_ui`, full tab — the only setup surface)**
 
@@ -136,12 +177,6 @@ Implementation note: grouping by form is an **extractor/normalizer add-on**
 optional grouping in the snapshot the popup already receives, or compute in
 the content script from `form` ancestry).
 
-**B-4. Shared polish (from original spec)**
-
-- One copy module for phases/errors (B4 table in the audit stays).
-- Health strip, demoted cursor tools, unified ambiguity UI, visual tokens —
-  all apply to the popup + options page only.
-
 **B-5. Quick learning / tutorial (launchable, not buried)**
 
 Answers “no point of reference on how the thing works”:
@@ -164,42 +199,128 @@ Answers “no point of reference on how the thing works”:
 - Research note (table above) gets a reality-check pass against 2–3 shipped
   extensions during Phase C; findings appended to `docs/ux-audit.md`.
 
+**B-6. Active-form indication (attention without hiding context)**
+
+After B-3 identifies forms (and whenever a command targets one):
+
+- **Active form:** ~2–3 px accent border (hairline radius, slight offset) —
+  unmistakable but quiet; optional 150 ms settle animation on activation.
+- **Other detected forms:** same indicator **muted** (low-opacity border) with
+  a **slight blur** (`filter: blur(1–2 px)` on non-active form containers, or
+  a translucent scrim over them) so page context stays readable.
+- Prefer **overlay elements positioned to the form’s rect** (content-script
+  injected, shadow-DOM, pointer-events: none) over mutating site CSS — avoids
+  breaking page layout/CSP; fall back to `outline` on the `<form>` when simpler.
+- Clears on: dismiss, submit, unmount; follows selection changes from B-3.
+- Zen mode (B-8) may dim everything except the active form further.
+
+**B-7. Tap-to-talk initiation (how filling starts, and with what)**
+
+- **Helper chip** anchored to the active form: “Tap and talk to start filling
+  your form” (Apple-style pill, soft material, dismissible).
+- **Tap anywhere on the form** (or the chip) → focus the **first interactive
+  field**, apply the existing green cursor highlight, play a **soft start
+  sound** (WebAudio cue — no bundled asset), and begin listening.
+- **While talking, fields fill sequentially:** utterance → fill focused field →
+  advance focus → next utterance. (Phrase-level loop first; true streaming
+  partial-fill is stretch — spec it, don’t block on it.)
+- **Controls** (buttons/checkbox/selects/links) get **navigation &
+  activation instructions**, surfaced in the helper + onboarding:
+  “next / back” (virtual cursor), “check / uncheck”, “select …”, “submit /
+  continue”. Map to existing `NAV_*` + command actions — no new NLU verbs
+  beyond what CORE-001 already parses unless the audit proves a gap.
+- Safety: Confirm gate **stays** for scriptable multi-step parses (E2E
+  contract); tap-to-talk mode confirms per-utterance or per-field (focus acts
+  as implicit review) — decide in spike write-up, default = keep explicit
+  Confirm for submits/risky actions only (already `confirmRequired`).
+
+**Feasibility spike #2 (gate with B-7/B-8):** interacting with the page closes
+the popup, so listening can’t live there. Investigate **MV3 offscreen
+document** (`chrome.offscreen`, reason `USER_MEDIA`, Chrome 109+): extension-
+origin page → reuses the grant from B-1, survives popup/page focus, streams
+audio to the SW → `TRANSCRIBE` → commands → content script. Verify:
+mic grant reuse without prompt, latency acceptable for sequential fill, SW
+lifetime rules. **If offscreen fails the spike → document alternative in
+`docs/ux-audit.md` before building B-7/B-8** (same rule as spike #1; still no
+user-visible second window).
+
+**B-8. Zen / reading mode (exploratory — evaluate as B-7’s host)**
+
+- Tap active form → **reading mode**: quiet overlay listing the form’s inputs
+  in order (label + current value), soft material panel (B-0), page dimmed —
+  “reading the form” without site noise.
+- Guides through fields with simple voice commands (B-7 vocabulary); progress
+  indicator (n / total) in Apple-style segmented/dots.
+- **On submit or dismiss** (close affordance / Esc / “done”): overlay hides,
+  page restored exactly as before — no layout residue, no injected styles left
+  behind.
+- Decide in spike: same offscreen mic channel as B-7; zen = presentation layer
+  over the same tap-to-talk loop. If scope must split, B-7 ships as chip +
+  focus + sound first, zen panel follows in the same release.
+
+**B-9. Shared polish (from original spec)**
+
+- One copy module for phases/errors (audit B4 table stays).
+- Health strip, demoted cursor tools, unified ambiguity UI — popup + options +
+  zen surfaces only; visual tokens come from B-0.
+
 ### Phase C — Implement (revised scope)
 
-1. Spike: options-page `getUserMedia` + persisted grant → note in audit.  
-2. `options.html` (B-1) + manifest `options_ui`.  
-3. Popup: inline recording when granted; “Open microphone setup” when not;
+1. **Spike #1:** options-page `getUserMedia` + persisted grant → note in audit.  
+2. **Spike #2:** offscreen document (`USER_MEDIA`) as the page-interaction mic
+   channel → note in audit (gates B-7/B-8).  
+3. `options.html` (B-1) + manifest `options_ui`.  
+4. Popup: inline recording when granted; “Open microphone setup” when not;
    **remove Stage window from the happy path**.  
-4. Form identification panel (B-3) as the popup’s first block.  
-5. **Tutorial (B-5):** `onboarding.html` + `onInstalled` open + popup “?” +
-   demo page + badge; desk-research reality check appended to audit.  
-6. Copy/error pass + shared tokens; context-menu silent-log fix if touched.  
-7. E2E: keep existing flow green; add popup-side form-list assertion if
-   selectors allow; recorder-window-specific tests updated to new path.
+5. Form identification panel (B-3) + **active-form indicators (B-6)**.  
+6. **Tutorial (B-5):** `onboarding.html` + `onInstalled` + popup “?” + demo
+   page + badge; desk-research reality check appended to audit.  
+7. **B-7 tap-to-talk** (chip, focus, sound, sequential fill, control
+   instructions) on the spike-#2 channel; **B-8 zen panel** if spike holds
+   (else split note in audit).  
+8. **B-0 design pass** across popup/options/onboarding/zen: token file,
+   pill controls, one accent, light/dark.  
+9. Copy/error pass; context-menu silent-log fix if touched.  
+10. E2E: existing flow green; recorder-window tests → new path; optional
+    form-list assertion.
 
 ## Files & deliverables
 
-- `/docs/ux-audit.md` — Phase B “Direction update” section (supersedes Stage);
-  research appendix (final pattern choice)
-- `/extensions/browser/manifest.json` (`options_ui`), `src/options/**`,
-  `src/onboarding/**` (or tabs of the same page), `src/popup/**`,
-  `src/content/*` or extractor grouping helper; `demo.html` (fixture copy)
+- `/docs/ux-audit.md` — direction update + both spike write-ups + research
+  appendix (final pattern choice)
+- `/extensions/browser/manifest.json` (`options_ui`, `offscreen` if spike #2
+  passes), `src/options/**`, `src/onboarding/**` (or tabs of one page),
+  `src/popup/**`, `src/content/*` (indicators, chip, zen overlay, form
+  grouping helper), `src/offscreen/**` (if needed), `demo.html`
+- Shared token stylesheet (B-0) consumed by all extension HTML
 - Remove/demote `src/recorder/**` from the happy path (per B-2)
 - `/tests/e2e/browser-flow.spec.ts` updates if popup selectors change
 
 ## Acceptance criteria
 
-- [ ] Feasibility spike written up (options-page mic works / or alternative
-      strategy documented **before** further UI build).
+- [ ] Feasibility spike #1 written up (options-page mic works / alternative
+      documented **before** further UI build).
+- [ ] Feasibility spike #2 written up (offscreen mic channel) **before** B-7/B-8
+      build; fallback documented if it fails.
 - [ ] Configuration page exists and can: grant mic, show Core/STT health,
       complete onboarding without the popup.
 - [ ] **No secondary window in the configured happy path** — voice records
-      inside the popup; no `chrome.windows.create` for recording.
+      inside the popup (B-7’s offscreen listener is invisible infrastructure,
+      not a window); no `chrome.windows.create` for recording.
 - [ ] On popup launch, the user sees **detected forms** (count + labels)
       before command entry; parse context can be scoped to a chosen form.
-- [ ] **Tutorial launchable in one click** from the popup (“?”); opens
-      automatically on first install; includes a runnable demo-form step that
-      completes the full loop; toolbar badge clears when done.
+- [ ] **Active form** shows the 2–3 px indicator; other forms show the muted,
+      slightly blurred variant; indicators clear on dismiss/submit.
+- [ ] **Tap-to-talk works end-to-end:** tap form → first field focused +
+      sound cue → speech fills fields sequentially; control vocabulary
+      (next/back/check/submit) documented in onboarding.
+- [ ] **Zen mode (if shipped in this item):** input list + guided pass;
+      submit/dismiss restores the original page with no residue.
+- [ ] **Tutorial launchable in one click** from the popup (“?”); auto-opens on
+      first install; demo-form step completes the full loop; badge clears.
+- [ ] **Design review:** B-0 rules visible on every surface (one accent, pill
+      primary, single token file, light/dark parity) — checked against the
+      table, not ad-hoc.
 - [ ] Research reality-check appended to `docs/ux-audit.md` (final pattern +
       why, referencing ≥2 shipped extensions).
 - [ ] A cold user completes setup + tutorial + T1/T2 with no external docs.
