@@ -99,7 +99,9 @@ secondary window” idea):**
 3. Chrome Extensions **best practices** (performance, layout shift,
    non-intrusive UX) —
    <https://developer.chrome.com/docs/extensions/get-started/best-practices>
-4. Community write-ups on **CSS/JS interference in extensions** (React/Tailwind
+4. Chrome Web Store **best practices** (trust, permissions posture) —
+   <https://developer.chrome.com/docs/webstore/best-practices>
+5. Community write-ups on **CSS/JS interference in extensions** (React/Tailwind
    + shadow roots inside content scripts).
 
 ### Research — how others teach an extension (desk research, refine during Phase C)
@@ -176,6 +178,40 @@ per surface. Light **and** dark parity via the existing
   4. Diagnostics: session id (copy), link to re-run onboarding.
 - Feasibility spike (above) is a **Phase C gate**: write the finding into the
   audit doc before merging UI that depends on it.
+
+**B-1a. Microphone permissions — just-in-time flow (stakeholder brief)**
+
+Architecture fact that drives the UX: **content scripts cannot call
+`getUserMedia`**, and prompting from a surface that dies on focus (popup) or
+on install is hostile. Canonical MV3 split:
+
+| Layer | Role |
+|---|---|
+| **Side Panel or Options page** | *Requests* permission (persistent, extension-origin, prompt can’t “dismiss” the surface) with contextual value-first copy |
+| **Offscreen document** (`chrome.offscreen`, reason `USER_MEDIA`) | *Captures* audio in the background once granted — the modern solution for recording/STT without a visible window |
+| **Content script** | Never touches `getUserMedia`; only renders cues |
+
+**Progressive-disclosure flow (never request on install):**
+
+1. **Value before prompt** — first voice affordance (Side Panel / onboarding)
+   explains *why* before the bubble:
+   > “VoiceForm uses speech-to-text to fill complex CRM forms faster. We only
+   > listen when you activate voice controls.”
+   Single primary button: **“Enable Voice Control”**.
+2. **Native prompt, contextual** — that button triggers
+   `navigator.mediaDevices.getUserMedia({ audio: true })`; keep our own UI
+   adjacent to where Chrome anchors the bubble (top-left / address bar / panel)
+   so the prompt clearly belongs to us.
+3. **Graceful denial** — never a dead end:
+   > “Microphone access is currently blocked. Click the mic icon in the
+   > address bar to allow access, or retry below.”
+   with a **Re-check Permission** button (`navigator.permissions.query` +
+   re-request). Denial state persists visibly (muted mic + banner), typed path
+   always available.
+
+**Manifest/checklist:** declare `offscreen` (and `activeTab` where it suffices)
+— no blanket host permissions for audio; **never** `getUserMedia` on install;
+hot-mic state always visible; fallback path for blockers (above).
 
 **B-2. Side Panel = the persistent runtime workspace (replaces popup-as-primary)**
 
@@ -295,16 +331,29 @@ After B-3 identifies forms (and whenever a command targets one):
   **Confirm** or click to execute”* with a **3-second** window (counts down,
   Esc/timeout cancels). Stacks on top of the existing Confirm gate (E2E keeps
   asserting an explicit confirm step).
+- **“Always know you’re heard” (hard requirement, stakeholder brief):**
+  - **Idle vs listening states:** idle mic = subtle/muted; listening = soft
+    glowing panel border + waveform (in-field badge above) — one glance tells
+    hot vs cold.
+  - **Audio chimes:** ultra-subtle start **and** stop blips (WebAudio) so
+    recognition boundaries are never a guess.
+  - **Global kill switch:** Esc (and a persistent mute button in the Side
+    Panel) instantly stops recognition — unmissable, always available.
 
 **Feasibility spike #2 (revised — gates B-7/B-8):** interacting with the page
-closes the popup, so the listener cannot live there. Evaluate, in order:
-1. **Side Panel** as the `getUserMedia` host (docked, extension-origin,
-   survives page focus) — preferred if the prompt behaves and capture
-   continues while the user clicks the page;
-2. **MV3 offscreen document** (`chrome.offscreen`, reason `USER_MEDIA`,
-   Chrome 109+) — invisible fallback channel.
+closes the popup, so the listener cannot live there. Content scripts can
+**never** call `getUserMedia` (platform rule). Per B-1a the canonical split is:
+permission **requested** from Side Panel/Options (persistent surface),
+audio **captured** by an **offscreen document** (`chrome.offscreen`, reason
+`USER_MEDIA`, Chrome 109+). Evaluate, in order:
+1. **Offscreen capture** after Side Panel/Options grant (the modern default —
+   verify prompt attaches to a surviving surface and capture continues while
+   the user clicks the page);
+2. **Side Panel itself as capture host** — only if offscreen proves
+   insufficient (e.g. latency), since offscreen keeps audio headless.
 Verify: grant reuse without re-prompt, capture continuity during page
-interaction, latency acceptable for sequential fill, SW lifetime rules.
+interaction, latency acceptable for sequential fill, SW lifetime rules,
+`offscreen` manifest permission posture (QA-001-compatible).
 **Document the winner (or the failure + alternative) in `docs/ux-audit.md`
 before building B-7/B-8** — same rule as spike #1; still no user-visible
 floating second window.
@@ -373,6 +422,14 @@ floating second window.
       B-7/B-8 build; fallback documented if both fail.
 - [ ] Configuration page exists and can: grant mic, show Core/STT health,
       complete onboarding without the popup.
+- [ ] **Mic is never requested on install** — value-first copy + single
+      “Enable Voice Control” action triggers the prompt (B-1a); denial shows
+      the non-punitive banner + **Re-check Permission**, typed path intact.
+- [ ] Manifest declares only needed perms (`side_panel`, `options_ui`,
+      `offscreen` if used, `activeTab` where it suffices) — auditable under
+      QA-001 rules.
+- [ ] **Hot-mic is always visible:** idle vs listening states, start/stop
+      chimes, Esc + Side-Panel mute kill switch (B-7).
 - [ ] **Side Panel hosts the runtime flow** (form list, transcript, cards,
       Confirm) and **persists across page interaction**; no user-managed
       floating window anywhere.
