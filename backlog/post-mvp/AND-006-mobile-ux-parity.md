@@ -3,8 +3,7 @@
 - **Phase:** Post-MVP (with UX-001 / UX-002)
 - **Track / Agent:** Agent C — Mobile / Kotlin (+ design ops)
 - **Priority:** P1
-- **Status:** ready (blocked on UX-002 token/copy assets for full visual pass;
-  mechanics can start against UX-001 behavior immediately)
+- **Status:** **in epic [UX-003](UX-003-spec-adoption-epic.md) as item P3** — spec refs: layouts §6.6–6.8, Compose tokens §1.8, Back precedence §8.3; D1/D2/D3 deferrals from the epic apply (no 3s gating / read-back / FSM work here)
 - **Depends on:** AND-001…005, UX-001 C1/C2 (behavior reference), UX-002 (tokens/copy), STT-001 compose stack
 - **Parallel with:** UX-002 generation, extension residuals
 - **Critical path:** No — quality/parity track

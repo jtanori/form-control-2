@@ -78,9 +78,10 @@ Zero-to-MVP development roadmap engineered for **multi-agent assignment**. Every
 
 | ID | Title | Agent | Priority | File | Issue |
 |---|---|---|---|---|---|
-| UX-001 | Extension UX Audit & Redesign | Frontend / Extension | P1 | [post-mvp/UX-001](post-mvp/UX-001-extension-ux-audit-redesign.md) | [#41](https://github.com/jtanori/form-control-2/issues/41) |
-| UX-002 | Design identity intake (Gemini / ChatGPT board) | Design ops | P1 | [post-mvp/UX-002](post-mvp/UX-002-design-identity-intake.md) | [#50](https://github.com/jtanori/form-control-2/issues/50) |
-| AND-006 | Mobile UX parity & shared visual identity | Mobile / Kotlin | P1 | [post-mvp/AND-006](post-mvp/AND-006-mobile-ux-parity.md) | [#51](https://github.com/jtanori/form-control-2/issues/51) |
+| UX-003 | **[EPIC] Multi-Surface Spec v1.0 Adoption** (R/C/P1/P2/P3/P4/GATE + manual QA gate) | Frontend / Design | P1 | [post-mvp/UX-003](post-mvp/UX-003-spec-adoption-epic.md) | [#54](https://github.com/jtanori/form-control-2/issues/54) |
+| UX-001 | Extension UX Audit & Redesign — *delivered → folded into UX-003* | Frontend / Extension | P1 | [post-mvp/UX-001](post-mvp/UX-001-extension-ux-audit-redesign.md) | [#41](https://github.com/jtanori/form-control-2/issues/41) |
+| UX-002 | Design identity intake — *superseded by UX-003 (spec baseline)* | Design ops | P1 | [post-mvp/UX-002](post-mvp/UX-002-design-identity-intake.md) | [#50](https://github.com/jtanori/form-control-2/issues/50) |
+| AND-006 | Mobile UX parity — *UX-003 sub-item P3* | Mobile / Kotlin | P1 | [post-mvp/AND-006](post-mvp/AND-006-mobile-ux-parity.md) | [#51](https://github.com/jtanori/form-control-2/issues/51) |
 
 ---
 

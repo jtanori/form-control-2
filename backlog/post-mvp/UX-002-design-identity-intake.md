@@ -3,7 +3,7 @@
 - **Phase:** Post-MVP (parallel with UX-001 C residuals / AND-006)
 - **Track / Agent:** Design ops (human) → Agent B / C (implementation)
 - **Priority:** P1
-- **Status:** ready (prompts delivered to stakeholder; awaiting generated assets)
+- **Status:** **superseded by [UX-003 epic](UX-003-spec-adoption-epic.md)** — the `speakalika` multi-surface spec v1.0 replaces the Gemini/ChatGPT generation pipeline as the design baseline (vendored by UX-003-C). Generation may return only as a future *refresh* channel (epic deferred register).
 - **Depends on:** UX-001 B-0 rules (shipped), C1/C2 surfaces (shipped)
 - **Parallel with:** AND-006
 - **Critical path:** No — quality/identity track

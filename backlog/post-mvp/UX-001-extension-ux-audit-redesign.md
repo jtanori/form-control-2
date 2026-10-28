@@ -3,7 +3,7 @@
 - **Phase:** Post-MVP (after REL-001 / `v0.1.0-mvp`)
 - **Track / Agent:** Agent B — Extension / Frontend (with design input)
 - **Priority:** P1
-- **Status:** ready (Phase A audit merged: [`docs/ux-audit.md`](../../docs/ux-audit.md))
+- **Status:** **delivered (C1+C2 merged) → superseded by [UX-003 epic](UX-003-spec-adoption-epic.md)** — audit + implementation landed; residuals (B-5 research appendix, remaining copy sweeps) tracked as epic sub-issues; safety extras (3s gating, validation) live in the epic's deferred register (D1–D3)
 - **Depends on:** EXT-001…EXT-006, REL-001
 - **Parallel with:** INTE-002, Phase 4 (DES-*)
 - **Critical path:** No (quality/usability track; does not block the MVP gate)
