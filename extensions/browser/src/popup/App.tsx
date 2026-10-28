@@ -75,12 +75,19 @@ export function App() {
     };
   }, []);
 
-  const toDrafts = useCallback((commands: Command[]): CommandDraft[] =>
-    commands.map((command) => ({ command, value: command.value ?? "" })), []);
+  const toDrafts = useCallback(
+    (commands: Command[] | undefined): CommandDraft[] =>
+      (commands ?? []).map((command) => ({
+        command,
+        value: command.value ?? "",
+      })),
+    [],
+  );
 
   const applyParse = useCallback((result: ParseResponse) => {
-    setParse(result);
-    setDrafts(toDrafts(result.commands));
+    const commands = result.commands ?? [];
+    setParse({ ...result, commands });
+    setDrafts(toDrafts(commands));
     if (result.needsClarification) {
       setPhase("clarifying");
       setStatus(result.clarificationQuestion ?? "Which one did you mean?");
@@ -88,11 +95,9 @@ export function App() {
     } else {
       setPhase("ready");
       setStatus(
-        result.commands.length
-          ? `${result.commands.length} command(s) ready`
-          : "No commands matched",
+        commands.length ? `${commands.length} command(s) ready` : "No commands matched",
       );
-      setStatusKind(result.commands.length ? "ok" : "error");
+      setStatusKind(commands.length ? "ok" : "error");
     }
   }, [toDrafts]);
 
@@ -180,12 +185,21 @@ export function App() {
       setStatusKind("");
       setTranscript(text);
       try {
-        const res = await sendMessage<ParseResponse>({
+        const res = await sendMessage<ParseResponse & { queued?: boolean }>({
           type: "PARSE",
           sessionId,
           transcript: text,
         });
         if (!res.ok) throw new Error(res.error ?? "parse failed");
+        if (res.queued) {
+          // Core unreachable — bridge queued the message (no parse result yet).
+          setPhase("idle");
+          setStatusKind("error");
+          setStatus(
+            `${copy("error.core.title")} ${copy("error.core.body")} (queued for retry)`,
+          );
+          return;
+        }
         applyParse(res as unknown as ParseResponse);
       } catch (err) {
         setPhase("idle");

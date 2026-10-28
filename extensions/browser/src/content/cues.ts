@@ -23,6 +23,9 @@ function ensureHost(): ShadowRoot | null {
     host.id = HOST_ID;
     document.body.appendChild(host);
   }
+  // Zero-geometry host: must never intercept clicks meant for the page/zen.
+  host.style.cssText =
+    "position:fixed;top:0;left:0;width:0;height:0;pointer-events:none;z-index:2147483000;";
   shadow = host.shadowRoot ?? host.attachShadow({ mode: "open" });
   if (!shadow.querySelector("#vf-cue-style")) {
     const style = document.createElement("style");

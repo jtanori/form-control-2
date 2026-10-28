@@ -70,17 +70,14 @@ export function resolveElement(
   });
   // nodeId is 1-based index into the *snapshot* node list; map by order + label match
   const idx = context.nodes.findIndex((n) => n.nodeId === node.nodeId);
+  const wantLabel = node.displayLabel ?? node.label;
   if (idx >= 0 && idx < all.length) {
     // Prefer label match among live nodes for robustness across re-renders
-    const byLabel = all.find(
-      (el) => resolveLabelQuick(el) === (node.displayLabel ?? node.label),
-    );
+    const byLabel = all.find((el) => resolveLabelQuick(el) === wantLabel);
     if (byLabel) return byLabel;
     return all[idx] ?? null;
   }
-  const byLabel = all.find(
-    (el) => resolveLabelQuick(el) === (node.displayLabel ?? node.label),
-  );
+  const byLabel = all.find((el) => resolveLabelQuick(el) === wantLabel);
   return byLabel ?? null;
 }
 
@@ -207,6 +204,11 @@ function runAction(command: Command, el: Element, context: FormSnapshot): void {
       break;
     }
     case "click": {
+      log.debug("click target", {
+        el: `${el.tagName}#${(el as HTMLElement).id || ""}`,
+        text: (el.textContent || "").trim().slice(0, 40),
+        attached: el.isConnected,
+      });
       (el as HTMLElement).click();
       break;
     }

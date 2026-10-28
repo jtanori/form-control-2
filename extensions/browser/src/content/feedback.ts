@@ -24,6 +24,9 @@ function ensure(): typeof ui {
     host.id = HOST_ID;
     document.body.appendChild(host);
   }
+  // Same rule as cues.ts: zero-geometry, click-through host.
+  host.style.cssText =
+    "position:fixed;top:0;left:0;width:0;height:0;pointer-events:none;z-index:2147483000;";
   shadow = host.shadowRoot ?? host.attachShadow({ mode: "open" });
   if (!shadow.querySelector("#vf-feedback-style")) {
     const style = document.createElement("style");
@@ -31,6 +34,7 @@ function ensure(): typeof ui {
     style.textContent = `
       ${SHADOW_HOST_VARS}
       .vf-chip { position: fixed; right: 16px; bottom: 72px;
+        pointer-events: auto;
         font: 600 12px/1.4 var(--vf-font-family); color: var(--vf-on-accent);
         background: var(--vf-accent-600); backdrop-filter: blur(12px) saturate(180%);
         padding: 8px 14px; border-radius: var(--vf-radius-pill);
@@ -56,6 +60,7 @@ function ensure(): typeof ui {
         .vf-listen { animation: none; }
       }
       .vf-pill2 { position: fixed; z-index: 2147483647; left: 50%; transform: translateX(-50%);
+        pointer-events: auto;
         bottom: 24px; font: 600 13px/1.4 var(--vf-font-family);
         color: var(--vf-on-accent);
         background: var(--vf-accent-600); backdrop-filter: blur(12px);
@@ -159,11 +164,16 @@ export function showConfirmPill(
   const no = e.pill.querySelector(".no") as HTMLButtonElement | null;
   let left = seconds;
   const tick = () => {
-    if (q) q.textContent = `${question} (${left}s)`;
-    left -= 1;
-    if (left < 0) {
-      cleanup(false);
+    if (left > 0) {
+      if (q) q.textContent = `${question} (${left}s)`;
+      left -= 1;
+      return;
     }
+    // Countdown finished → pill stays enabled until Confirm/Cancel/Esc
+    // (spec §3.3 enabled state; D1: no gating — expiry never auto-closes).
+    if (e.pillTimer !== null) window.clearInterval(e.pillTimer);
+    e.pillTimer = null;
+    if (q) q.textContent = question;
   };
   const cleanup = (approved: boolean) => {
     if (e.pillTimer !== null) window.clearInterval(e.pillTimer);
