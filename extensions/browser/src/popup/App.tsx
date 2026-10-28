@@ -329,6 +329,32 @@ export function App() {
     [sessionId],
   );
 
+  /** B-8 — toggle zen on the first page with a content script (PING probe). */
+  const onZen = useCallback(async () => {
+    setStatusKind("");
+    setStatus("Opening reading mode…");
+    try {
+      const tabs = await chrome.tabs.query({});
+      for (const tab of tabs) {
+        if (tab.id === undefined) continue;
+        try {
+          await chrome.tabs.sendMessage(tab.id, { type: "PING" });
+          await chrome.tabs.sendMessage(tab.id, { type: "TOGGLE_ZEN" });
+          setStatusKind("ok");
+          setStatus("Reading mode toggled — Esc or Done to exit.");
+          return;
+        } catch {
+          /* try next tab */
+        }
+      }
+      setStatusKind("error");
+      setStatus("No page with VoiceForm found — open a form tab first.");
+    } catch (err) {
+      setStatusKind("error");
+      setStatus(err instanceof Error ? err.message : "Zen failed");
+    }
+  }, []);
+
   const saveCoreUrl = useCallback(async (url: string) => {
     setCoreUrl(url);
     await sendMessage({ type: "SET_CORE_URL", coreUrl: url });
@@ -373,6 +399,15 @@ export function App() {
         </button>
         <button type="button" onClick={() => void onNav("NAV_READ")} title="Read focused">
           🔊
+        </button>
+        <button
+          type="button"
+          className="vf-btn"
+          style={{ padding: "6px 12px", minHeight: 32 }}
+          onClick={() => void onZen()}
+          title="Reading mode (zen) — Esc or Done to exit"
+        >
+          Zen
         </button>
       </div>
 
