@@ -79,6 +79,8 @@ Zero-to-MVP development roadmap engineered for **multi-agent assignment**. Every
 | ID | Title | Agent | Priority | File | Issue |
 |---|---|---|---|---|---|
 | UX-001 | Extension UX Audit & Redesign | Frontend / Extension | P1 | [post-mvp/UX-001](post-mvp/UX-001-extension-ux-audit-redesign.md) | [#41](https://github.com/jtanori/form-control-2/issues/41) |
+| UX-002 | Design identity intake (Gemini / ChatGPT board) | Design ops | P1 | [post-mvp/UX-002](post-mvp/UX-002-design-identity-intake.md) | [#50](https://github.com/jtanori/form-control-2/issues/50) |
+| AND-006 | Mobile UX parity & shared visual identity | Mobile / Kotlin | P1 | [post-mvp/AND-006](post-mvp/AND-006-mobile-ux-parity.md) | [#51](https://github.com/jtanori/form-control-2/issues/51) |
 
 ---
 
