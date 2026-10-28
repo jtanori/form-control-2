@@ -72,6 +72,9 @@ class OverlayVoice(private val service: VoiceFormService) {
     private var countdownTick: Runnable? = null
     private var countdownLeft = 0
 
+    private fun getString(id: Int, vararg args: Any): String =
+        service.getString(id, *args)
+
     @SuppressLint("ClickableViewAccessibility", "InflateParams")
     fun show() {
         if (root != null) return
@@ -155,8 +158,22 @@ class OverlayVoice(private val service: VoiceFormService) {
     fun hide() {
         stopListening(silent = true)
         cancelCountdown()
+        pendingCommands = emptyList() // §6.7: dismissal invalidates pending auth
         root?.let { runCatching { wm.removeView(it) } }
         root = null
+        collapsed = null
+        expanded = null
+        fab = null
+        badge = null
+        header = null
+        statusView = null
+        transcriptView = null
+        listeningRow = null
+        reviewRow = null
+        reviewTitle = null
+        reviewCommands = null
+        reviewConfirm = null
+        primary = null
         state = State.COLLAPSED
     }
 
@@ -370,7 +387,11 @@ class OverlayVoice(private val service: VoiceFormService) {
         when (result.status) {
             ExecutionResult.Status.OK ->
                 setStatus(
-                    getString(R.string.success_count, result.executed.size),
+                    service.resources.getQuantityString(
+                        R.plurals.success_count,
+                        result.executed.size,
+                        result.executed.size,
+                    ),
                 )
             ExecutionResult.Status.AMBIGUITY -> {
                 val labels = result.candidates.joinToString(", ") {

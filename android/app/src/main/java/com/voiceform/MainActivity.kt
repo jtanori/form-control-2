@@ -13,7 +13,9 @@ import android.widget.TextView
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -27,6 +29,7 @@ class MainActivity : Activity() {
 
     private val micPermissionRequest = 41
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var probeJob: Job? = null
 
     private lateinit var dotAccessibility: View
     private lateinit var dotMic: View
@@ -148,10 +151,16 @@ class MainActivity : Activity() {
         // Core is async — never show a stale "ok" (§6.8 / HealthStrip rule)
         checkCore.text = getString(R.string.setup_checking)
         checkCore.setTextColor(getColor(R.color.vf_text_secondary))
-        scope.launch {
+        probeJob?.cancel() // rapid re-checks must not race to a stale mark
+        probeJob = scope.launch {
             val ok = withContext(Dispatchers.IO) { probeCore() }
             mark(checkCore, getString(R.string.setup_check_core), ok)
         }
+    }
+
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
     }
 
     private fun probeCore(): Boolean =

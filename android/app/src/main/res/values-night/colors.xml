@@ -16,7 +16,7 @@
     <color name="vf_warning">#FFE7B14D</color>
     <color name="vf_danger">#FFFF7777</color>
     <color name="vf_info">#FF94A3B8</color>
-    <color name="vf_on_accent">#FF0B0F14</color>
+    <color name="vf_on_accent">#FFFFFFFF</color>
     <color name="vf_disabled_fill">#FF202A3A</color>
     <color name="vf_disabled_text">#FF69778D</color>
     <color name="vf_overlay_scrim">#E6172033</color>
