@@ -2,9 +2,55 @@
 <resources>
     <string name="app_name">VoiceForm</string>
     <string name="accessibility_service_description">VoiceForm reads the current screen so you can fill forms by voice. It only processes the visible UI tree while you use the floating button — it does not collect keystrokes or network data on its own.</string>
+
+    <!-- Overlay (spec §6.6/6.7) -->
     <string name="overlay_title">VoiceForm</string>
     <string name="overlay_mic">Mic</string>
+    <string name="overlay_collapsed_hint">Tap to open VoiceForm</string>
     <string name="confirm">Confirm</string>
     <string name="cancel">Cancel</string>
     <string name="clarify">Clarify</string>
+
+    <!-- Copy bank (contracts/design/copy.json — voice/confirm/errors) -->
+    <string name="voice_start">Listening…</string>
+    <string name="voice_stop">Stop listening</string>
+    <string name="voice_parsing">Understanding command…</string>
+    <string name="voice_cancelled">Listening stopped. No new changes were made.</string>
+    <string name="voice_try_again">Try again</string>
+    <string name="error_empty_stt">I didn\'t catch that. Try again, or type instead.</string>
+    <string name="error_core">Voice processing isn\'t available. Your form hasn\'t been changed.</string>
+    <string name="error_ambiguous">Which field do you mean?</string>
+    <string name="error_no_match">I couldn\'t find that field. Try its visible label.</string>
+    <string name="error_execution">That field couldn\'t be updated. Check it and try again.</string>
+    <string name="confirm_cancelled">Cancelled. Nothing was submitted.</string>
+    <string name="confirm_submit">Submit this form?</string>
+    <string name="confirm_countdown">Confirm · %1$ds</string>
+    <string name="success_count">%1$d step(s) executed</string>
+    <plurals name="field_count">
+        <item quantity="one">%1$d field</item>
+        <item quantity="other">%1$d fields</item>
+    </plurals>
+
+    <!-- Setup checklist (spec §6.8) -->
+    <string name="setup_title">Set up VoiceForm</string>
+    <string name="setup_intro">Allow accessibility access to detect forms and interact with them when you ask.</string>
+    <string name="setup_step1">1 · Enable accessibility service</string>
+    <string name="setup_step1_hint">Opens system settings — returning here rechecks the status.</string>
+    <string name="setup_step2">2 · Allow microphone permission</string>
+    <string name="setup_step2_hint">Requested only when you choose — never at install.</string>
+    <string name="setup_step3">3 · Check and continue</string>
+    <string name="setup_check_accessibility">Accessibility</string>
+    <string name="setup_check_microphone">Microphone</string>
+    <string name="setup_check_overlay">Overlay</string>
+    <string name="setup_check_core">Core</string>
+    <string name="setup_open_settings">Open Settings</string>
+    <string name="setup_allow_mic">Allow microphone</string>
+    <string name="setup_checking">Checking voice services…</string>
+    <string name="setup_continue">Continue</string>
+    <string name="setup_continue_voiceless">Continue without voice</string>
+    <string name="setup_ready">VoiceForm is ready.</string>
+    <string name="setup_learn_more">Learn more</string>
+    <string name="setup_learning_body">VoiceForm uses accessibility access only to read the visible UI tree of the screen you are on, to find fields and act on them after you ask. Microphone audio goes to your configured Core for transcription; nothing is recorded at install, and passive screen reading never activates the mic.</string>
+    <string name="core_url_toggle">Toggle Core URL (emulator / LAN)</string>
+    <string name="overlay_permission">Allow display over other apps</string>
 </resources>

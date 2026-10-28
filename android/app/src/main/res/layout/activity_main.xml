@@ -1,46 +1,249 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- AND-006 / spec §6.8 — setup checklist (accessibility → mic → check). -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp">
+    android:fillViewport="true">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textSize="22sp"
-        android:textStyle="bold" />
+        android:orientation="vertical"
+        android:padding="24dp">
 
-    <TextView
-        android:id="@+id/info"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:textSize="14sp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/setup_title"
+            android:textColor="@color/vf_text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
 
-    <Button
-        android:id="@+id/openAccessibility"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Enable Accessibility service" />
+        <TextView
+            android:id="@+id/info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/setup_intro"
+            android:textColor="@color/vf_text_secondary"
+            android:textSize="14sp" />
 
-    <Button
-        android:id="@+id/openOverlayPermission"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Allow display over other apps" />
+        <!-- Step 1: accessibility (+ overlay grant for our floating UI) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:background="@color/vf_surface"
+            android:orientation="vertical"
+            android:padding="14dp">
 
-    <Button
-        android:id="@+id/allowMic"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Allow microphone (when you want voice)" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/coreUrl"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Toggle Core URL (emulator / LAN)" />
-</LinearLayout>
+                <View
+                    android:id="@+id/dotAccessibility"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:background="@color/vf_info" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="@string/setup_step1"
+                    android:textColor="@color/vf_text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/setup_step1_hint"
+                android:textColor="@color/vf_text_secondary"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/openAccessibility"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/vf_accent"
+                    android:text="@string/setup_open_settings"
+                    android:textColor="@color/vf_on_accent"
+                    android:textSize="13sp" />
+
+                <Button
+                    android:id="@+id/openOverlayPermission"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:text="@string/overlay_permission"
+                    android:textColor="@color/vf_text_primary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Step 2: microphone -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@color/vf_surface"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:id="@+id/dotMic"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:background="@color/vf_info" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="@string/setup_step2"
+                    android:textColor="@color/vf_text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/setup_step2_hint"
+                android:textColor="@color/vf_text_secondary"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/allowMic"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="8dp"
+                android:backgroundTint="@color/vf_accent"
+                android:text="@string/setup_allow_mic"
+                android:textColor="@color/vf_on_accent" />
+        </LinearLayout>
+
+        <!-- Step 3: check & continue -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@color/vf_surface"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/setup_step3"
+                android:textColor="@color/vf_text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/checkAccessibility"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/vf_text_secondary"
+                    android:textSize="12sp"
+                    tools:text="Accessibility ○" />
+
+                <TextView
+                    android:id="@+id/checkMic"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/vf_text_secondary"
+                    android:textSize="12sp"
+                    tools:text="Microphone ○" />
+
+                <TextView
+                    android:id="@+id/checkCore"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textColor="@color/vf_text_secondary"
+                    android:textSize="12sp"
+                    tools:text="Core ○" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/continueBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/vf_accent"
+                    android:enabled="false"
+                    android:text="@string/setup_checking"
+                    android:textColor="@color/vf_on_accent" />
+
+                <Button
+                    android:id="@+id/coreUrl"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
+                    android:text="@string/core_url_toggle"
+                    android:textColor="@color/vf_text_secondary"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Learn more (§6.8) -->
+        <TextView
+            android:id="@+id/learnMoreToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/setup_learn_more"
+            android:textColor="@color/vf_accent"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/learnMoreBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/setup_learning_body"
+            android:textColor="@color/vf_text_secondary"
+            android:textSize="12sp"
+            android:visibility="gone" />
+    </LinearLayout>
+</ScrollView>

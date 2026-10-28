@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AND-006 — light tokens (contracts/design/tokens.json color.light).
+  values-night/colors.xml holds the dark set.
+-->
+<resources>
+    <color name="vf_bg">#FFFFFFFF</color>
+    <color name="vf_surface">#FFF7F8FA</color>
+    <color name="vf_surface_elevated">#FFFFFFFF</color>
+    <color name="vf_surface_subtle">#FFF1F3F6</color>
+    <color name="vf_text_primary">#FF0B0F14</color>
+    <color name="vf_text_secondary">#FF667085</color>
+    <color name="vf_text_tertiary">#FF8993A3</color>
+    <color name="vf_hairline">#FFE5E7EB</color>
+    <color name="vf_border_strong">#FFCBD2DC</color>
+    <color name="vf_accent">#FF2878F0</color>
+    <color name="vf_accent_soft">#FFDBEAFE</color>
+    <color name="vf_success">#FF0D9488</color>
+    <color name="vf_warning">#FFB7791F</color>
+    <color name="vf_danger">#FFD94848</color>
+    <color name="vf_info">#FF64748B</color>
+    <color name="vf_on_accent">#FFFFFFFF</color>
+    <color name="vf_disabled_fill">#FFEEF1F5</color>
+    <color name="vf_disabled_text">#FF98A2B3</color>
+    <color name="vf_overlay_scrim">#E60B0F14</color>
+</resources>
