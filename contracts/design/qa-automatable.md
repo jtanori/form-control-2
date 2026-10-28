@@ -5,16 +5,16 @@ Source: `spec-v1.md` §10, minus **D1 rows** (QA-010–014 excluded — countdow
 
 | Spec row | Scenario | Where | Status |
 |---|---|---|---|
-| QA-001 | Install → no mic prompt | manual M01 (+ P4: automation attempt) | manual |
-| QA-002 | Passive detection local-only | manual M07/M08 + P4 (no `/stt` on load) | later-auto |
+| QA-001 | Install → no mic prompt | **e2e `qa-matrix.spec.ts` QA-001** (permission stays prompt) + manual M01 | auto ✅ |
+| QA-002 | Passive detection local-only | **e2e QA-002** (`/debug/stats` stt/parse deltas = 0) + manual M07/M08 | auto ✅ |
 | QA-003 | Mic denied → recovery | manual M03 | manual |
 | QA-004 | Empty transcript → no mutation | unit (voice path) / manual M18 | later-auto |
-| QA-005 | Core offline → no execution | manual M05 (+ P4 dead-port test) | later-auto |
+| QA-005 | Core offline → no execution | **e2e QA-005** (dead port → error copy, zero cards) + manual M05 | auto ✅ |
 | QA-006 | Twin labels → candidate selection | unit `ActionExecutorTest` ambiguity + manual M16 | auto ✅ |
 | QA-007 | No match → no substitution | unit (executor error) + manual M17 | auto ✅ |
 | QA-008 | Ordinary fill executes once | **E2E** browser-flow (D8) + manual M11 | auto ✅ |
-| QA-009 | Submit → confirm pill appears | manual M15 (+ P4 possible E2E assert) | later-auto |
-| QA-015 | Esc/Cancel pill → no execute | manual M15 (+ P4) | later-auto |
+| QA-009 | Submit → confirm pill appears | **e2e QA-009** (zen submit → `.vf-pill2`) + manual M15 | auto ✅ |
+| QA-015 | Esc/Cancel pill → no execute | **e2e QA-015** (Cancel → no `data-clicked`) + manual M15 | auto ✅ |
 | QA-016 | Dismiss zen mid-listening | manual M19 | manual |
 | QA-017 | Retry after partial failure → no dup ops | unit (prefix-on-error) + GATE spot | auto ✅ |
 | QA-018 | Android service loss | manual M31+ (P3) | manual |

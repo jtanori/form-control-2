@@ -313,9 +313,9 @@ function renderPanel(panelEl: HTMLDivElement, repaint: () => void): void {
         action: "click",
         target: { nodeId: submitTarget.nodeId, label: submitTarget.label },
       };
+      // Zen stays open until the pill is approved (index.ts closes it).
       void chrome.runtime
         .sendMessage({ type: "ZEN_EXECUTE", commands: [command] })
-        .then(() => zenClose())
         .catch(() => undefined);
     });
     row.append(edit, dismiss, submit);

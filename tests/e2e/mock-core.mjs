@@ -32,6 +32,9 @@ const sttResponse = {
   duration_sec: 3.2,
 };
 
+/** QA-002 evidence: passive detection must never hit STT (or parse) on load. */
+const stats = { sttHits: 0, parseHits: 0, clarifyHits: 0 };
+
 function send(res, status, body, extraHeaders = {}) {
   const payload = JSON.stringify(body);
   res.writeHead(status, {
@@ -60,7 +63,12 @@ const server = createServer((req, res) => {
     });
     return;
   }
+  if (url.pathname === "/debug/stats") {
+    send(res, 200, stats);
+    return;
+  }
   if (url.pathname === "/api/v1/parse") {
+    stats.parseHits += 1;
     let raw = "";
     req.on("data", (c) => (raw += c));
     req.on("end", () => {
@@ -76,6 +84,7 @@ const server = createServer((req, res) => {
     return;
   }
   if (url.pathname === "/api/v1/clarify") {
+    stats.clarifyHits += 1;
     send(res, 200, {
       sessionId: "e2e-session",
       commands: [],
@@ -86,6 +95,7 @@ const server = createServer((req, res) => {
     return;
   }
   if (url.pathname === "/stt/transcribe" || url.pathname === "/transcribe") {
+    stats.sttHits += 1;
     send(res, 200, sttResponse);
     return;
   }

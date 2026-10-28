@@ -193,11 +193,19 @@ export function installVoiceHandlers(): void {
         };
         if (approved) {
           const sessionId = await getSessionId();
-          await handleMessage({
+          log.info("confirm pill approved — executing", {
+            sessionId,
+            commandCount: commands.length,
+          });
+          const execResult = (await handleMessage({
             type: "EXECUTE",
             sessionId,
             commands,
-          } as ExtensionMessage);
+          } as ExtensionMessage)) as { result?: { status?: string; error?: string } };
+          log.info("confirm execute result", {
+            status: execResult?.result?.status,
+            error: execResult?.result?.error,
+          });
           await toTab(
             {
               type: "SET_LISTENING_UI",

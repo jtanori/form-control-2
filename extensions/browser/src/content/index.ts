@@ -15,7 +15,7 @@ import {
   showHelperChip,
   hideHelperChip,
 } from "./feedback";
-import { zenToggle } from "./zen";
+import { zenClose, zenToggle } from "./zen";
 
 const log = createLogger("ext.content");
 
@@ -103,6 +103,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           const commands = (message.commands ?? []) as Command[];
           const context = (message.context ?? extractFormSnapshot()) as FormSnapshot;
           const result = await executeCommands(commands, context);
+          log.info("execute result", {
+            status: result.status,
+            executed: result.executed.length,
+          });
           sendResponse({ ok: true, result });
           break;
         }
@@ -154,6 +158,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
                 approved,
                 commands,
               });
+              // Zen §6.4: reading mode ends only after an approved submit.
+              if (approved) zenClose();
             },
           );
           sendResponse({ ok: true });

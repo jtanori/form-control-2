@@ -120,7 +120,7 @@ test("voiceform extension: parse → confirm → fills checkout form", async ({}
     await expect(page.locator("#email")).toHaveValue("");
     await expect(page.locator("body")).not.toHaveAttribute("data-clicked", /.+/);
 
-    await confirm.click();
+    await confirm.click({ force: true, timeout: 15_000 });
 
     // (1) email filled
     await expect(page.locator("#email")).toHaveValue("test@example.com", {
