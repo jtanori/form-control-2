@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>SPA re-render — VoiceForm fixtures</title>
+  </head>
+  <body>
+    <h1>Re-render playground</h1>
+    <p>
+      Select a form in the VoiceForm panel, then hit <strong>Rebuild</strong> —
+      indicators must re-apply to the remounted form (M21 / MutationObserver).
+    </p>
+
+    <div id="mount"></div>
+    <button type="button" id="rebuild">Rebuild</button>
+
+    <template id="form-tpl">
+      <form id="spa-form" action="/save" method="post">
+        <label for="spa-name">Full name</label>
+        <input id="spa-name" name="name" type="text" />
+        <label for="spa-company">Company</label>
+        <input id="spa-company" name="company" type="text" />
+        <button type="submit">Save profile</button>
+      </form>
+    </template>
+
+    <script>
+      const mount = document.getElementById("mount");
+      const tpl = document.getElementById("form-tpl");
+      function build() {
+        mount.innerHTML = "";
+        mount.appendChild(tpl.content.cloneNode(true));
+        const form = mount.querySelector("form");
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          document.body.dataset.submitted = String(Date.now());
+        });
+      }
+      build();
+      document.getElementById("rebuild").addEventListener("click", build);
+    </script>
+  </body>
+</html>

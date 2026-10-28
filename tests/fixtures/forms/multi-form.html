@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Multi-form page — VoiceForm fixtures</title>
+  </head>
+  <body>
+    <h1>Account setup</h1>
+    <p>Three forms on one page — active/muted indicators + Start-voice gating (M09/M10).</p>
+
+    <h2>Checkout</h2>
+    <form id="checkout" action="/order" method="post">
+      <label for="co-email">Email address</label>
+      <input id="co-email" name="email" type="email" />
+      <button type="submit" name="step" value="billing">Submit billing</button>
+    </form>
+
+    <h2>Sign in</h2>
+    <form id="login" action="/login" method="post">
+      <label for="li-user">Username</label>
+      <input id="li-user" name="username" autocomplete="username" />
+      <label for="li-pass">Password</label>
+      <input id="li-pass" name="password" type="password" />
+      <button type="submit">Sign in</button>
+    </form>
+
+    <h2>Newsletter</h2>
+    <form id="news" action="/subscribe" method="post">
+      <label for="nl-email">Newsletter email</label>
+      <input id="nl-email" name="newsletter" type="email" placeholder="you@example.com" />
+      <button type="submit">Subscribe</button>
+    </form>
+
+    <script>
+      document.querySelectorAll("form").forEach((f) =>
+        f.addEventListener("submit", (e) => {
+          e.preventDefault();
+          document.body.dataset.submitted = f.id;
+        }),
+      );
+    </script>
+  </body>
+</html>
