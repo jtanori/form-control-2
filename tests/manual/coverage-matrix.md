@@ -32,9 +32,9 @@ Every epic-relevant feature appears ≥1× (D12). “Auto” = CI test that also
 | History nav or recorded defer (D11) | M27 | panel | no |
 | Context-menu capture (no crash) | M28 | any page | no |
 | Log redaction sanity (no transcript text in SW console) | M29 | during M12/M13 | no |
-| Android setup checklist | M30 | APK setup | no |
-| Overlay collapsed/expanded | M31 | APK | no |
-| Android tap/form count → fill | M32 | APK + form app | no |
+| Android setup checklist, progress dots, denied-mic recovery | M30 | APK setup | no |
+| Overlay collapsed/expanded + Back precedence | M31 | APK | no |
+| Android field tap → anchored HUD, field outline, sound cues, field-scoped fill (active-form grouping pending #69) | M32 | APK + form app | no |
 | Android confirm pill on submit | M33 | APK | no |
 | Android zen/back precedence | M34 | APK | no |
 | Android light/dark + copy pass | M35 | APK | no |

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">VoiceForm</string>
-    <string name="accessibility_service_description">VoiceForm reads the current screen so you can fill forms by voice. It only processes the visible UI tree while you use the floating button — it does not collect keystrokes or network data on its own.</string>
+    <string name="accessibility_service_description">VoiceForm reads interactive controls in the current app when you use its floating button. It handles Back only to cancel or collapse the VoiceForm overlay; it does not collect typed characters.</string>
 
     <!-- Overlay (spec §6.6/6.7) -->
     <string name="overlay_title">VoiceForm</string>
@@ -44,9 +44,13 @@
     <string name="error_retry">Retry</string>
     <string name="error_choose_field">Choose field</string>
     <string name="error_edit_manually">Edit manually</string>
-    <string name="confirm_cancelled">Cancelled. Nothing was submitted.</string>
+    <string name="confirm_cancelled">Cancelled. No action was taken.</string>
     <string name="confirm_expired">Confirmation expired. Review the action to try again.</string>
     <string name="confirm_submit">Submit this form?</string>
+    <string name="confirm_payment">Review this payment before continuing.</string>
+    <string name="confirm_delete">Delete this item?</string>
+    <string name="confirm_clear">Clear this information?</string>
+    <string name="confirm_action">Review this action before continuing.</string>
     <string name="confirm_countdown">Confirm · %1$ds</string>
     <plurals name="success_count">
         <item quantity="one">%1$d field updated.</item>
@@ -60,6 +64,11 @@
     <!-- Setup checklist (spec §6.8) -->
     <string name="setup_title">Set up VoiceForm</string>
     <string name="setup_intro">Allow accessibility access to detect forms and interact with them when you ask.</string>
+    <string name="setup_progress_description">Three setup steps</string>
+    <string name="setup_step_complete">complete</string>
+    <string name="setup_step_incomplete">not complete</string>
+    <string name="setup_mic_denied">Microphone access is off. Enable it to speak commands. You can continue without voice.</string>
+    <string name="setup_open_app_settings">Open Settings</string>
     <string name="setup_step1">1 · Enable accessibility service</string>
     <string name="setup_step1_hint">Opens system settings — returning here rechecks the status.</string>
     <string name="setup_step2">2 · Allow microphone permission</string>
@@ -76,7 +85,11 @@
     <string name="setup_continue_voiceless">Continue without voice</string>
     <string name="setup_ready">VoiceForm is ready.</string>
     <string name="setup_learn_more">Learn more</string>
-    <string name="setup_learning_body">VoiceForm uses accessibility access only to read the visible UI tree of the screen you are on, to find fields and act on them after you ask. Microphone audio goes to your configured Core for transcription; nothing is recorded at install, and passive screen reading never activates the mic.</string>
-    <string name="core_url_toggle">Toggle Core URL (emulator / LAN)</string>
+    <string name="setup_learning_body">VoiceForm uses accessibility access to read interactive controls in the app you are using, then acts only after you ask. Voice transcription uses the speech recognition service configured on your device; recognized text is sent to your configured Core for command parsing. Nothing is recorded at install, and passive screen reading never activates the microphone.</string>
+    <string name="core_url_toggle">Configure Core URL</string>
+    <string name="core_url_title">Core server address</string>
+    <string name="core_url_help">Enter the base URL for your VoiceForm Core, including its port. For example, http://10.0.2.2:8020 on the Android emulator.</string>
+    <string name="core_url_save">Save address</string>
+    <string name="core_url_invalid">Enter a valid http or https URL with a host.</string>
     <string name="overlay_permission">Allow display over other apps</string>
 </resources>

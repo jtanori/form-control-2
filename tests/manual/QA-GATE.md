@@ -77,12 +77,12 @@
 
 | ID | Steps | Expected | Result | Reason / notes |
 |---|---|---|---|---|
-| M30 | Fresh install → Setup | 3-step checklist (accessibility/mic/Core) with spec copy | ☐ | |
+| M30 | Fresh install → Setup; deny microphone, then open Settings | 3-step dots + checklist; denied copy is actionable; voiceless continuation remains available | ☐ | |
 | M31 | Overlay collapsed ↔ expanded; drag handle | Spec §6.6/6.7 layout; Back precedence §8.3 | ☐ | |
-| M32 | Tap native form → voice fill | Count/list + fill + LISTENING HUD | ☐ | |
+| M32 | Tap native value field → speak a value | Field outline + LISTENING HUD anchored to field; start/stop cues; only tapped field may be targeted. Active-form/other-form border remains pending #69 | ☐ | |
 | M33 | Submit-like command | Confirm pill before action; Back cancels, never confirms | ☐ | |
 | M34 | Zen sheet + Back chain | Zen → pill → collapse order; no residue | ☐ | |
-| M35 | Light/dark + copy pass | Tokens from §1.8 mapping | ☐ | |
+| M35 | Light/dark + copy pass | Resolve/record #68 token mapping; verify foreground contrast on accent in both themes | ☐ | *(#68 pending)*
 | M36 | Wrong Core URL → fix in Setup | Offline copy + recovery | ☐ | |
 
 ---

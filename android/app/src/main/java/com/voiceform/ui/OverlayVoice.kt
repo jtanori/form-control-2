@@ -3,8 +3,12 @@ package com.voiceform.ui
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PixelFormat
+import android.graphics.Rect
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -30,6 +34,7 @@ import com.voiceform.model.isRisky
 import com.voiceform.voice.VoiceClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -62,6 +67,12 @@ class OverlayVoice(private val service: VoiceFormService) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     private var root: LinearLayout? = null
+    private var windowParams: WindowManager.LayoutParams? = null
+    private var fieldHighlight: FieldHighlightView? = null
+    private var fieldHighlightParams: WindowManager.LayoutParams? = null
+    private var lastFieldTapAt = 0L
+    private var toneGenerator: ToneGenerator? = null
+    private var cueSequence = 0L
     private var collapsed: LinearLayout? = null
     private var expanded: LinearLayout? = null
     private var fab: Button? = null
@@ -83,6 +94,7 @@ class OverlayVoice(private val service: VoiceFormService) {
     private var zenCount: TextView? = null
     private var zenProgress: ProgressBar? = null
     private var zenFieldValue: TextView? = null
+    private var zenFieldLabel: TextView? = null
     private var zenList: LinearLayout? = null
     private var zenEmpty: TextView? = null
     private var zenFieldRow: LinearLayout? = null
@@ -102,6 +114,8 @@ class OverlayVoice(private val service: VoiceFormService) {
     private var zenSubmitPending = false // close Zen only after approved submit (P2 parity)
 
     private var voice: VoiceClient? = null
+    private var parseJob: Job? = null
+    private var operationId = 0L
     private var pendingCommands: List<Command> = emptyList()
     private var state: State = State.COLLAPSED
 
@@ -148,6 +162,7 @@ class OverlayVoice(private val service: VoiceFormService) {
         zenCount = view.findViewById(R.id.zenCount)
         zenProgress = view.findViewById(R.id.zenProgress)
         zenFieldValue = view.findViewById(R.id.zenFieldValue)
+        zenFieldLabel = view.findViewById(R.id.zenFieldLabel)
         zenList = view.findViewById(R.id.zenList)
         zenEmpty = view.findViewById(R.id.zenEmpty)
         zenFieldRow = view.findViewById(R.id.zenFieldRow)
@@ -187,6 +202,8 @@ class OverlayVoice(private val service: VoiceFormService) {
             when {
                 zenOpen -> closeZen()
                 state == State.REVIEWING -> cancelReview()
+                state == State.LISTENING -> stopListening(silent = false)
+                state == State.PARSING -> cancelParsing()
                 state == State.COLLAPSED -> hide()
                 else -> collapse()
             }
@@ -219,6 +236,7 @@ class OverlayVoice(private val service: VoiceFormService) {
         try {
             wm.addView(view, params)
             root = view as LinearLayout
+            windowParams = params
             applyState()
             refreshBadge()
             refreshFieldList()
@@ -231,11 +249,20 @@ class OverlayVoice(private val service: VoiceFormService) {
     }
 
     fun hide() {
-        stopListening(silent = true)
+        // Invalidate callbacks/results already in flight before removing the
+        // surface; a late parse must never execute after dismissal/service loss.
+        operationId += 1
+        parseJob?.cancel()
+        parseJob = null
+        stopListening(silent = true, playSound = false)
         cancelCountdown()
         pendingCommands = emptyList() // §6.7: dismissal invalidates pending auth
+        clearFieldHighlight()
+        toneGenerator?.release()
+        toneGenerator = null
         root?.let { runCatching { wm.removeView(it) } }
         root = null
+        windowParams = null
         collapsed = null
         expanded = null
         fab = null
@@ -257,6 +284,7 @@ class OverlayVoice(private val service: VoiceFormService) {
         zenCount = null
         zenProgress = null
         zenFieldValue = null
+        zenFieldLabel = null
         zenList = null
         zenEmpty = null
         zenFieldRow = null
@@ -280,6 +308,53 @@ class OverlayVoice(private val service: VoiceFormService) {
         refreshBadge()
         refreshFieldList()
         setStatus(service.getString(R.string.voice_start))
+    }
+
+    fun willHandleBack(): Boolean = zenOpen || state != State.COLLAPSED
+
+    /** Android Back precedence: dismiss Zen, cancel modal work, then collapse the shell. */
+    fun handleBack(): Boolean {
+        if (zenOpen) {
+            closeZen()
+            return true
+        }
+        when (state) {
+            State.REVIEWING -> cancelReview()
+            State.LISTENING -> stopListening(silent = false)
+            State.PARSING -> cancelParsing()
+            State.IDLE -> collapse()
+            State.COLLAPSED -> return false
+        }
+        return true
+    }
+
+    private fun cancelParsing() {
+        operationId += 1
+        parseJob?.cancel()
+        parseJob = null
+        pendingCommands = emptyList()
+        zenSubmitPending = false
+        state = State.IDLE
+        applyState()
+        setStatus(getString(R.string.voice_cancelled))
+    }
+
+    /** Privacy/safety stop when Android interrupts the service. */
+    fun onServiceInterrupted() {
+        operationId += 1
+        parseJob?.cancel()
+        parseJob = null
+        val wasListening = state == State.LISTENING
+        voice?.stop()
+        voice = null
+        if (wasListening) playCue(start = false)
+        cancelCountdown()
+        pendingCommands = emptyList()
+        zenSubmitPending = false
+        clearFieldHighlight()
+        if (state != State.COLLAPSED) state = State.IDLE
+        applyState()
+        setStatus(getString(R.string.voice_cancelled))
     }
 
     private fun collapse() {
@@ -386,25 +461,36 @@ class OverlayVoice(private val service: VoiceFormService) {
     }
 
     private fun closeZen() {
+        // Zen owns its confirmation pill. Dismissing the sheet must invalidate
+        // that authorization as well as any capture/parse still in flight.
+        if (state == State.REVIEWING) cancelReview()
+        operationId += 1
+        parseJob?.cancel()
+        parseJob = null
+        stopListening(silent = true) // §8.3.1: dismiss Zen cancels capture
+        if (state == State.LISTENING || state == State.PARSING) state = State.IDLE
         zenOpen = false
         zenReview = false
         zenSubmitPending = false
-        stopListening(silent = true) // §8.3.1: dismiss Zen cancels capture
-        if (state == State.LISTENING) state = State.IDLE // capture was cancelled
         applyState()
         refreshFieldList()
     }
 
     private fun stepZen(delta: Int) {
         if (zenNodes.isEmpty()) return
-        zenIndex = (zenIndex + delta).coerceIn(0, zenNodes.size - 1)
-        if (zenReview && delta != 0) zenReview = false
+        if (!zenReview && delta > 0 && zenIndex == zenNodes.lastIndex) {
+            // Advancing past the final field opens the final review step.
+            zenReview = true
+        } else {
+            zenIndex = (zenIndex + delta).coerceIn(0, zenNodes.size - 1)
+            if (zenReview && delta != 0) zenReview = false
+        }
         paintZen()
     }
 
     private fun paintZen() {
         val count = zenNodes.size
-        zenCount?.text = getString(R.string.zen_count, zenIndex + 1, count)
+        zenCount?.text = getString(R.string.zen_count, if (count == 0) 0 else zenIndex + 1, count)
         zenProgress?.progress =
             if (count == 0) 0
             else if (zenReview) 100
@@ -413,6 +499,8 @@ class OverlayVoice(private val service: VoiceFormService) {
         if (count == 0) {
             zenEmpty?.visibility = View.VISIBLE
             zenFieldRow?.visibility = View.GONE
+            zenFieldLabel?.visibility = View.GONE
+            zenFieldValue?.visibility = View.GONE
             zenReviewRow?.visibility = View.GONE
             zenReviewMeta?.visibility = View.GONE
             zenFieldValue?.text = getString(R.string.zen_empty)
@@ -428,7 +516,7 @@ class OverlayVoice(private val service: VoiceFormService) {
             row.findViewById<TextView>(R.id.rowLabel).text =
                 node.displayLabel ?: node.label
             row.findViewById<TextView>(R.id.rowValue).text = nodeDisplayValue(node)
-            if (i == zenIndex) row.setBackgroundColor(service.getColor(R.color.vf_accent_soft))
+            if (!zenReview && i == zenIndex) row.setBackgroundColor(service.getColor(R.color.vf_accent_soft))
             row.setOnClickListener {
                 zenIndex = i
                 zenReview = false
@@ -442,7 +530,10 @@ class OverlayVoice(private val service: VoiceFormService) {
             (current.displayLabel ?: current.label) +
                 (current.value?.let { " = $it" } ?: "")
 
-        zenFieldRow?.visibility = if (zenReview) View.GONE else View.VISIBLE
+        val fieldDetailsVisibility = if (zenReview) View.GONE else View.VISIBLE
+        zenFieldLabel?.visibility = fieldDetailsVisibility
+        zenFieldValue?.visibility = fieldDetailsVisibility
+        zenFieldRow?.visibility = fieldDetailsVisibility
         zenReviewRow?.visibility = if (zenReview) View.VISIBLE else View.GONE
         zenReviewMeta?.visibility = if (zenReview) View.VISIBLE else View.GONE
         zenBack?.isEnabled = zenIndex > 0
@@ -465,9 +556,100 @@ class OverlayVoice(private val service: VoiceFormService) {
                 else -> "—"
             }
 
+    /** Called for an explicit tap on a value control in the host application. */
+    fun onFormFieldTapped(target: FormNode) {
+        if (zenOpen || state !in setOf(State.COLLAPSED, State.IDLE)) return
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastFieldTapAt < 650) return // accessibility may emit duplicate click events
+        lastFieldTapAt = now
+        val fieldRect = modelRect(target.rect)
+        showFieldHighlight(fieldRect)
+        startListening(target.nodeId, fieldRect)
+    }
+
+    private fun showFieldHighlight(fieldRect: Rect) {
+        // FormSnapshot is currently flat and does not identify separate forms.
+        // Until #69 adds reliable grouping, outline only the tapped field rather
+        // than drawing a misleading border around unrelated controls.
+        val frame = Rect(fieldRect)
+        clearFieldHighlight()
+        val view = FieldHighlightView(service, frame)
+        val params = WindowManager.LayoutParams(
+            frame.width().coerceAtLeast(1),
+            frame.height().coerceAtLeast(1),
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT,
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+            x = frame.left
+            y = frame.top
+        }
+        runCatching {
+            wm.addView(view, params)
+            fieldHighlight = view
+            fieldHighlightParams = params
+        }.onFailure {
+            Log.w("overlay", "field highlight unavailable")
+        }
+    }
+
+    private fun clearFieldHighlight() {
+        fieldHighlight?.let { view -> runCatching { wm.removeView(view) } }
+        fieldHighlight = null
+        fieldHighlightParams = null
+    }
+
+    private fun modelRect(rect: com.voiceform.model.Rect): Rect =
+        Rect(rect.x, rect.y, rect.x + rect.w, rect.y + rect.h)
+
+    private fun positionNearField(anchor: Rect) {
+        val view = root ?: return
+        val params = windowParams ?: return
+        view.post {
+            if (root !== view || view.width == 0 || view.height == 0) return@post
+            val metrics = service.resources.displayMetrics
+            val margin = (12 * metrics.density).toInt()
+            val maxX = (metrics.widthPixels - view.width - margin).coerceAtLeast(margin)
+            val maxY = (metrics.heightPixels - view.height - margin).coerceAtLeast(margin)
+            params.x = anchor.left.coerceIn(margin, maxX)
+            val above = anchor.top - view.height - margin
+            params.y = (if (above >= margin) above else anchor.bottom + margin).coerceIn(margin, maxY)
+            runCatching { wm.updateViewLayout(view, params) }
+        }
+    }
+
+    private fun playCue(start: Boolean) {
+        val sequence = ++cueSequence
+        runCatching {
+            val audio = service.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            if (audio.getStreamVolume(AudioManager.STREAM_NOTIFICATION) <= 0 ||
+                audio.ringerMode != AudioManager.RINGER_MODE_NORMAL
+            ) return@runCatching
+            val player = toneGenerator ?: ToneGenerator(AudioManager.STREAM_NOTIFICATION, 35)
+                .also { toneGenerator = it }
+            val first = if (start) ToneGenerator.TONE_PROP_BEEP else ToneGenerator.TONE_PROP_PROMPT
+            val second = if (start) ToneGenerator.TONE_PROP_PROMPT else ToneGenerator.TONE_PROP_BEEP
+            player.startTone(first, 65)
+            main.postDelayed({
+                if (sequence == cueSequence && toneGenerator === player) {
+                    player.startTone(second, 65)
+                }
+            }, 70)
+        }.onFailure {
+            Log.w("overlay", "sound cue unavailable")
+        }
+    }
+
     private fun onZenSpeak() {
         if (state == State.LISTENING) stopListening(silent = false)
-        else if (state == State.IDLE) startListening()
+        else if (state == State.IDLE) {
+            // Keep the voice request bound to the field the user chose, even
+            // if they navigate the sheet before speech recognition completes.
+            zenNodes.getOrNull(zenIndex)?.let { startListening(it.nodeId, modelRect(it.rect)) }
+        }
     }
 
     private fun onZenSubmit() {
@@ -502,42 +684,72 @@ class OverlayVoice(private val service: VoiceFormService) {
         }
     }
 
-    private fun startListening() {
+    private fun startListening(targetNodeId: String? = null, anchorRect: Rect? = null) {
+        operationId += 1
+        val requestId = operationId
         state = State.LISTENING
         applyState()
         transcriptView?.visibility = View.GONE
         setStatus(getString(R.string.voice_start))
+        anchorRect?.let { positionNearField(it) }
         voice = VoiceClient(
             service,
             onResult = { transcript ->
                 main.post {
+                    if (requestId != operationId || root == null || state != State.LISTENING) return@post
+                    voice?.stop()
                     voice = null
-                    onTranscript(transcript)
+                    playCue(start = false)
+                    onTranscript(transcript, requestId, targetNodeId)
                 }
             },
             onError = { err ->
                 main.post {
+                    if (requestId != operationId || root == null || state != State.LISTENING) return@post
+                    voice?.stop()
                     voice = null
+                    playCue(start = false)
                     state = State.IDLE
                     applyState()
                     setStatus(err)
+                }
+            },
+            onReady = {
+                main.post {
+                    if (requestId == operationId && root != null && state == State.LISTENING) {
+                        playCue(start = true)
+                    }
                 }
             },
         )
         voice?.startListening()
     }
 
-    private fun stopListening(silent: Boolean) {
+    private fun stopListening(silent: Boolean, playSound: Boolean = true) {
         voice?.stop()
         voice = null
-        if (!silent && state == State.LISTENING) {
-            state = State.IDLE
-            applyState()
-            setStatus(getString(R.string.voice_cancelled))
+        if (state == State.LISTENING) {
+            operationId += 1
+            if (playSound) playCue(start = false)
+            if (!silent) {
+                state = State.IDLE
+                applyState()
+                setStatus(getString(R.string.voice_cancelled))
+            }
         }
     }
 
-    private fun onTranscript(transcript: String) {
+    private fun onTranscript(
+        transcript: String,
+        requestId: Long,
+        targetNodeId: String? = null,
+    ) {
+        if (transcript.isBlank()) {
+            state = State.IDLE
+            applyState()
+            setStatus(getString(R.string.error_empty_stt))
+            return
+        }
         state = State.PARSING
         applyState()
         transcriptView?.visibility = View.VISIBLE
@@ -550,19 +762,39 @@ class OverlayVoice(private val service: VoiceFormService) {
             setStatus(getString(R.string.error_no_match))
             return
         }
+        val parseSnapshot = if (targetNodeId != null) {
+            val selectedNode = snapshot.nodes.firstOrNull { it.nodeId == targetNodeId }
+            if (selectedNode == null) {
+                state = State.IDLE
+                applyState()
+                if (zenOpen) refreshZenSnapshot()
+                setStatus(getString(R.string.error_no_match))
+                return
+            }
+            // Tap-to-talk and Zen's “Speak value” are field-scoped; do not let
+            // the parser retarget a different field elsewhere on the page.
+            snapshot.copy(nodes = listOf(selectedNode))
+        } else {
+            snapshot
+        }
         Log.i("overlay", "parse", mapOf("transcriptLength" to transcript.length))
-        scope.launch {
+        parseJob?.cancel()
+        parseJob = scope.launch {
             try {
                 val client = CoreSettings.newClient(service)
                 val result = withContext(Dispatchers.IO) {
-                    client.parse(transcript, snapshot, snapshot.sessionId)
+                    client.parse(transcript, parseSnapshot, parseSnapshot.sessionId)
                 }
-                withContext(Dispatchers.Main) { onParsed(result) }
+                if (requestId != operationId || root == null || state != State.PARSING) return@launch
+                onParsed(result)
             } catch (e: Exception) {
-                Log.e("overlay", "parse failed", mapOf("error" to (e.message ?: "")))
+                if (requestId != operationId || root == null || state != State.PARSING) return@launch
+                // Exception text can contain remote response details. Keep logs
+                // and user-facing recovery copy free of transcript/form data.
+                Log.e("overlay", "parse failed", mapOf("errorType" to e.javaClass.simpleName))
                 state = State.IDLE
                 applyState()
-                setStatus(getString(R.string.error_core) + " (${e.message})")
+                setStatus(getString(R.string.error_core))
             }
         }
     }
@@ -584,7 +816,7 @@ class OverlayVoice(private val service: VoiceFormService) {
                 pendingCommands = result.commands
                 state = State.REVIEWING
                 applyState()
-                reviewTitle?.text = getString(R.string.confirm_submit)
+                reviewTitle?.text = confirmationTitle(result.commands)
                 reviewCommands?.text = result.commands.joinToString("\n") { cmd ->
                     val target = cmd.target.label ?: cmd.target.nodeId ?: "?"
                     val value = cmd.value?.let { " = $it" } ?: ""
@@ -600,6 +832,21 @@ class OverlayVoice(private val service: VoiceFormService) {
                 state = State.IDLE
                 applyState()
             }
+        }
+    }
+
+    private fun confirmationTitle(commands: List<Command>): String {
+        val labels = commands.joinToString(" ") { it.target.label.orEmpty() }
+        return when {
+            Regex("(?i)\\b(pay|payment)\\b").containsMatchIn(labels) ->
+                getString(R.string.confirm_payment)
+            Regex("(?i)\\bdelete\\b").containsMatchIn(labels) ->
+                getString(R.string.confirm_delete)
+            Regex("(?i)\\bclear\\b").containsMatchIn(labels) ->
+                getString(R.string.confirm_clear)
+            Regex("(?i)\\b(submit|place order|purchase|checkout)\\b").containsMatchIn(labels) ->
+                getString(R.string.confirm_submit)
+            else -> getString(R.string.confirm_action)
         }
     }
 
@@ -699,6 +946,7 @@ class OverlayVoice(private val service: VoiceFormService) {
 
     private fun setStatus(text: String) {
         statusView?.text = text
-        Log.d("overlay", text)
+        // Status strings may quote the user or field labels; never put them in logs.
+        Log.d("overlay", "status updated")
     }
 }

@@ -21,6 +21,8 @@ class RiskTest {
         assertTrue(isRisky(listOf(cmd(NodeAction.CLICK, "submit billing"))))
         assertTrue(isRisky(listOf(cmd(NodeAction.CLICK, "Pay now"))))
         assertTrue(isRisky(listOf(cmd(NodeAction.CLICK, "Place order"))))
+        assertTrue(isRisky(listOf(cmd(NodeAction.CLICK, "Continue to checkout"))))
+        assertTrue(isRisky(listOf(cmd(NodeAction.CLICK, "Sign in"))))
     }
 
     @Test

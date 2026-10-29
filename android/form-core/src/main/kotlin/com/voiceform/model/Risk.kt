@@ -6,7 +6,7 @@ package com.voiceform.model
  * **ungated** — countdown is text only).
  */
 private val RISKY_LABEL =
-    Regex("(?i)\\b(submit|pay|place order|purchase|checkout|delete|clear all)\\b")
+    Regex("(?i)\\b(submit|pay|place|purchase|checkout|order|delete|clear|sign in|log in|login)\\b")
 
 fun isRisky(commands: List<Command>): Boolean =
     commands.any { cmd ->

@@ -29,6 +29,37 @@
             android:textColor="@color/vf_text_secondary"
             android:textSize="14sp" />
 
+        <LinearLayout
+            android:id="@+id/setupProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/setup_progress_description"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/setupProgress1"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:background="@drawable/setup_progress_dot" />
+
+            <View
+                android:id="@+id/setupProgress2"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/setup_progress_dot" />
+
+            <View
+                android:id="@+id/setupProgress3"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/setup_progress_dot" />
+        </LinearLayout>
+
         <!-- Step 1: accessibility (+ overlay grant for our floating UI) -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -137,6 +168,18 @@
                 android:textColor="@color/vf_text_secondary"
                 android:textSize="12sp" />
 
+            <TextView
+                android:id="@+id/micDeniedText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@color/vf_surface_subtle"
+                android:padding="10dp"
+                android:text="@string/setup_mic_denied"
+                android:textColor="@color/vf_text_primary"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
             <Button
                 android:id="@+id/allowMic"
                 android:layout_width="match_parent"
@@ -145,6 +188,15 @@
                 android:backgroundTint="@color/vf_accent"
                 android:text="@string/setup_allow_mic"
                 android:textColor="@color/vf_on_accent" />
+
+            <Button
+                android:id="@+id/openAppSettings"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:text="@string/setup_open_app_settings"
+                android:textColor="@color/vf_accent"
+                android:visibility="gone" />
         </LinearLayout>
 
         <!-- Step 3: check & continue -->

@@ -11,14 +11,16 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * AND-004 part 1 — Android built-in speech recognition client.
- * Falls back to Core STT (`POST /stt/transcribe`) when the device recognizer
- * is unavailable — host configurable via CoreSettings (Termux/LAN).
+ * AND-004 part 1 — Android system speech-recognition client.
+ * Recognition is delegated to the speech service configured on the device;
+ * recognized text (not raw audio) is sent to Core for NLU. The separate
+ * postTranscribe helper is not currently wired into this capture flow.
  */
 class VoiceClient(
     context: Context,
     private val onResult: (String) -> Unit,
     private val onError: (String) -> Unit,
+    private val onReady: () -> Unit = {},
 ) {
     private val appContext = context.applicationContext
     private var recognizer: SpeechRecognizer? = null
@@ -54,7 +56,7 @@ class VoiceClient(
                 onError(humanizeError(error))
             }
 
-            override fun onReadyForSpeech(params: Bundle?) = Unit
+            override fun onReadyForSpeech(params: Bundle?) = onReady()
             override fun onBeginningOfSpeech() = Unit
             override fun onRmsChanged(rmsdB: Float) = Unit
             override fun onBufferReceived(buffer: ByteArray?) = Unit

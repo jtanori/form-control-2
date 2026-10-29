@@ -40,7 +40,7 @@
 | §1.5 radius/elevation/material | **Adopt** | `--vf-radius-card/sheet/pill`, shadow recipes replace ad-hoc `box-shadow` |
 | §1.6 focus/selection (2px inset + glow) | **Adopt** | Executor focus restyle yellow-dashed → accent inset ring (P1) |
 | §1.7 CSS custom properties | **Adopt** | Canonical `tokens.css` (D6/D9) |
-| §1.8 Compose mapping | **Adopt → P3** | Consumed by AND-006 child |
+| §1.8 Compose mapping | **Adopt → P3; mismatch filed** | Dark `onPrimary=#0B0F14` in spec vs `on-accent=#FFFFFF` in tokens.json is tracked as UX-003 child #68; resolve canonically before visual sign-off. Triage: `P1`, `backlog`, `post-mvp`, `design`, `agent-mobile`, `accessibility`; milestone `Post-MVP` (GitHub edit permission pending). |
 | WCAG contrast verification note | **Adopt (checklist)** | GATE manual rows |
 
 ### §2 Component catalog (20)
@@ -90,7 +90,7 @@
 |---|---|
 | Motion tokens + easing + reduced-motion | **Adopt** | P1 |
 | Listening pulse 1,600 ms | **Adopt** | replace 1.2s blink |
-| Sound cues (start/stop; optional completion) | **Adopt start/stop spec shape**; completion blip **optional — skip** (D5: ornamental) |
+| Sound cues (start/stop; optional completion) | **Adopt start/stop spec shape**; completion blip **optional — skip** (D5: ornamental) | Android ToneGenerator start/stop cues are P3; M32 manual device verification remains |
 | Mute/respect OS prefs + visual-always-sufficient | **Adopt** (visual status already primary) |
 
 ### §6 Surfaces
@@ -103,8 +103,8 @@
 | §6.4 Zen sheet | **Adopt simplified (P2)** | n/N, Speak/Next/Back, final review list, dismiss; **no** voice-Confirm (D1), web drag handle dropped |
 | §6.5 Mini popup | **Adopt** | mic launcher + form-count chip + `? Setup`; never a workspace (true today) |
 | §6.6 Android overlay collapsed | **Adopt → P3** | AND-006 |
-| §6.7 Android overlay expanded | **Adopt → P3** | Back precedence §8.3 included; auth-invalidation bullets marked D1-deferred |
-| §6.8 Android setup | **Adopt → P3** | checklist flow ≡ our MainActivity, restyled per spec + copy |
+| §6.7 Android overlay expanded | **Adopt → P3** | Back precedence §8.3; field-scoped tap-to-talk/HUD, field outline, and start/stop cues. True active-form grouping/other-form dimming is tracked in child #69; auth-invalidation bullets marked D1-deferred. Triage for #69: `P1`, `backlog`, `post-mvp`, `agent-mobile`, `accessibility`; milestone `Post-MVP` (GitHub edit permission pending). |
+| §6.8 Android setup | **Adopt → P3** | Checklist with 3-step progress dots, persisted denied-mic recovery, overlay/Core checks, and copy alignment |
 
 ### §7 Component↔surface mapping
 **Adopt** as living checklist inside `components-map.md` (C).

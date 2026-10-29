@@ -3,6 +3,8 @@ package com.voiceform
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
+import android.graphics.Rect
+import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import com.voiceform.executor.ActionExecutor
@@ -11,6 +13,7 @@ import com.voiceform.model.ExecutionResult
 import com.voiceform.model.FormSnapshot
 import com.voiceform.network.CoreClient
 import com.voiceform.parser.AndroidA11yNode
+import com.voiceform.parser.FieldTargetResolver
 import com.voiceform.parser.NodeParser
 import com.voiceform.ui.OverlayVoice
 
@@ -21,6 +24,7 @@ import com.voiceform.ui.OverlayVoice
 class VoiceFormService : AccessibilityService() {
 
     private var overlay: OverlayVoice? = null
+    private var consumeBackKeyUp = false
 
     private var lastBound: NodeParser.BoundSnapshot? = null
 
@@ -39,16 +43,62 @@ class VoiceFormService : AccessibilityService() {
             feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
             flags = flags or
                 AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS or
-                AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
+                AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS or
+                AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
             notificationTimeout = 100
         }
         Log.i("service", "VoiceForm accessibility service connected")
         overlay = OverlayVoice(this).also { it.show() }
     }
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) = Unit
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (event?.eventType != AccessibilityEvent.TYPE_VIEW_CLICKED) return
+        if (event.packageName?.toString() == packageName) return
+        val source = event.source ?: return
+        val className = source.className?.toString()?.lowercase().orEmpty()
+        val isValueControl = source.isEditable || source.isCheckable ||
+            className.contains("spinner") || className.contains("dropdown")
+        if (!isValueControl) return
 
-    override fun onInterrupt() = Unit
+        val tappedBounds = Rect()
+        source.getBoundsInScreen(tappedBounds)
+        if (tappedBounds.isEmpty) return
+        val snapshot = currentSnapshot() ?: return
+        // Never read EditText text here: it is the user's value, not a label.
+        val sourceLabel = source.contentDescription?.toString()
+            ?: source.viewIdResourceName
+        val target = FieldTargetResolver.resolveTappedField(
+            nodes = snapshot.nodes,
+            sourceLabel = sourceLabel,
+            centerX = tappedBounds.centerX(),
+            centerY = tappedBounds.centerY(),
+        ) ?: return
+        overlay?.onFormFieldTapped(target)
+    }
+
+    override fun onInterrupt() {
+        overlay?.onServiceInterrupted()
+    }
+
+    /** Back is cancellation/navigation only; the overlay never consumes it as approval. */
+    override fun onKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode != KeyEvent.KEYCODE_BACK) return false
+        return when (event.action) {
+            KeyEvent.ACTION_DOWN -> {
+                if (event.repeatCount == 0) {
+                    consumeBackKeyUp = overlay?.willHandleBack() == true
+                }
+                consumeBackKeyUp
+            }
+            KeyEvent.ACTION_UP -> {
+                val consume = consumeBackKeyUp
+                consumeBackKeyUp = false
+                if (consume) overlay?.handleBack()
+                consume
+            }
+            else -> false
+        }
+    }
 
     override fun onDestroy() {
         overlay?.hide()
