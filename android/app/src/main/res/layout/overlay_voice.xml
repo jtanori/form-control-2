@@ -129,40 +129,228 @@
             android:textSize="12sp"
             android:visibility="gone" />
 
-        <!-- Primary: Start/Stop listening (§6.7) -->
-        <Button
-            android:id="@+id/primary"
+        <!-- ===== Workspace (default expanded content) ===== -->
+        <LinearLayout
+            android:id="@+id/workspace"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="8dp"
-            android:backgroundTint="@color/vf_accent"
-            android:text="@string/voice_start"
-            android:textColor="@color/vf_on_accent" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-        <!-- Field/form list (§6.7 + AND-006 "count + list"): label → value rows -->
-        <ScrollView
-            android:id="@+id/fieldListScroll"
+            <!-- Primary: Start/Stop listening (§6.7) -->
+            <Button
+                android:id="@+id/primary"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:backgroundTint="@color/vf_accent"
+                android:text="@string/voice_start"
+                android:textColor="@color/vf_on_accent" />
+
+            <!-- Field/form list (§6.7 + AND-006 "count + list"): label → value rows -->
+            <ScrollView
+                android:id="@+id/fieldListScroll"
+                android:layout_width="match_parent"
+                android:layout_height="140dp"
+                android:layout_marginTop="8dp"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/fieldList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </ScrollView>
+
+            <TextView
+                android:id="@+id/fieldListEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/overlay_empty_fields"
+                android:textColor="@color/vf_text_tertiary"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+            <!-- Zen entry (P2 parity — reading mode) -->
+            <Button
+                android:id="@+id/zenOpen"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_marginTop="4dp"
+                android:text="@string/zen_open"
+                android:textColor="@color/vf_text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- ===== Zen panel (§6.4 simplified — P2 parity) ===== -->
+        <LinearLayout
+            android:id="@+id/zenPanel"
             android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:layout_marginTop="8dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:visibility="gone">
 
             <LinearLayout
-                android:id="@+id/fieldList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical" />
-        </ScrollView>
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/fieldListEmpty"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/overlay_empty_fields"
-            android:textColor="@color/vf_text_tertiary"
-            android:textSize="12sp"
-            android:visibility="gone" />
+                <TextView
+                    android:id="@+id/zenTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/zen_title"
+                    android:textColor="@color/vf_text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/zenCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/vf_text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/zenProgress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="6dp"
+                android:layout_marginTop="6dp"
+                android:backgroundTint="@color/vf_surface_subtle"
+                android:max="100"
+                android:progressTint="@color/vf_accent" />
+
+            <TextView
+                android:id="@+id/zenFieldLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:text="@string/zen_current"
+                android:textColor="@color/vf_text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/zenFieldValue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="@color/vf_surface"
+                android:padding="10dp"
+                android:textColor="@color/vf_text_primary"
+                android:textSize="13sp" />
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginTop="8dp">
+
+                <LinearLayout
+                    android:id="@+id/zenList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </ScrollView>
+
+            <TextView
+                android:id="@+id/zenEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/zen_empty"
+                android:textColor="@color/vf_text_tertiary"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+            <!-- Field-mode controls: Speak / Back / Next / Dismiss -->
+            <LinearLayout
+                android:id="@+id/zenFieldRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="end"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/zenSpeak"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:backgroundTint="@color/vf_accent"
+                    android:text="@string/zen_speak"
+                    android:textColor="@color/vf_on_accent"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/zenBack"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:text="@string/zen_back"
+                    android:textColor="@color/vf_text_primary"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/zenNext"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:text="@string/zen_next"
+                    android:textColor="@color/vf_text_primary"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/zenDismiss"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:text="@string/zen_dismiss"
+                    android:textColor="@color/vf_text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- Review-mode meta + controls -->
+            <TextView
+                android:id="@+id/zenReviewMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/zen_review_meta"
+                android:textColor="@color/vf_text_secondary"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/zenReviewRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="end"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <Button
+                    android:id="@+id/zenEdit"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:text="@string/zen_continue_editing"
+                    android:textColor="@color/vf_text_primary"
+                    android:textSize="12sp" />
+
+                <Button
+                    android:id="@+id/zenSubmit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:backgroundTint="@color/vf_accent"
+                    android:text="@string/zen_submit"
+                    android:textColor="@color/vf_on_accent"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
 
         <!-- Command review / confirm pill (§6.7 + §3.3 — text countdown, ungated D1) -->
         <LinearLayout
