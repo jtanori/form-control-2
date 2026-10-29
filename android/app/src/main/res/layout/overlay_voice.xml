@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- AND-006 / spec §6.6+6.7 — collapsed FAB + expanded workspace in one window. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/overlayRoot"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -8,45 +10,210 @@
     android:orientation="vertical"
     android:padding="12dp">
 
+    <!-- ============ COLLAPSED (§6.6): mic FAB + field-count badge ============ -->
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <View
-            android:id="@+id/drag"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/overlay_title"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/close"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="✕"
-            android:textColor="#FFFFFF" />
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/status"
-        android:layout_width="220dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:maxLines="4"
-        android:text="Tap mic…"
-        android:textColor="#E5E7EB"
-        android:textSize="12sp" />
-
-    <Button
-        android:id="@+id/mic"
+        android:id="@+id/collapsed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="8dp"
-        android:text="@string/overlay_mic"
-        android:textColor="#FFFFFF" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/fab"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:backgroundTint="@color/vf_accent"
+            android:contentDescription="@string/overlay_collapsed_hint"
+            android:text="🎙"
+            android:textColor="@color/vf_on_accent"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/overlay_badge_bg"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:textColor="@color/vf_text_primary"
+            android:textSize="11sp"
+            android:visibility="gone"
+            tools:text="8 fields" />
+    </LinearLayout>
+
+    <!-- ============ EXPANDED (§6.7): session workspace ============ -->
+    <LinearLayout
+        android:id="@+id/expanded"
+        android:layout_width="320dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <View
+                android:id="@+id/drag"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/close"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:contentDescription="@string/cancel"
+                android:text="✕"
+                android:textColor="@color/vf_text_primary" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/overlay_title"
+            android:textColor="@color/vf_text_primary"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <!-- LISTENING badge (§ ListeningBadge): visible only while capturing -->
+        <LinearLayout
+            android:id="@+id/listeningRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <View
+                android:id="@+id/listeningDot"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:background="@color/vf_accent" />
+
+            <TextView
+                android:id="@+id/listeningLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="@string/voice_start"
+                android:textColor="@color/vf_accent"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:maxLines="6"
+            android:text="@string/overlay_mic"
+            android:textColor="@color/vf_text_secondary"
+            android:textSize="12sp" />
+
+        <!-- Transcript preview (final STT text) -->
+        <TextView
+            android:id="@+id/transcript"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:background="@color/vf_surface_subtle"
+            android:padding="8dp"
+            android:textColor="@color/vf_text_primary"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <!-- Primary: Start/Stop listening (§6.7) -->
+        <Button
+            android:id="@+id/primary"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@color/vf_accent"
+            android:text="@string/voice_start"
+            android:textColor="@color/vf_on_accent" />
+
+        <!-- Field/form list (§6.7 + AND-006 "count + list"): label → value rows -->
+        <ScrollView
+            android:id="@+id/fieldListScroll"
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:layout_marginTop="8dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/fieldList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+
+        <TextView
+            android:id="@+id/fieldListEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/overlay_empty_fields"
+            android:textColor="@color/vf_text_tertiary"
+            android:textSize="12sp"
+            android:visibility="gone" />
+
+        <!-- Command review / confirm pill (§6.7 + §3.3 — text countdown, ungated D1) -->
+        <LinearLayout
+            android:id="@+id/reviewRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:background="@color/vf_accent_soft"
+            android:orientation="vertical"
+            android:padding="8dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/reviewTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/vf_text_primary"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/reviewCommands"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/vf_text_secondary"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="end"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/reviewCancel"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:text="@string/cancel"
+                    android:textColor="@color/vf_text_primary" />
+
+                <Button
+                    android:id="@+id/reviewConfirm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:backgroundTint="@color/vf_accent"
+                    android:text="@string/confirm"
+                    android:textColor="@color/vf_on_accent" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
 </LinearLayout>
