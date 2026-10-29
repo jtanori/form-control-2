@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createLogger } from "@shared/logger";
 import { copy } from "../ui/copy";
+import { countRegisteredForms, type FormRegistryEntry } from "../sidepanel/registry-utils";
 
 const log = createLogger("ext.popup");
 
@@ -26,10 +27,10 @@ export function MiniApp() {
       });
       if (st.ok) setStatus(`Core: ${st.coreUrl ?? "localhost:8020"}`);
       try {
-        const reg = await send<{ ok: boolean; forms?: unknown[] }>({
+        const reg = await send<{ ok: boolean; forms?: FormRegistryEntry[] }>({
           type: "GET_FORM_REGISTRY",
         });
-        if (reg.ok) setFormCount((reg.forms ?? []).length);
+        if (reg.ok) setFormCount(countRegisteredForms(reg.forms ?? []));
       } catch {
         /* count optional */
       }

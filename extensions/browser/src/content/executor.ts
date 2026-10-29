@@ -205,8 +205,8 @@ function runAction(command: Command, el: Element, context: FormSnapshot): void {
     }
     case "click": {
       log.debug("click target", {
-        el: `${el.tagName}#${(el as HTMLElement).id || ""}`,
-        text: (el.textContent || "").trim().slice(0, 40),
+        tag: el.tagName,
+        elementIdPresent: Boolean((el as HTMLElement).id),
         attached: el.isConnected,
       });
       (el as HTMLElement).click();

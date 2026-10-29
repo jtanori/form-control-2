@@ -31,13 +31,19 @@ function visible(el: Element): boolean {
   return html.offsetParent !== null || style.position === "fixed";
 }
 
-function formKey(form: HTMLFormElement, fallbackIndex: number): string {
+export function formKey(form: HTMLFormElement, fallbackIndex: number): string {
   return (
     form.id ||
     form.getAttribute("name") ||
     form.getAttribute("action") ||
     `form-${fallbackIndex}`
   );
+}
+
+export function findFormByKey(key: string): HTMLFormElement | null {
+  if (key === "page") return null;
+  const forms = Array.from(document.querySelectorAll("form")).filter(visible);
+  return forms.find((form, index) => formKey(form as HTMLFormElement, index) === key) as HTMLFormElement | undefined ?? null;
 }
 
 function summarize(): FormSummary[] {

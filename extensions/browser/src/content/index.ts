@@ -7,7 +7,7 @@ import type { Command, FormSnapshot, FormSummary } from "@shared/types";
 import { extractFormSnapshot } from "./context-extractor";
 import { executeCommands } from "./executor";
 import { navNext, navPrev, navRead, resetCursor } from "./cursor";
-import { startFormRegistry } from "./form-registry";
+import { findFormByKey, startFormRegistry } from "./form-registry";
 import { clearCues, installCueReapply, setCues } from "./cues";
 import {
   setListeningUi,
@@ -37,6 +37,15 @@ installCueReapply();
 startFormRegistry();
 
 let listeningAnchor: Element | null = null;
+let activeFormKey: string | null = null;
+
+/** Use the panel-selected form for panel context and execution; no stale fallback. */
+function currentSnapshot(): FormSnapshot {
+  const full = extractFormSnapshot();
+  if (!activeFormKey || activeFormKey === "page") return full;
+  const form = findFormByKey(activeFormKey);
+  return form ? extractFormSnapshot(form) : { ...full, nodes: [] };
+}
 
 /** B-7: tap anywhere on a known form → start listening. */
 function onDocumentClick(ev: MouseEvent): void {
@@ -94,14 +103,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           sendResponse({ ok: true });
           break;
         case "GET_CONTEXT": {
-          const snapshot: FormSnapshot = extractFormSnapshot();
+          const snapshot: FormSnapshot = currentSnapshot();
           if (message.sessionId) snapshot.sessionId = message.sessionId;
           sendResponse({ ok: true, context: snapshot });
           break;
         }
         case "EXECUTE": {
           const commands = (message.commands ?? []) as Command[];
-          const context = (message.context ?? extractFormSnapshot()) as FormSnapshot;
+          const context = (message.context ?? currentSnapshot()) as FormSnapshot;
           const result = await executeCommands(commands, context);
           log.info("execute result", {
             status: result.status,
@@ -126,6 +135,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         case "SET_CUES": {
           // B-6: side panel tells the page which form is active
           const forms = (message.forms ?? []) as FormSummary[];
+          activeFormKey = (message.activeKey as string | null) ?? null;
           setCues({
             forms,
             activeKey: (message.activeKey as string | null) ?? null,
@@ -134,6 +144,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           break;
         }
         case "CLEAR_CUES":
+          activeFormKey = null;
           clearCues();
           sendResponse({ ok: true });
           break;
@@ -175,7 +186,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     } catch (err) {
       log.error("content message failed", {
         type: message?.type,
-        error: err instanceof Error ? err.message : String(err),
+        errorType: err instanceof Error ? err.name : typeof err,
       });
       sendResponse({
         ok: false,

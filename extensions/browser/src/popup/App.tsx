@@ -47,6 +47,11 @@ async function fetchCoreUrl(): Promise<string> {
   return state.coreUrl ?? "http://localhost:8020";
 }
 
+async function getActiveTabId(): Promise<number | undefined> {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return tab?.id;
+}
+
 export function App() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [status, setStatus] = useState("");
@@ -64,6 +69,8 @@ export function App() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
+  const targetTabIdRef = useRef<number | undefined>(undefined);
+  const operationGenerationRef = useRef(0);
 
   useEffect(() => {
     void (async () => {
@@ -112,7 +119,9 @@ export function App() {
     setTranscript("");
     setParse(null);
     setDrafts([]);
+    const operationId = ++operationGenerationRef.current;
     try {
+      targetTabIdRef.current = await getActiveTabId();
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
       chunksRef.current = [];
@@ -121,8 +130,9 @@ export function App() {
       };
       recorder.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
+        if (operationGenerationRef.current !== operationId) return;
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        void finishRecording(blob);
+        void finishRecording(blob, operationId);
       };
       recorder.start();
       recorderRef.current = recorder;
@@ -150,13 +160,14 @@ export function App() {
   }, []);
 
   const finishRecording = useCallback(
-    async (blob: Blob) => {
+    async (blob: Blob, operationId: number) => {
       try {
         const tx = await sendMessage<{ transcript?: string }>({
           type: "TRANSCRIBE",
           blob,
           sessionId,
         });
+        if (operationGenerationRef.current !== operationId) return;
         if (!tx.ok) throw new Error(tx.error ?? "transcription failed");
         const text = tx.transcript ?? "";
         if (!text) {
@@ -166,8 +177,9 @@ export function App() {
           return;
         }
         setTranscript(text);
-        await runParse(text);
+        await runParse(text, targetTabIdRef.current, operationId);
       } catch (err) {
+        if (operationGenerationRef.current !== operationId) return;
         setPhase("idle");
         setStatusKind("error");
         setStatus(
@@ -179,17 +191,27 @@ export function App() {
   );
 
   const runParse = useCallback(
-    async (text: string) => {
+    async (text: string, requestedTabId?: number, requestedOperationId?: number) => {
+      const operationId = requestedOperationId ?? ++operationGenerationRef.current;
+      if (operationGenerationRef.current !== operationId) return;
+      const tabId = requestedTabId ?? await getActiveTabId();
+      if (operationGenerationRef.current !== operationId) return;
+      targetTabIdRef.current = tabId;
       setPhase("parsing");
       setStatus("Parsing…");
       setStatusKind("");
       setTranscript(text);
+      setParse(null);
+      setDrafts([]);
+      setAmbiguity(null);
       try {
         const res = await sendMessage<ParseResponse & { queued?: boolean }>({
           type: "PARSE",
           sessionId,
           transcript: text,
+          tabId,
         });
+        if (operationGenerationRef.current !== operationId) return;
         if (!res.ok) throw new Error(res.error ?? "parse failed");
         if (res.queued) {
           // Core unreachable — bridge queued the message (no parse result yet).
@@ -202,6 +224,7 @@ export function App() {
         }
         applyParse(res as unknown as ParseResponse);
       } catch (err) {
+        if (operationGenerationRef.current !== operationId) return;
         setPhase("idle");
         setStatusKind("error");
         setStatus(err instanceof Error ? err.message : "Parse failed");
@@ -211,6 +234,18 @@ export function App() {
   );
 
   const onConfirm = useCallback(async () => {
+    const tabId = targetTabIdRef.current;
+    const activeTabId = await getActiveTabId();
+    if (tabId === undefined || tabId !== activeTabId) {
+      targetTabIdRef.current = undefined;
+      setDrafts([]);
+      setParse(null);
+      setAmbiguity(null);
+      setPhase("idle");
+      setStatusKind("error");
+      setStatus("The active page changed. Run the command again on that page.");
+      return;
+    }
     const commands = drafts
       .filter((d) => d.command.action !== "fill" || d.value !== "")
       .map((d) =>
@@ -230,7 +265,7 @@ export function App() {
           executed?: Command[];
           candidates?: { nodeId: string; label?: string; displayLabel?: string }[];
         };
-      }>({ type: "EXECUTE", sessionId, commands });
+      }>({ type: "EXECUTE", sessionId, commands, tabId });
       if (!res.ok) throw new Error(res.error ?? "execute failed");
       const result = res.result;
       if (result?.status === "ambiguity") {
@@ -307,6 +342,7 @@ export function App() {
         type: "CLARIFY",
         sessionId,
         clarificationText: clarifyText.trim(),
+        tabId: targetTabIdRef.current,
       });
       if (!res.ok) throw new Error(res.error ?? "clarify failed");
       setClarifyText("");
@@ -331,7 +367,7 @@ export function App() {
       try {
         const res = await sendMessage<{
           cursor?: { index: number; label: string; value?: string };
-        }>({ type, sessionId });
+        }>({ type, sessionId, tabId: await getActiveTabId() });
         if (res.ok && res.cursor) {
           const { index, label, value } = res.cursor;
           setStatusKind("ok");
@@ -352,21 +388,12 @@ export function App() {
     setStatusKind("");
     setStatus("Opening reading mode…");
     try {
-      const tabs = await chrome.tabs.query({});
-      for (const tab of tabs) {
-        if (tab.id === undefined) continue;
-        try {
-          await chrome.tabs.sendMessage(tab.id, { type: "PING" });
-          await chrome.tabs.sendMessage(tab.id, { type: "TOGGLE_ZEN" });
-          setStatusKind("ok");
-          setStatus("Reading mode toggled — Esc or Done to exit.");
-          return;
-        } catch {
-          /* try next tab */
-        }
-      }
-      setStatusKind("error");
-      setStatus("No page with VoiceForm found — open a form tab first.");
+      const tabId = await getActiveTabId();
+      if (tabId === undefined) throw new Error("No active page tab");
+      await chrome.tabs.sendMessage(tabId, { type: "PING" });
+      await chrome.tabs.sendMessage(tabId, { type: "TOGGLE_ZEN" });
+      setStatusKind("ok");
+      setStatus("Reading mode toggled — Esc or Done to exit.");
     } catch (err) {
       setStatusKind("error");
       setStatus(err instanceof Error ? err.message : "Zen failed");
@@ -417,6 +444,22 @@ export function App() {
   }, [phase, elapsed]);
 
   const onFormSelect = useCallback((key: string | null) => {
+    operationGenerationRef.current += 1;
+    if (timerRef.current !== null) window.clearInterval(timerRef.current);
+    timerRef.current = null;
+    const recorder = recorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      recorder.stream.getTracks().forEach((track) => track.stop());
+      recorder.stop(); // the generation guard drops this interrupted capture
+    }
+    recorderRef.current = null;
+    targetTabIdRef.current = undefined;
+    setDrafts([]);
+    setParse(null);
+    setAmbiguity(null);
+    setPhase("idle");
+    setStatus("");
+    setStatusKind("");
     setActiveFormKey(key);
   }, []);
 
@@ -431,7 +474,11 @@ export function App() {
 
       <HealthStrip />
 
-      <FormList activeKey={activeFormKey} onSelect={onFormSelect} />
+      <FormList
+        activeKey={activeFormKey}
+        onSelect={onFormSelect}
+        disabled={["recording", "transcribing", "parsing", "executing"].includes(phase)}
+      />
 
       {/* Spec §6.1 primary: Start voice — gated on a selected form (D10).
           Page-tap tap-to-talk remains a parallel entry (D10). */}

@@ -97,7 +97,7 @@
 
 | Spec | Verdict | Notes |
 |---|---|---|
-| §6.1 Side Panel order + frame contract | **Adopt, simplified** | header → forms+count → **Start voice gated on selection (D10)** → command area → zen row → **HealthStrip** → nav **Settings (open options)** + **History-lite (D11)** from `GET /api/v1/session/{id}`; **drop header `[x]`**; page-tap + typed entries stay (D10/D8) |
+| §6.1 Side Panel order + frame contract | **Adopt, simplified** | header → forms+count → **Start voice gated on selection (D10)** → command area → zen row → **HealthStrip** → nav **Settings (open options)** + **History-lite (D11)** from `GET /api/v1/session/{id}`; **drop header `[x]`**; page-tap + typed entries stay (D10/D8). Residual audit: registry and active-form selection are scoped to the current tab; tab changes clear stale selection/cues; parse, clarify, execute, and approvals retain the originating tab. See M08/M15. |
 | §6.2 Options wizard + in-wizard demo loop | **Simplify** | 3 cards + “Step n of 3” + dots + copy; **demo loop in-wizard ditched** (duplicate of panel flow; demo.html path instead); health strip adopted |
 | §6.3 In-page cues | **Adopt adjusted** | field-anchored LISTENING/preview; accent inset ring (§1.6); no full-page scrim (already true); SPA re-apply (have) |
 | §6.4 Zen sheet | **Adopt simplified (P2)** | n/N, Speak/Next/Back, final review list, dismiss; **no** voice-Confirm (D1), web drag handle dropped |
@@ -114,8 +114,8 @@
 | Proposal | Verdict |
 |---|---|
 | 44px/48dp targets, focus order, SR single announcements, reduced motion, zoom | **Adopt (cheap wins in P1; full audit in GATE)** |
-| Privacy rules (local detection, no install mic, ephemeral transcripts, redact logs) | **Adopt — verify-only**: already enforced (QA-001-era); log redaction check added to GATE |
-| §8.3 Android Back precedence | **Adopt → P3** |
+| Privacy rules (local detection, no install mic, ephemeral transcripts, redact logs) | **Adopt — verify**: per-tab context scoping and log redaction hardened in residual audit; M29 remains a runtime sanity check (no transcript or field values in logs) |
+| §8.3 Android Back precedence / confirmation ownership | **Adopt → P3 + web audit** | Android Back cancels active work before collapsing; web confirmation approval is tied to the originating tab, never a mutable last-active tab. Verify M15/M31/M33/M34 |
 
 ### §9 Engineering notes
 | Proposal | Verdict |

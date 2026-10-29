@@ -30,7 +30,7 @@
 | ID | Steps | Expected | Result | Reason / notes |
 |---|---|---|---|---|
 | M07 | Browse `login-bootstrap` + `checkout-plain` **without clicking the icon** | Toolbar badge shows form count(s) | ☐ | |
-| M08 | Open Side Panel | List already populated (count + rows) | ☐ | |
+| M08 | Open Side Panel with forms on tabs A/B; select on A, switch to B | List already populated but scoped to active tab; stale selection/cues from A are cleared on B | ☐ | |
 | M09 | Open `multi-form.html`, select one form in panel | Selected form: **accent ~3px border**; others **muted + slight blur** | ☐ | |
 | M10 | With **no** form selected | **Start voice disabled**; select a form → enabled (D10); page-tap still works without selection | ☐ | |
 
@@ -42,7 +42,7 @@
 | M12 | Panel **Start voice** (form selected) on `login-plain` → speak a fill command | LISTENING → transcript → parse → cards/execute as applicable | ☐ | |
 | M13 | **Tap `signup-aria` form** → chime → speak field values sequentially | LISTENING badge near field + preview bubble; fields fill in order; stop chime | ☐ | |
 | M14 | On `shipping-step`: voice/typed `next field`, `back`, `check…` where present | Navigation/activation works per control vocabulary | ☐ | |
-| M15 | On `checkout-plain`, issue `click submit billing` (voice or typed) | Confirm pill **appears with countdown text**; click Confirm executes; Cancel kills it (current behavior per D1) | ☐ | |
+| M15 | On `checkout-plain` tab A, issue `click submit billing`; switch to tab B while pill is open, then return to A | Confirm pill **appears with countdown text**; only A’s originating page executes on Confirm; Cancel kills it (current behavior per D1) | ☐ | |
 
 ## D. Failure & recovery (M16–M19)
 

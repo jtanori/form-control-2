@@ -28,6 +28,7 @@
   "confirm.enabled": "Confirm",
   "confirm.cancel": "Cancel",
   "confirm.cancelled": "Cancelled. Nothing was submitted.",
+  "confirm.cancelled_action": "Cancelled. No action was taken.",
   "confirm.expired": "Confirmation expired. Review the action to try again.",
   "error.empty_stt.title": "I didn't catch that.",
   "error.empty_stt.body": "Try speaking again, or enter the value.",

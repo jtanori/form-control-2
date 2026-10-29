@@ -256,10 +256,18 @@ export async function handleMessage(
       }
 
       case "CLARIFY": {
+        const context =
+          message.context ??
+          (
+            await sendMessageToTab<{
+              ok: boolean;
+              context: FormSnapshot;
+            }>(message.tabId, { type: "GET_CONTEXT", sessionId })
+          ).context;
         const result = await corePost<ParseResponse>("/api/v1/clarify", {
           sessionId,
           clarificationText: message.clarificationText,
-          ...(message.context ? { context: message.context } : {}),
+          context,
         });
         return result;
       }
@@ -313,6 +321,8 @@ export async function handleMessage(
       }
 
       case "GET_FORM_REGISTRY":
+        // Return per-tab entries. Consumers must choose the active tab before
+        // painting/acting; mixing rectangles from other tabs is unsafe.
         return { forms: await getFormRegistry() };
 
       case "OPEN_SIDE_PANEL": {
@@ -352,7 +362,7 @@ export async function handleMessage(
     log.error("bridge error", {
       type: message.type,
       sessionId,
-      error: err instanceof Error ? err.message : String(err),
+      errorType: err instanceof Error ? err.name : typeof err,
     });
     throw err;
   }

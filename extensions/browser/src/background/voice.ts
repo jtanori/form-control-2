@@ -8,11 +8,11 @@ import { createLogger } from "@shared/logger";
 import type { Command, ExtensionMessage, ParseResponse } from "@shared/types";
 import { copy } from "../ui/copy";
 import { getSessionId, handleMessage, resolveTabId } from "./bridge";
+import { isRisky } from "./risk";
 
 const log = createLogger("ext.voice");
 
 const OFFSCREEN_PATH = "offscreen.html";
-const RISKY_LABEL = /\b(submit|pay|place|purchase|checkout|order|delete|clear)\b/i;
 
 let pendingTabId: number | undefined;
 
@@ -34,18 +34,9 @@ async function toTab(message: Record<string, unknown>, tabId?: number): Promise<
   await chrome.tabs.sendMessage(id, message).catch((err) => {
     log.warn("tab message failed", {
       type: message.type,
-      error: err instanceof Error ? err.message : String(err),
+      errorType: err instanceof Error ? err.name : typeof err,
     });
   });
-}
-
-function isRisky(commands: Command[]): boolean {
-  return commands.some(
-    (c) =>
-      c.confirmRequired ||
-      (c.action === "click" &&
-        RISKY_LABEL.test(c.target.label ?? c.target.nodeId ?? "")),
-  );
 }
 
 export function installVoiceHandlers(): void {
@@ -66,7 +57,7 @@ export function installVoiceHandlers(): void {
           sendResponse({ ok: true });
         } catch (err) {
           log.error("tap-to-talk start failed", {
-            error: err instanceof Error ? err.message : String(err),
+            errorType: err instanceof Error ? err.name : typeof err,
           });
           sendResponse({
             ok: false,
@@ -80,6 +71,7 @@ export function installVoiceHandlers(): void {
     if (type === "AUDIO_BLOB") {
       void (async () => {
         const blob = message.blob as Blob;
+        const tabId = pendingTabId;
         try {
           const sessionId = await getSessionId();
           // Reuse the existing TRANSCRIBE bridge (host_permissions :8020).
@@ -96,19 +88,20 @@ export function installVoiceHandlers(): void {
                 listening: false,
                 error: "No speech recognized — tap and try again.",
               },
-              pendingTabId,
+              tabId,
             );
             sendResponse({ ok: false });
             return;
           }
           await toTab(
             { type: "SET_LISTENING_UI", listening: false, preview: text },
-            pendingTabId,
+            tabId,
           );
           const parse = (await handleMessage({
             type: "PARSE",
             sessionId,
             transcript: text,
+            tabId,
           } as ExtensionMessage)) as ParseResponse;
 
           if (parse.needsClarification) {
@@ -118,7 +111,7 @@ export function installVoiceHandlers(): void {
                 listening: false,
                 error: parse.clarificationQuestion ?? "Which one did you mean?",
               },
-              pendingTabId,
+              tabId,
             );
             sendResponse({ ok: true });
             return;
@@ -130,7 +123,7 @@ export function installVoiceHandlers(): void {
                 listening: false,
                 error: "No commands matched — try different wording.",
               },
-              pendingTabId,
+              tabId,
             );
             sendResponse({ ok: true });
             return;
@@ -139,11 +132,11 @@ export function installVoiceHandlers(): void {
             await toTab(
               {
                 type: "SHOW_CONFIRM_PILL",
-                question: `Voice command ready — say “Confirm” or tap in 3s`,
+                question: "Review this action, then tap Confirm.",
                 commands: parse.commands,
                 seconds: 3,
               },
-              pendingTabId,
+              tabId,
             );
             sendResponse({ ok: true });
             return;
@@ -152,6 +145,7 @@ export function installVoiceHandlers(): void {
             type: "EXECUTE",
             sessionId,
             commands: parse.commands,
+            tabId,
           } as ExtensionMessage);
           await toTab(
             {
@@ -159,7 +153,7 @@ export function installVoiceHandlers(): void {
               listening: false,
               preview: `Executed ${parse.commands.length} step(s)`,
             },
-            pendingTabId,
+            tabId,
           );
           log.info("tap-to-talk executed", {
             sessionId,
@@ -169,7 +163,7 @@ export function installVoiceHandlers(): void {
           sendResponse({ ok: true });
         } catch (err) {
           log.error("audio result failed", {
-            error: err instanceof Error ? err.message : String(err),
+            errorType: err instanceof Error ? err.name : typeof err,
           });
           await toTab(
             {
@@ -177,7 +171,7 @@ export function installVoiceHandlers(): void {
               listening: false,
               error: err instanceof Error ? err.message : "Voice failed",
             },
-            pendingTabId,
+            tabId,
           );
           sendResponse({ ok: false });
         }
@@ -191,40 +185,56 @@ export function installVoiceHandlers(): void {
           approved: boolean;
           commands: Command[];
         };
-        if (approved) {
-          const sessionId = await getSessionId();
-          log.info("confirm pill approved — executing", {
-            sessionId,
-            commandCount: commands.length,
-          });
-          const execResult = (await handleMessage({
-            type: "EXECUTE",
-            sessionId,
-            commands,
-          } as ExtensionMessage)) as { result?: { status?: string; error?: string } };
-          log.info("confirm execute result", {
-            status: execResult?.result?.status,
-            error: execResult?.result?.error,
-          });
-          await toTab(
-            {
-              type: "SET_LISTENING_UI",
-              listening: false,
-              preview: `Executed ${commands.length} step(s)`,
-            },
-            pendingTabId,
-          );
-        } else {
-          await toTab(
-            {
-              type: "SET_LISTENING_UI",
-              listening: false,
-              error: copy("confirm.cancelled"),
-            },
-            pendingTabId,
-          );
+        // The approval belongs to the page that rendered the pill. Never route
+        // it through the mutable global last-target tab (another tab may have
+        // become active while the confirmation was visible).
+        const tabId = sender.tab?.id;
+        if (tabId === undefined) {
+          sendResponse({ ok: false, error: "confirmation has no owning tab" });
+          return;
         }
-        sendResponse({ ok: true });
+        try {
+          if (approved) {
+            const sessionId = await getSessionId();
+            log.info("confirm pill approved — executing", {
+              sessionId,
+              commandCount: commands.length,
+            });
+            const execResult = (await handleMessage({
+              type: "EXECUTE",
+              sessionId,
+              commands,
+              tabId,
+            } as ExtensionMessage)) as { result?: { status?: string; error?: string } };
+            log.info("confirm execute result", {
+              status: execResult?.result?.status,
+              hasError: Boolean(execResult?.result?.error),
+            });
+            await toTab(
+              {
+                type: "SET_LISTENING_UI",
+                listening: false,
+                preview: `Executed ${commands.length} step(s)`,
+              },
+              tabId,
+            );
+          } else {
+            await toTab(
+              {
+                type: "SET_LISTENING_UI",
+                listening: false,
+                error: copy("confirm.cancelled_action"),
+              },
+              tabId,
+            );
+          }
+          sendResponse({ ok: true });
+        } catch (err) {
+          sendResponse({
+            ok: false,
+            error: err instanceof Error ? err.message : "confirmation failed",
+          });
+        }
       })();
       return true;
     }
@@ -244,7 +254,7 @@ export function installVoiceHandlers(): void {
             await toTab(
               {
                 type: "SHOW_CONFIRM_PILL",
-                question: `Voice command ready — say “Confirm” or tap in 3s`,
+                question: "Review this action, then tap Confirm.",
                 commands,
                 seconds: 3,
               },
@@ -256,6 +266,7 @@ export function installVoiceHandlers(): void {
               type: "EXECUTE",
               sessionId,
               commands,
+              tabId,
             } as ExtensionMessage);
           }
           sendResponse({ ok: true });

@@ -1,9 +1,10 @@
 /**
  * B-3 UI — passive form registry list (pre-populated, no icon click needed).
- * Selection is lifted to the workspace (Start-voice gating, D10).
+ * Registry data is per-tab; never mix forms/rectangles from different pages.
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormSummary } from "@shared/types";
+import { formsForTab, type FormRegistryEntry } from "./registry-utils";
 
 async function send<T>(message: Record<string, unknown>): Promise<T> {
   return chrome.runtime.sendMessage(message) as Promise<T>;
@@ -12,27 +13,53 @@ async function send<T>(message: Record<string, unknown>): Promise<T> {
 export interface FormListProps {
   activeKey: string | null;
   onSelect: (key: string | null) => void;
+  disabled?: boolean;
   /** readiness hint for the workspace (forms seen at least once) */
   onFormsSeen?: (count: number) => void;
 }
 
-export function FormList({ activeKey, onSelect, onFormsSeen }: FormListProps) {
+export function FormList({ activeKey, onSelect, onFormsSeen, disabled = false }: FormListProps) {
   const [forms, setForms] = useState<FormSummary[]>([]);
   const [error, setError] = useState("");
+  const activeTabRef = useRef<number | undefined>(undefined);
 
   const load = useCallback(async () => {
     try {
-      const res = await send<{ ok: boolean; forms?: FormSummary[] }>({
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      const previousTabId = activeTabRef.current;
+      const tabChanged = previousTabId !== tab?.id;
+      activeTabRef.current = tab?.id;
+      if (tabChanged && previousTabId !== undefined) {
+        await chrome.tabs.sendMessage(previousTabId, { type: "CLEAR_CUES" }).catch(() => undefined);
+      }
+      const res = await send<{ ok?: boolean; forms?: FormRegistryEntry[] }>({
         type: "GET_FORM_REGISTRY",
       });
-      if (res.ok && res.forms) {
-        setForms(res.forms);
-        onFormsSeen?.(res.forms.length);
-      } else setError(res.ok ? "" : "Could not read forms");
+      const currentForms = formsForTab(res.forms ?? [], tab?.id);
+      setForms(currentForms);
+      setError(res.ok === false ? "Could not read forms" : "");
+      onFormsSeen?.(currentForms.length);
+
+      // The side panel can remain open while the active tab changes. Drop a
+      // selection that belongs to the previous page rather than leaving voice
+      // enabled with a stale form key.
+      const selectionMissing = Boolean(
+        activeKey && !currentForms.some((form) => form.key === activeKey),
+      );
+      if (tabChanged || selectionMissing) onSelect(null);
+      if (tabChanged || selectionMissing) {
+        if (tab?.id !== undefined) {
+          await chrome.tabs.sendMessage(tab.id, {
+            type: "SET_CUES",
+            forms: currentForms,
+            activeKey: null,
+          }).catch(() => undefined);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registry unavailable");
     }
-  }, [onFormsSeen]);
+  }, [activeKey, onFormsSeen, onSelect]);
 
   useEffect(() => {
     void load();
@@ -52,23 +79,22 @@ export function FormList({ activeKey, onSelect, onFormsSeen }: FormListProps) {
       const next = key === activeKey ? null : key;
       onSelect(next);
       try {
-        const res = await send<{ ok: boolean; forms?: FormSummary[] }>({
-          type: "GET_FORM_REGISTRY",
-        });
-        const all = res.forms ?? [];
         const [tab] = await chrome.tabs.query({
           active: true,
           currentWindow: true,
         });
-        if (tab?.id !== undefined) {
-          await chrome.tabs
-            .sendMessage(tab.id, {
-              type: "SET_CUES",
-              forms: all.map((f) => ({ ...f })),
-              activeKey: next,
-            })
-            .catch(() => undefined);
-        }
+        if (tab?.id === undefined) return;
+        const res = await send<{ forms?: FormRegistryEntry[] }>({
+          type: "GET_FORM_REGISTRY",
+        });
+        const currentForms = formsForTab(res.forms ?? [], tab.id);
+        await chrome.tabs
+          .sendMessage(tab.id, {
+            type: "SET_CUES",
+            forms: currentForms,
+            activeKey: next,
+          })
+          .catch(() => undefined);
       } catch {
         /* cue paint is best-effort */
       }
@@ -118,6 +144,7 @@ export function FormList({ activeKey, onSelect, onFormsSeen }: FormListProps) {
           style={{ justifyContent: "space-between", width: "100%" }}
           onClick={() => void select(f.key)}
           aria-pressed={activeKey === f.key}
+          disabled={disabled}
         >
           <span>{f.title}</span>
           <span style={{ opacity: 0.75 }}>{f.fieldCount} fields</span>

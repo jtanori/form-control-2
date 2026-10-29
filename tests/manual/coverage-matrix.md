@@ -10,14 +10,14 @@ Every epic-relevant feature appears ≥1× (D12). “Auto” = CI test that also
 | Core healthy / offline recovery | M04, M05 | — (compose stop/start) | partial (E2E reuses live/mock) |
 | Demo form loop | M06 | `forms/form-checkout.html` | E2E twin |
 | Badge count, zero clicks | M07 | `forms/login-bootstrap.html` | no |
-| Panel list pre-populated | M08 | any | no |
+| Panel list pre-populated, scoped per active tab; stale selection/cues cleared on tab change | M08 | two tabs with different forms | no |
 | Active accent border + muted/blurred others | M09 | **`forms/multi-form.html`** | no |
 | Start-voice gated on selection (D10) | M10 | `forms/multi-form.html` | no |
 | Typed → cards → Confirm → fill/submit | M11 | `forms/checkout-plain.html` | **E2E** |
 | Panel voice → STT → fill | M12 | `forms/login-plain.html` | no |
 | Tap-to-talk: chime, LISTENING, preview, sequential fill | M13 | `forms/signup-aria.html` | no |
 | Control vocab next/back/check/submit | M14 | `forms/shipping-step.html` | unit (executor) |
-| Confirm pill on submit-like action (current behavior, D1) | M15 | `forms/checkout-plain.html` | no |
+| Confirm pill on submit-like action, bound to originating tab (current behavior, D1) | M15 | `forms/checkout-plain.html` + second tab | no |
 | Ambiguity → candidates, no guess | M16 | **`forms/ambiguous-labels.html`** | unit |
 | No-match + recovery copy | M17 | `forms/ambiguous-labels.html` | unit |
 | Empty STT retry | M18 | any | no |
