@@ -1,0 +1,34 @@
+{
+  "categories": [
+    {
+      "id": "ui",
+      "title": "UI",
+      "description": "Basic UI element presence, side‑panel rendering, theme contrast, active‑form borders, dimming behavior."
+    },
+    {
+      "id": "navigation",
+      "title": "Navigation",
+      "description": "Voice‑driven navigation between fields, tabs, and pages, including focus‑reset on tab change."
+    },
+    {
+      "id": "form-handling",
+      "title": "Form handling",
+      "description": "Filling, editing, and submitting a simple checkout form via voice commands."
+    },
+    {
+      "id": "multiple-forms",
+      "title": "Multiple Forms",
+      "description": "Handling several forms on the same page, ensuring correct form target resolution."
+    },
+    {
+      "id": "massive-forms",
+      "title": "Massive Forms",
+      "description": "Performance and correctness when a page contains a large number of inputs (100+)."
+    },
+    {
+      "id": "native-elements",
+      "title": "Full Native Form Elements",
+      "description": "Testing all native input types (checkbox, radio, select, date, file, etc.) via voice."
+    }
+  ]
+}

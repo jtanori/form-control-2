@@ -4,13 +4,12 @@
  */
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "../popup/App";
-import "../popup/popup.css";
+import { ManualTest } from "./ManualTest";
 
 const el = document.getElementById("root");
 if (!el) throw new Error("missing #root");
 createRoot(el).render(
   <StrictMode>
-    <App />
+    <ManualTest />
   </StrictMode>,
 );

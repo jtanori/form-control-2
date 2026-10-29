@@ -82,6 +82,7 @@ Zero-to-MVP development roadmap engineered for **multi-agent assignment**. Every
 | UX-001 | Extension UX Audit & Redesign — *delivered → folded into UX-003* | Frontend / Extension | P1 | [post-mvp/UX-001](post-mvp/UX-001-extension-ux-audit-redesign.md) | [#41](https://github.com/jtanori/form-control-2/issues/41) |
 | UX-002 | Design identity intake — *superseded by UX-003 (spec baseline)* | Design ops | P1 | [post-mvp/UX-002](post-mvp/UX-002-design-identity-intake.md) | [#50](https://github.com/jtanori/form-control-2/issues/50) |
 | AND-006 | Mobile UX parity — *UX-003 sub-item P3* | Mobile / Kotlin | P1 | [post-mvp/AND-006](post-mvp/AND-006-mobile-ux-parity.md) | [#51](https://github.com/jtanori/form-control-2/issues/51) |
+| UX-003-70 | Manual‑Testing Suite (Side‑panel UI) | QA / Integration | P1 | - | [#70](https://github.com/jtanori/form-control-2/issues/70) |
 
 ---
 

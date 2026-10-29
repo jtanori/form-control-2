@@ -34,7 +34,7 @@ by item **UX-003-C**. Gemini/ChatGPT remain only a *future refresh* channel
 | D9 | Clean token break **confirmed**. |
 | D10 | **Start-voice gating confirmed**; page-tap tap-to-talk stays as parallel entry. |
 | D11 | History nav = adopt-lite; **auto-defer post-MVP on friction**. Settings nav ships. |
-| D12 | **Manual test suite (`tests/manual/`) = QA gate**: every feature ≥1×; passes only on your completed run **or** per-item written valid reasons. CI green never overrides an incomplete manual run. |
+| D12 | **Manual test suite (`tests/manual/`) = QA gate** – implemented as a **side‑panel UI** with per‑session **JSON log** (`run‑log‑<timestamp>.json`). Passes only on a completed run **or** per‑item valid reasons. CI green never overrides an incomplete manual run. PR workflow uses **Option B** (edit Draft #67). |
 
 **Deferred register (carry everywhere):** D1 (countdown/auth/voice-Confirm) ·
 D2 (read-back) · D3 (FSM/events) · D4 (streaming) · QA-010→014 ·
